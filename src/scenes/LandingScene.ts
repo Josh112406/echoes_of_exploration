@@ -10,7 +10,7 @@ import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUDGauges, HUD_FONT } from '../ui/NineSliceHUD.ts';
 import { CIN_MARGIN, buildLandingTerrain } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
-import { completeMinigame, failMinigame, leaveMinigame, missionName } from '../systems/MinigameKit.ts';
+import { completeMinigame, failMinigame, leaveMinigame, minTouchTarget, missionName } from '../systems/MinigameKit.ts';
 import { Practice } from '../systems/Practice.ts';
 
 interface Particle {
@@ -407,7 +407,7 @@ export class LandingScene extends Phaser.Scene {
       letterSpacing: 3,
     }).setOrigin(0.5));
 
-    const zone = this.add.zone(0, 63 + extra, 220, 22).setInteractive({ cursor: 'pointer' });
+    const zone = this.add.zone(0, 63 + extra, 220, Math.max(22, minTouchTarget(this))).setInteractive({ cursor: 'pointer' });
     zone.on('pointerdown', () => {
       SoundFX.playClick();
       this.closeTutorial();
@@ -428,11 +428,12 @@ export class LandingScene extends Phaser.Scene {
   private createTouchControls(): void {
     const W = CONSTANTS.CANVAS.WIDTH;
     const H = CONSTANTS.CANVAS.HEIGHT;
+    const hit = minTouchTarget(this);
 
     // Top-right exit
     const exitBg = this.ui(this.add.graphics().setDepth(100));
     NineSliceHUD.drawFrame(exitBg, W - 96, 10, 86, 22, 'secondary');
-    const exitZone = this.ui(this.add.zone(W - 53, 21, 86, 22).setDepth(101).setInteractive({ cursor: 'pointer' }));
+    const exitZone = this.ui(this.add.zone(W - 53, Math.max(21, hit / 2), Math.max(86, hit), Math.max(22, hit)).setDepth(101).setInteractive({ cursor: 'pointer' }));
     exitZone.on('pointerdown', () => {
       SoundFX.setThruster(false);
       SoundFX.playClick();
@@ -449,11 +450,13 @@ export class LandingScene extends Phaser.Scene {
     exitZone.on('pointerout', () => exitText.setColor(PALETTE.lunarHighlight));
 
     const btnY = H - 32;
+    const hitH = Math.max(24, hit);
+    const hitY = Phaser.Math.Clamp(btnY + 12, hitH / 2, H - hitH / 2);
 
     const makeSteer = (x: number, dir: -1 | 1, label: string) => {
       const bg = this.ui(this.add.graphics().setDepth(100));
       NineSliceHUD.drawFrame(bg, x, btnY, 68, 24, 'ghost');
-      const zone = this.ui(this.add.zone(x + 34, btnY + 12, 68, 24).setDepth(101).setInteractive({ cursor: 'pointer' }));
+      const zone = this.ui(this.add.zone(x + 34, hitY, Math.max(68, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
       zone.on('pointerdown', () => { this.touchSteer = dir; });
       zone.on('pointerup', () => { this.touchSteer = 0; });
       zone.on('pointerout', () => { this.touchSteer = 0; });
@@ -469,7 +472,7 @@ export class LandingScene extends Phaser.Scene {
 
     const thrustBg = this.ui(this.add.graphics().setDepth(100));
     NineSliceHUD.drawFrame(thrustBg, W / 2 - 75, btnY, 150, 24, 'primary');
-    const thrustZone = this.ui(this.add.zone(W / 2, btnY + 12, 150, 24).setDepth(101).setInteractive({ cursor: 'pointer' }));
+    const thrustZone = this.ui(this.add.zone(W / 2, hitY, Math.max(150, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
     thrustZone.on('pointerdown', () => { this.touchThrust = true; });
     thrustZone.on('pointerup', () => { this.touchThrust = false; });
     thrustZone.on('pointerout', () => { this.touchThrust = false; });

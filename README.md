@@ -24,6 +24,10 @@
   - Every date, coordinate, photograph, and scientific claim links directly to official NASA, JPL, NSSDCA, ILRS, or PDS primary sources (see [docs/submission-references.md](docs/submission-references.md)).
   - Zero runtime external API calls and zero third-party cookies; all progress is saved locally in `localStorage`.
 
+## Playing on a Phone
+
+Open the site in a mobile browser. Landscape gives the game and its controls more room; portrait remains playable. Drag on the exploration scene to move, then tap a nearby echo. The phone controls provide Talk, Map, and Menu, and each minigame has touch buttons. You can hold two controls at once, such as steer and thrust.
+
 ## Development & Verification Commands
 
 ```bash

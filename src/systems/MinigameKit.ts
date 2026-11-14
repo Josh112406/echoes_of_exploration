@@ -32,6 +32,11 @@ export function leaveMinigame(scene: Phaser.Scene, practiceResult?: 'complete' |
 export const MG_W = CONSTANTS.CANVAS.WIDTH;
 export const MG_H = CONSTANTS.CANVAS.HEIGHT;
 
+/** Canvas units needed for a 44px touch target at the current display scale. */
+export function minTouchTarget(scene: Phaser.Scene): number {
+  return Math.ceil(44 * MG_W / scene.scale.displaySize.width);
+}
+
 export interface Particle {
   x: number;
   y: number;
@@ -181,7 +186,10 @@ export function touchButton(
 ): TouchButton {
   const bg = scene.add.graphics().setDepth(100).setScrollFactor(0);
   NineSliceHUD.drawFrame(bg, x, y, w, h, variant);
-  const zone = scene.add.zone(x + w / 2, y + h / 2, w, h).setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+  const hit = minTouchTarget(scene);
+  const hitH = Math.max(h, hit);
+  const zone = scene.add.zone(x + w / 2, Phaser.Math.Clamp(y + h / 2, hitH / 2, MG_H - hitH / 2), Math.max(w, hit), hitH)
+    .setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
   zone.on('pointerdown', onDown);
   zone.on('pointerup', onUp);
   zone.on('pointerout', onUp);
@@ -197,7 +205,9 @@ export function exitButton(scene: Phaser.Scene, label: string, onExit: () => voi
   const W = MG_W;
   const bg = scene.add.graphics().setDepth(100).setScrollFactor(0);
   NineSliceHUD.drawFrame(bg, W - 98, 8, 86, 22, 'secondary');
-  const zone = scene.add.zone(W - 55, 19, 86, 22).setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+  const hit = minTouchTarget(scene);
+  const zone = scene.add.zone(W - 55, Math.max(19, hit / 2), Math.max(86, hit), Math.max(22, hit))
+    .setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
   const txt = scene.add.text(W - 55, 19, label, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarHighlight, letterSpacing: 1 })
     .setOrigin(0.5).setDepth(102).setScrollFactor(0);
   zone.on('pointerdown', () => {
@@ -277,7 +287,7 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
   NineSliceHUD.drawFrame(btn, -110, by, 220, 22, 'primary');
   c.add(btn);
   c.add(scene.add.text(0, by + 11, spec.cta, { fontFamily: HUD_FONT, fontSize: '8px', color: PALETTE.spaceBlack, letterSpacing: 3 }).setOrigin(0.5));
-  const zone = scene.add.zone(0, by + 11, 220, 22).setInteractive({ cursor: 'pointer' });
+  const zone = scene.add.zone(0, by + 11, 220, Math.max(22, minTouchTarget(scene))).setInteractive({ cursor: 'pointer' });
   c.add(zone);
 
   let done = false;

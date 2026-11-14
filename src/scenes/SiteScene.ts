@@ -14,6 +14,7 @@ import { getMinigameMetaForSite } from '../data/minigames.ts';
 import { WorldId } from '../data/schema.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
+import { minTouchTarget } from '../systems/MinigameKit.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
@@ -155,6 +156,8 @@ export class SiteScene extends Phaser.Scene {
 
   create(): void {
     document.body.classList.add('in-game');
+    document.body.classList.add('site-scene');
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => document.body.classList.remove('site-scene'));
     const world = GameState.getWorld();
     // Each world has its own exploration music and its own air (or lack of it)
     const music = world === 'moon' ? 'explore_moon' : world === 'mars' ? 'explore_mars' : 'transition';
@@ -307,11 +310,15 @@ export class SiteScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-SPACE', () => {
       if (!this.isUiBlocked()) this.voice.advance();
     });
-    this.keyQ.on('down', () => {
+    const talk = () => {
       if (this.isUiBlocked()) return;
       this.tutorialContainer.setVisible(false);
       if (!this.voice.advance()) this.story.requestThought(world);
-    });
+    };
+    this.keyQ.on('down', talk);
+    const mobileTalk = document.getElementById('mobile-talk');
+    mobileTalk?.addEventListener('click', talk);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileTalk?.removeEventListener('click', talk));
     this.input.keyboard?.on('keydown-M', () => {
       if (this.isUiBlocked()) return;
       if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
@@ -818,15 +825,20 @@ export class SiteScene extends Phaser.Scene {
     this.updateHUDProgress(world);
 
     // Map button
-    const mapBtn = this.add.zone(W - 88, 22, 44, 24)
+    const hitH = Math.max(24, minTouchTarget(this));
+    const mapBtn = this.add.zone(W - 88, Math.max(22, hitH / 2), 44, hitH)
       .setScrollFactor(0).setDepth(102).setInteractive({ cursor: 'pointer' });
-    mapBtn.on('pointerdown', () => {
+    const openMap = () => {
       if (this.robot) {
         GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
       }
       SoundFX.playClick();
       EventBus.emit(EVENTS.NAVIGATE_TO_HUB);
-    });
+    };
+    mapBtn.on('pointerdown', openMap);
+    const mobileMap = document.getElementById('mobile-map');
+    mobileMap?.addEventListener('click', openMap);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileMap?.removeEventListener('click', openMap));
 
     const mapText = this.add.text(W - 88, 22, 'MAP', {
       fontSize: '7px',
@@ -838,15 +850,19 @@ export class SiteScene extends Phaser.Scene {
     mapBtn.on('pointerout', () => mapText.setColor(PALETTE.lunarHighlight));
 
     // Menu button
-    const menuBtn = this.add.zone(W - 37, 22, 50, 24)
+    const menuBtn = this.add.zone(W - 37, Math.max(22, hitH / 2), 50, hitH)
       .setScrollFactor(0).setDepth(102).setInteractive({ cursor: 'pointer' });
-    menuBtn.on('pointerdown', () => {
+    const openMenu = () => {
       if (this.robot) {
         GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
       }
       SoundFX.playClick();
       EventBus.emit(EVENTS.SHOW_TITLE);
-    });
+    };
+    menuBtn.on('pointerdown', openMenu);
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenu?.addEventListener('click', openMenu);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileMenu?.removeEventListener('click', openMenu));
 
     const menuText = this.add.text(W - 37, 22, 'MENU', {
       fontSize: '7px',
