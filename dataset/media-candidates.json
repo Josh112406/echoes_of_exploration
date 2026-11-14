@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "policy": "Authentic artifact evidence must come from the listed official mission or media page. Select an individual asset only after item-level credit and third-party rights review. Generated images may not replace authentic evidence.",
+  "candidates": [
+    {"mission_id":"surveyor-1","official_page":"https://science.nasa.gov/mission/surveyor-1/","preferred_asset":"photograph or spacecraft illustration explicitly credited by NASA/JPL","selection_status":"item-selection-required"},
+    {"mission_id":"apollo-11-surface","official_page":"https://ilrs.gsfc.nasa.gov/missions/satellite_missions/current_missions/ap11_general.html","preferred_asset":"Apollo 11 surface photograph showing the reflector or experiment deployment","selection_status":"item-selection-required"},
+    {"mission_id":"apollo-17-surface","official_page":"https://www.nasa.gov/missions/apollo/apollo-17-mission-details/","preferred_asset":"Apollo 17 Lunar Roving Vehicle photograph","selection_status":"item-selection-required"},
+    {"mission_id":"viking-1","official_page":"https://science.nasa.gov/mission/viking/","preferred_asset":"Viking 1 lander image or surface panorama with item credit","selection_status":"item-selection-required"},
+    {"mission_id":"spirit","official_page":"https://science.nasa.gov/mission/mer-spirit/","preferred_asset":"Spirit rover self-image, landing-site image, or official spacecraft illustration","selection_status":"item-selection-required"},
+    {"mission_id":"ingenuity","official_page":"https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/","preferred_asset":"Perseverance image of Ingenuity or official NASA/JPL illustration","selection_status":"item-selection-required"},
+    {"mission_id":"near-shoemaker","official_page":"https://science.nasa.gov/mission/near-shoemaker/","preferred_asset":"official spacecraft illustration and authentic Eros image","selection_status":"item-selection-required"},
+    {"mission_id":"voyager-1","official_page":"https://science.nasa.gov/mission/voyager/voyager-1/","preferred_asset":"official Voyager spacecraft image or illustration and authentic planetary/interstellar data visual","selection_status":"item-selection-required"},
+    {"mission_id":"new-horizons","official_page":"https://science.nasa.gov/mission/new-horizons/","preferred_asset":"official spacecraft illustration plus authentic Pluto or Arrokoth image","selection_status":"item-selection-required"}
+  ],
+  "rights_reference":"https://www.nasa.gov/nasa-brand-center/images-and-media/"
+}
