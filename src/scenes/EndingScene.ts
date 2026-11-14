@@ -137,14 +137,12 @@ export class EndingScene extends Phaser.Scene {
   private slideMask: Phaser.GameObjects.Graphics | null = null;
   private photoItems: {
     el: HTMLDivElement;
-    img: HTMLImageElement;
     slide: Phaser.GameObjects.Container;
     fx: number;
     fy: number;
     fw: number;
     fh: number;
     reveal: { h: number };
-    kb: { scale: number; dx: number };
   }[] = [];
   private lastSlideYear: number | null = null;
   private rulerLayer!: Phaser.GameObjects.Container;
@@ -860,14 +858,13 @@ export class EndingScene extends Phaser.Scene {
         continue;
       }
       const st = item.el.style;
-      st.left = `${rect.left + (item.fx + item.slide.x) * sx}px`;
-      st.top = `${rect.top + (item.fy + item.slide.y) * sy}px`;
-      st.width = `${item.fw * sx}px`;
-      st.height = `${item.fh * sy}px`;
+      st.left = `${Math.round(rect.left + (item.fx + item.slide.x) * sx)}px`;
+      st.top = `${Math.round(rect.top + (item.fy + item.slide.y) * sy)}px`;
+      st.width = `${Math.round(item.fw * sx)}px`;
+      st.height = `${Math.round(item.fh * sy)}px`;
       st.opacity = String(item.slide.alpha);
       const clipBottom = Math.max(0, Math.min(100, ((item.fh - item.reveal.h) / item.fh) * 100));
-      st.clipPath = `inset(0 0 ${clipBottom.toFixed(2)}% 0)`;
-      item.img.style.transform = `scale(${item.kb.scale.toFixed(4)}) translateX(${((item.kb.dx / item.fw) * 100).toFixed(3)}%)`;
+      st.clipPath = clipBottom > 0.05 ? `inset(0 0 ${clipBottom.toFixed(2)}% 0)` : 'none';
     }
   }
 
@@ -928,17 +925,16 @@ export class EndingScene extends Phaser.Scene {
 
     const stage = document.getElementById('game-stage') ?? document.body;
     const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;overflow:hidden;pointer-events:none;z-index:6;background:#05070f;opacity:0;will-change:left,top,opacity,clip-path;';
+    el.style.cssText = 'position:fixed;overflow:hidden;pointer-events:none;z-index:6;background:#05070f;opacity:0;';
     const img = document.createElement('img');
     img.src = entry.image.file;
     img.alt = entry.image.alt;
-    img.style.cssText = `width:100%;height:100%;object-fit:${objectFit};image-rendering:auto;transform-origin:center center;display:block;will-change:transform;`;
+    img.style.cssText = `width:100%;height:100%;object-fit:${objectFit};image-rendering:auto;display:block;`;
     el.appendChild(img);
     stage.appendChild(el);
 
     const reveal = { h: this.reducedMotion ? fh : 0 };
-    const kb = { scale: this.reducedMotion ? 1 : 1.12, dx: 0 };
-    this.photoItems.push({ el, img, slide: c, fx, fy, fw, fh, reveal, kb });
+    this.photoItems.push({ el, slide: c, fx, fy, fw, fh, reveal });
     this.syncPhotos();
 
     if (!this.reducedMotion) {
@@ -948,13 +944,6 @@ export class EndingScene extends Phaser.Scene {
         targets: reveal, h: fh, duration: 900, delay: enter + 120, ease: 'Sine.easeInOut',
         onUpdate: () => { if (scan.active) scan.y = fy + reveal.h; },
         onComplete: () => { if (scan.active) this.tweens.add({ targets: scan, alpha: 0, duration: 260, onComplete: () => scan.destroy() }); },
-      });
-      const drift = i % 2 ? 8 : -8;
-      this.tweens.add({
-        targets: kb, scale: 1.02, duration: 1400, delay: enter, ease: 'Cubic.easeOut',
-        onComplete: () => {
-          if (c.active) this.tweens.add({ targets: kb, scale: 1.08, dx: drift, duration: 12000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
-        },
       });
     }
     const creditLine = entry.image.nasa_id === 'SI-ILLUSTRATION'
