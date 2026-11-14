@@ -1,0 +1,284 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Echoes Art Reference</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column on a 640x360-feeling grid; screenshots full column width, rules beside them on wide screens. Single dark look: this is the game's own world. */
+:root {
+  --void: #05070f;
+  --panel: #0b0f1d;
+  --line: #1d263f;
+  --ink: #e2e6fa;
+  --muted: #8389a8;
+  --cyan: #0ec3dc;
+  --amber: #f59e0b;
+  --rust: #cf724a;
+  --f-display: "Silkscreen", "Courier New", monospace;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--void); color: var(--ink); font: 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 80px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 64px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; letter-spacing: .06em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 5vw, 44px); line-height: 1.1; }
+h2 { font-size: 20px; color: var(--cyan); }
+h3 { font-size: 13px; color: var(--ink); }
+p { margin: 0; max-width: 65ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--f-display); font-size: 11px; letter-spacing: .14em; color: var(--amber); text-transform: uppercase; }
+section { display: grid; gap: 20px; }
+header { display: grid; gap: 16px; }
+.note { border: 1px solid var(--line); border-left: 3px solid var(--amber); background: var(--panel); padding: 14px 16px; max-width: 72ch; }
+.note b { color: var(--amber); font-weight: 600; }
+
+/* Screens */
+.shot { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.shot figure { margin: 0; border: 1px solid var(--line); background: #000; }
+.shot img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.shot .txt { display: grid; gap: 8px; min-width: 0; }
+.shot ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.shot li { margin-bottom: 4px; }
+.shot li b { color: var(--ink); font-weight: 600; }
+@media (max-width: 760px) { .shot { grid-template-columns: 1fr; } }
+
+/* Palette */
+.ramps { display: grid; gap: 18px; }
+.ramp { display: grid; gap: 8px; }
+.ramp-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.ramp-head span { color: var(--muted); font-size: 14px; }
+.chips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--panel); min-width: 0; cursor: pointer; padding: 0; text-align: left; color: inherit; font: inherit; }
+.chip:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.chip .sw { height: 54px; }
+.chip .lab { padding: 6px 8px; font: 500 12px/1.35 var(--f-mono); }
+.chip .lab small { display: block; color: var(--muted); font-family: var(--f-body); font-size: 11px; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .chips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+#toast { min-height: 1.4em; font: 12px var(--f-mono); color: var(--cyan); }
+
+/* Sprites */
+.sprites { display: flex; flex-wrap: wrap; gap: 14px; }
+.sprite { border: 1px solid var(--line); background: var(--panel); padding: 12px; display: grid; gap: 8px; justify-items: center; min-width: 0; }
+.sprite img { image-rendering: pixelated; max-width: 100%; height: auto; }
+.sprite span { font: 12px var(--f-mono); color: var(--muted); }
+
+/* Rules table */
+.rules { overflow-x: auto; border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+th { font: 400 12px var(--f-display); letter-spacing: .08em; color: var(--muted); background: var(--panel); }
+td:first-child { font-family: var(--f-display); font-size: 12px; color: var(--cyan); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+
+/* Voices */
+.voices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.voice { background: var(--panel); padding: 16px; display: grid; gap: 8px; min-width: 0; }
+.voice.story { border: 1px solid var(--cyan); }
+.voice.record { border: 1px solid var(--amber); }
+.tag { justify-self: start; font: 11px var(--f-display); letter-spacing: .08em; padding: 2px 8px; border: 1px solid currentColor; }
+.story .tag { color: var(--cyan); }
+.record .tag { color: var(--amber); }
+.voice .map { font-size: 14px; color: var(--muted); }
+@media (max-width: 640px) { .voices { grid-template-columns: 1fr; } }
+
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.col { border: 1px solid var(--line); padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.col ul { margin: 0; padding-left: 18px; }
+.col li { margin-bottom: 6px; }
+.keep h3 { color: var(--cyan); }
+.drop h3 { color: var(--rust); }
+@media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+code { font: 14px var(--f-mono); color: var(--ink); background: var(--panel); padding: 1px 5px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Visual reference · from the practice build</div>
+    <h1>Echoes art reference</h1>
+    <p class="muted">The look we settled on while building the <i>Still Out There</i> practice game: dark, moody 16-bit pixel art at 640×360, cyan for the story voice, amber for verified records. Use it to lock palette, type and asset specs at Hour 0 instead of designing from nothing.</p>
+    <div class="note"><b>Reference only.</b> Rebuild every sprite, tile and panel from scratch on hackathon day. Look at these images; don't copy files or code from the practice repo into the real one.</div>
+  </header>
+
+  <section aria-labelledby="s-screens">
+    <h2 id="s-screens">The look, view by view</h2>
+
+    <div class="shot">
+      <figure><img src="img/02.jpg" alt="Title screen: pixel robot on a grey lunar ridge, large pixel Earth with cyan rim light, spaced pixel title text and a cyan-framed speech box" width="1280" height="720"></figure>
+      <div class="txt"><h3>Title / hub backdrop</h3><ul>
+        <li><b>Earth is the hero light.</b> Big, detailed, cyan rim glow, terminator shadow.</li>
+        <li>Wide letter-spaced pixel type, cyan for actions, amber for the tagline.</li>
+        <li>Ground ridges dither from navy into lavender grey; no pure black anywhere.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/05.jpg" alt="Top-down Moon surface: mottled grey regolith with dithered craters, a Surveyor-style lander sprite inside a cyan dashed ring, small rover robot leaving dotted tracks" width="1280" height="720"></figure>
+      <div class="txt"><h3>Top-down map (3/4 view)</h3><ul>
+        <li>Regolith is value noise quantised to 4–5 shades with ordered dithering.</li>
+        <li>Craters: light rim top-left, deep indigo bowl bottom-right.</li>
+        <li>Points of interest get a soft cyan ring and a notched label; locked ones go grey.</li>
+        <li>Fits the new Moon / Mars chapter maps directly.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/07.jpg" alt="Side-view Moon scene: robot with orange thruster flame above grey ridges, glowing cyan landing pad, Earth upper right, telemetry panel at the top" width="1280" height="720"></figure>
+      <div class="txt"><h3>Side view, Moon</h3><ul>
+        <li>Four parallax layers: stars and Earth, far ridge, mid ridge, near ground. Each farther layer is darker and cooler.</li>
+        <li>Orange is reserved for thrust and lamps, so it always reads as "energy".</li>
+        <li>Telemetry panel: dark translucent fill, 1px cyan edge, mono digits. Gauges instead of tables.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/08.jpg" alt="Side-view Mars scene: rust and ochre ridges under a dark sky fading to brown haze, rover sprite on a cyan pad" width="1280" height="720"></figure>
+      <div class="txt"><h3>Side view, Mars</h3><ul>
+        <li>Same structure as the Moon, warm ramp swapped in. The sky gets a dusty brown haze band above the ridges.</li>
+        <li>Earth shrinks to a pale cyan dot.</li>
+        <li>Swapping the ground ramp is how one scene template serves several destinations.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/11.jpg" alt="Record reader: a real NASA photograph in an amber-bordered card labelled Verified Record, with a cyan-bordered robot speech panel labelled Game Story below" width="1280" height="720"></figure>
+      <div class="txt"><h3>Record reader (DOM)</h3><ul>
+        <li>Authentic NASA photo in an <b>amber</b> frame with ID, credit and source link.</li>
+        <li>The narrator's line sits in a separate <b>cyan</b> panel tagged "Game story".</li>
+        <li>This is a ready-made template for the Memory Echo / Archivist Note split.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/10.jpg" alt="Archive grid: dark cards with pixel-font titles and coloured status badges such as Dormant in amber, Active in cyan and Ended in grey" width="1280" height="720"></figure>
+      <div class="txt"><h3>Catalog grid (DOM)</h3><ul>
+        <li>Status shown as an outlined badge with its own colour and word, so colour is never the only cue.</li>
+        <li>Locked items keep the layout and dim the content.</li>
+        <li>Maps onto the museum catalog and its status filter.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/01.jpg" alt="Cutscene frame: Earth in a starfield above a faint lunar horizon, caption console with cyan corner brackets at the bottom" width="1280" height="720"></figure>
+      <div class="txt"><h3>Cutscene / chapter card</h3><ul>
+        <li>Same layers as gameplay, slow camera, text only in the bottom console.</li>
+        <li>Console has corner brackets, a step counter (03 / 06) and a skip button top-right.</li>
+        <li>Good fit for the Opening, chapter transitions and the ending.</li>
+      </ul></div>
+    </div>
+
+    <div class="shot">
+      <figure><img src="img/15.jpg" alt="Transition cutscene: white rocket standing on the lunar horizon under a large Earth, caption console reading Lunar Recovery Complete" width="1280" height="720"></figure>
+      <div class="txt"><h3>Chapter transition</h3><ul>
+        <li>One clear silhouette in the middle of an otherwise quiet frame.</li>
+        <li>Low horizon leaves two-thirds of the frame for sky and Earth.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-palette">
+    <h2 id="s-palette">24-colour palette</h2>
+    <p class="muted">Four ramps and two accent ramps. Shadows go to deep indigo, never black. Select a swatch to copy its hex.</p>
+    <div class="ramps" id="ramps"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <div class="note"><b>Elsewhere has no ramp yet.</b> The new plan's third chapter (NEAR Shoemaker on Eros, Voyager 1, New Horizons) needs one. A natural fit is a dusty grey-brown asteroid ramp plus a pale Pluto tan, keeping the same indigo shadows and cyan/amber accents.</div>
+  </section>
+
+  <section aria-labelledby="s-sprites">
+    <h2 id="s-sprites">Sprite scale</h2>
+    <p class="muted">Crops from the screenshots at 3×, nearest-neighbour. Characters are about 24 px and hardware 24–40 px on the 640×360 grid. Each one has a lit top-left edge, an indigo contact shadow, and orange only on lights.</p>
+    <div class="sprites">
+      <div class="sprite"><img src="img/robot.png" alt="Robot sprite, grey body with cyan visor" width="270" height="300"><span>robot · 24 px</span></div>
+      <div class="sprite"><img src="img/surveyor.png" alt="Surveyor-style lander sprite on three legs" width="330" height="300"><span>lander · top-down</span></div>
+      <div class="sprite"><img src="img/lm.png" alt="Lunar module descent stage sprite, gold foil body" width="330" height="225"><span>descent stage</span></div>
+      <div class="sprite"><img src="img/curiosity.png" alt="Six-wheeled rover sprite with mast" width="270" height="225"><span>rover · side view</span></div>
+      <div class="sprite"><img src="img/rocket.png" alt="White rocket sprite with orange band" width="195" height="375"><span>rocket</span></div>
+      <div class="sprite"><img src="img/earth.png" alt="Pixel Earth with continents, clouds and cyan atmosphere rim" width="435" height="420"><span>Earth · 64 px</span></div>
+    </div>
+    <div class="sprite" style="justify-items:start"><img src="img/panel.png" alt="Telemetry panel with site name, altitude, vertical and horizontal speed, and a segmented fuel bar" width="610" height="72"><span>HUD panel · 1:1 at 2× scale</span></div>
+  </section>
+
+  <section aria-labelledby="s-rules">
+    <h2 id="s-rules">Rules to hand the visual designer</h2>
+    <div class="rules"><table>
+      <thead><tr><th>Area</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td>Grid</td><td>640×360 internal resolution, integer scaling, <code>image-rendering: pixelated</code>. Detailed modern pixel art, not 8-bit blocks.</td></tr>
+        <tr><td>Light</td><td>One cool light from Earth or sky. Lit edges get a 1 px light rim. Shadows are deep indigo, never black.</td></tr>
+        <tr><td>Colour roles</td><td>Cyan = story voice, UI and focus. Amber = verified record and badges. Orange = thrust and lamps only.</td></tr>
+        <tr><td>Ground</td><td>Layered rock, ledges, cracks, small stones, craters with soft contact shadows. Moon: grey regolith, purple shadows. Mars: rust and ochre, dusty haze.</td></tr>
+        <tr><td>Sky</td><td>Dense small stars, a few larger twinkles. Earth detailed from the Moon, a pale dot from Mars.</td></tr>
+        <tr><td>Depth</td><td>Four parallax layers, each darker and cooler with distance.</td></tr>
+        <tr><td>FX</td><td>Soft bloom on glows, light vignette, ground-hugging dust. No flashing. Reduced motion turns off parallax drift and shake.</td></tr>
+        <tr><td>UI</td><td>Dark translucent panels, 1 px cyan edge, small corner notches, square corners, one pixel font for labels.</td></tr>
+        <tr><td>Never</td><td>NASA logos or insignia, plants, aliens, coins, enemies, HP bars, inventory.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="s-voices">
+    <h2 id="s-voices">Two voices, two colours</h2>
+    <p class="muted">The practice build already separates fiction from fact by colour and label. The new plan needs the same split.</p>
+    <div class="voices">
+      <div class="voice story"><span class="tag">Game story</span><p>"Built as twins and sent to opposite sides of the planet."</p><p class="map">Becomes <b>Memory Echo</b>: cyan frame, first-person, dramatised.</p></div>
+      <div class="voice record"><span class="tag">Verified record</span><p>Opportunity drove more than 45 kilometers on Mars.</p><p class="map">Becomes <b>Archivist Note</b> and <b>Deep Dive</b>: amber frame, sourced, links out.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-carry">
+    <h2 id="s-carry">What carries over to the new plan</h2>
+    <div class="cols">
+      <div class="col keep"><h3>Keep</h3><ul>
+        <li>Palette, lighting rules and colour roles.</li>
+        <li>Side-view and top-down scene templates with swappable ground ramps.</li>
+        <li>Cyan/amber framing for echo versus evidence.</li>
+        <li>Notched DOM panels and outlined status badges.</li>
+        <li>Caption-console cutscene layout for chapter cards.</li>
+      </ul></div>
+      <div class="col drop"><h3>Change or drop</h3><ul>
+        <li>The pixel title font: no licence on record. Pick an OFL pixel font on the day.</li>
+        <li>Twitch jetpack landing: the new plan wants no reaction-time play and says Surveyor wasn't hand-flown.</li>
+        <li>Robot hero: the new plan has a human Signal Archivist in an observatory. That interior needs its own look.</li>
+        <li>The second palette in <code>docs/DESIGN.md</code>, which conflicts with the 24-colour one. Use one palette.</li>
+      </ul></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const RAMPS = [
+  ['Space & shadow', 'Backgrounds and every shadow', [['#05070f','Void'],['#0b0f1d','Deep indigo'],['#131a2e','Shadow navy'],['#1d263f','Dusk']]],
+  ['Moon regolith', 'Cool grey-purple ground', [['#27293d','Basalt dark'],['#3b3e59','Regolith deep'],['#595e7d','Regolith mid'],['#8389a8','Dust light'],['#b2b8d4','Crust cream'],['#e2e6fa','Highlight rim']]],
+  ['Mars rust', 'Warm layered ground and haze', [['#2b140e','Shadow umber'],['#522116','Deep rust'],['#7d331c','Ochre core'],['#ab4f2c','Terracotta'],['#cf724a','Dust tan'],['#e89e7d','Haze peach']]],
+  ['Cyan', 'Story voice, UI edges, focus', [['#032630','Void'],['#064b5c','Shadow'],['#087d99','Deep'],['#0ec3dc','Glow'],['#7ef1ff','Laser core']]],
+  ['Warm accents', 'Thrust, lamps, verified badges', [['#4a1805','Ember shadow'],['#e65100','Thruster'],['#f59e0b','Beacon gold']]],
+];
+const host = document.getElementById('ramps');
+const toast = document.getElementById('toast');
+for (const [name, role, cols] of RAMPS) {
+  const r = document.createElement('div'); r.className = 'ramp';
+  r.innerHTML = `<div class="ramp-head"><h3>${name}</h3><span>${role}</span></div><div class="chips"></div>`;
+  const chips = r.querySelector('.chips');
+  for (const [hex, label] of cols) {
+    const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
+    b.setAttribute('aria-label', `${label} ${hex}, copy`);
+    b.innerHTML = `<div class="sw" style="background:${hex}"></div><div class="lab">${hex}<small>${label}</small></div>`;
+    b.addEventListener('click', () => {
+      navigator.clipboard?.writeText(hex).then(() => { toast.textContent = `Copied ${hex}`; },
+        () => { toast.textContent = `${hex} (copy blocked, select it by hand)`; });
+    });
+    chips.appendChild(b);
+  }
+  host.appendChild(r);
+}
+</script>
+
+</body></html>
