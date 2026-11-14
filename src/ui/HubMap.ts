@@ -28,8 +28,8 @@ export class HubMap {
 
   render(): void {
     const currentWorld = GameState.getWorld();
-    const marsUnlocked = GameState.getState().marsUnlocked;
-    const elsewhereUnlocked = GameState.getState().elsewhereUnlocked;
+    const marsUnlocked = GameState.isWorldUnlocked('mars');
+    const elsewhereUnlocked = GameState.isWorldUnlocked('elsewhere');
     const entries = Object.values(ALL_ENTRIES).filter(e => e.world === currentWorld);
 
     if (!entries.find(e => e.id === this.activeEntryId)) {
@@ -40,11 +40,11 @@ export class HubMap {
       <!-- Editorial Hero Header Entrance -->
       <div class="hero-intro">
         <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:4px; flex-wrap:wrap;">
-          <h1 class="hero-title">STILL OUT THERE</h1>
+          <h1 class="hero-title">ECHOES OF EXPLORATION</h1>
           <span class="badge badge--active" style="font-size:10px; font-family:var(--font-mono);">CATALOGUE // 23 NASA SITES · 3 SECTORS · 5 MINIGAMES</span>
         </div>
         <p class="hero-sub">
-          Abandoned, but not forgotten. Authentic archival survey and mathematical simulation of real NASA hardware across the Moon, Mars, and deep space.
+          The NASA Signal Archive. Authentic archival survey and mathematical simulation of real NASA hardware across the Moon, Mars, and deep space.
         </p>
       </div>
 
@@ -186,7 +186,9 @@ export class HubMap {
           <td style="padding:10px 8px;">
             <div style="display:flex; gap:6px;">
               <button class="btn btn-fly-here" data-entry-id="${entry.id}">VISIT</button>
-              <button class="btn btn--primary btn-direct-land" data-entry-id="${entry.id}">PLAY ${mg.code} (60Hz)</button>
+              ${GameState.isSiteActive(entry.id)
+            ? `<button class="btn btn--primary btn-direct-land" data-entry-id="${entry.id}">PLAY ${mg.code} (60Hz)</button>`
+            : `<button class="btn" disabled title="Echoes are recovered in launch order">LOCKED · RECOVER ${(ALL_ENTRIES[GameState.getNextTarget(entry.world) ?? '']?.name ?? 'THE PREVIOUS SECTOR').toUpperCase()} FIRST</button>`}
             </div>
           </td>
         </tr>
@@ -229,9 +231,9 @@ export class HubMap {
     });
 
     btnMars?.addEventListener('click', () => {
-      if (!GameState.getState().marsUnlocked) {
+      if (!GameState.isWorldUnlocked('mars')) {
         SoundFX.playCrash();
-        alert('Mars sector is locked. Recover the 3 Moon Flagships (Apollo 11, Apollo 15 Rover, Surveyor 3) to unlock Mars!');
+        alert('Out of range. Recover all 8 Moon echoes to ignite the Mars transfer stage.');
         return;
       }
       SoundFX.playWhoosh();
@@ -240,8 +242,9 @@ export class HubMap {
     });
 
     btnElsewhere?.addEventListener('click', () => {
-      if (!GameState.getState().elsewhereUnlocked) {
+      if (!GameState.isWorldUnlocked('elsewhere')) {
         SoundFX.playCrash();
+        alert('Deep space telemetry offline. Recover all 9 Mars echoes to ignite the outer-system ion drive.');
         return;
       }
       SoundFX.playWhoosh();

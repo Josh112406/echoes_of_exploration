@@ -13,6 +13,7 @@
     "build:data": "tsx tools/build-artifacts-json.ts",
     "palette:check": "tsx tools/palette-lock.ts",
     "validate": "tsx tools/palette-lock.ts && tsx tools/validate-data.ts --strict",
+    "validate:entries": "node tools/validate-entries.mjs",
     "validate:dev": "tsx tools/validate-data.ts --dev",
     "solve": "tsx tools/solve-levels.ts",
     "test": "vitest run",

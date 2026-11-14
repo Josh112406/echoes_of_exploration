@@ -75,6 +75,15 @@ export class Unit7Voice {
     if (!this.current) this.next();
   }
 
+  /** Queue a short sequence in order (bypasses the two-line backlog cap). */
+  sayAll(lines: VoiceLine[]): void {
+    for (const line of lines) {
+      if (this.current?.key === line.key || this.queue.some((q) => q.key === line.key)) continue;
+      this.queue.push(line);
+    }
+    if (!this.current) this.next();
+  }
+
   /** True while a line is showing or queued. */
   get busy(): boolean {
     return !!this.current || this.queue.length > 0;

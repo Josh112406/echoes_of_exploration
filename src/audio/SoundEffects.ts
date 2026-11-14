@@ -397,6 +397,122 @@ class SoundEffectsSystem {
     osc.start();
     osc.stop(ctx.currentTime + 2.5);
   }
+  // ---------------------------------------------------------------------------
+  // Shared minigame / flight cues (procedural, no samples)
+  // ---------------------------------------------------------------------------
+
+  /** One short tone through the effects bus. */
+  private tone(freq: number, dur: number, gainPeak: number, type: OscillatorType = 'sine', endFreq?: number, delay = 0): void {
+    if (!this.isAudioAllowed()) return;
+    const ctx = this.initContext();
+    if (!ctx) return;
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t + dur);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(gainPeak, t + Math.min(0.012, dur / 4));
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain);
+    gain.connect(this.out(ctx));
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  }
+
+  /** A burst of filtered noise (dust, impacts, gas puffs). */
+  private noiseBurst(dur: number, gainPeak: number, filterType: BiquadFilterType, freq: number, q = 1, delay = 0): void {
+    if (!this.isAudioAllowed()) return;
+    const ctx = this.initContext();
+    const buf = AudioCore.noiseBuffer();
+    if (!ctx || !buf) return;
+    const t = ctx.currentTime + delay;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = filterType;
+    filter.frequency.value = freq;
+    filter.Q.value = q;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(gainPeak, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.out(ctx));
+    src.start(t, Math.random() * 1.5);
+    src.stop(t + dur + 0.02);
+  }
+
+  /** Soft ion / RCS thruster pulse for zero-g flight (level 0..1). */
+  public playIonPulse(level = 1): void {
+    const v = Math.max(0.2, Math.min(1, level));
+    this.noiseBurst(0.16, 0.035 * v, 'bandpass', 2400 + v * 900, 2.2);
+    this.tone(880 + v * 220, 0.12, 0.012 * v, 'sine', 660);
+  }
+
+  /** Harmonic chime; `step` climbs a pentatonic scale (lock combos, gates, captures). */
+  public playChime(step = 0): void {
+    const scale = [0, 2, 4, 7, 9];
+    const n = Math.max(0, Math.floor(step));
+    const semis = scale[n % 5] + 12 * Math.floor(n / 5);
+    const f = 523.25 * Math.pow(2, Math.min(semis, 24) / 12);
+    this.tone(f, 0.32, 0.05, 'triangle');
+    this.tone(f * 2, 0.22, 0.018, 'sine', undefined, 0.015);
+  }
+
+  /** Suspension thud / hard landing; intensity 0..1. */
+  public playThud(intensity = 0.5): void {
+    const v = Math.max(0.1, Math.min(1, intensity));
+    this.tone(90 + v * 40, 0.14 + v * 0.1, 0.06 + v * 0.08, 'sine', 40);
+    this.noiseBurst(0.08 + v * 0.1, 0.03 + v * 0.05, 'lowpass', 500 + v * 600);
+  }
+
+  /** Spring creak of a rover suspension. */
+  public playCreak(): void {
+    this.tone(320 + Math.random() * 80, 0.12, 0.012, 'sawtooth', 210);
+  }
+
+  /** Q-switched laser pulse: a short bright zap. */
+  public playLaserPulse(onTarget: boolean): void {
+    this.tone(onTarget ? 1760 : 990, 0.09, 0.035, 'square', onTarget ? 2640 : 600);
+  }
+
+  /** Overheat / denied buzz. */
+  public playBuzz(): void {
+    this.tone(110, 0.22, 0.05, 'sawtooth', 90);
+  }
+
+  /** Camera shutter: click-clack. */
+  public playShutter(): void {
+    this.noiseBurst(0.03, 0.08, 'highpass', 3000, 0.8);
+    this.noiseBurst(0.04, 0.06, 'bandpass', 1800, 1.5, 0.06);
+  }
+
+  /** Radio downlink burst: a quick rising data chirp sequence. */
+  public playDownlink(): void {
+    for (let i = 0; i < 6; i++) this.tone(600 + i * 140, 0.07, 0.025, 'square', undefined, i * 0.075);
+    this.tone(1800, 0.4, 0.02, 'sine', 1200, 0.5);
+  }
+
+  /** Small debris strike on the hull. */
+  public playImpact(): void {
+    this.noiseBurst(0.12, 0.09, 'bandpass', 900, 0.9);
+    this.tone(160, 0.1, 0.05, 'square', 70);
+  }
+
+  /** Sample pickup / gate pass sparkle. */
+  public playPickup(): void {
+    this.tone(988, 0.1, 0.04, 'triangle');
+    this.tone(1319, 0.16, 0.04, 'triangle', undefined, 0.07);
+  }
+
+  /** Wind gust swell (Mars / Titan). */
+  public playGust(strength = 0.5): void {
+    this.noiseBurst(0.9, 0.02 + strength * 0.03, 'bandpass', 400 + strength * 300, 0.7);
+  }
 }
 
 export const SoundFX = new SoundEffectsSystem();

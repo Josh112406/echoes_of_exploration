@@ -58,6 +58,13 @@ export class StoryDirector {
     }
   }
 
+  /** Speak several lines in order and remember all of them. */
+  private sequence(lines: VoiceLine[]): null {
+    for (const l of lines) spoken.add(l.key);
+    this.voice.sayAll(lines);
+    return null;
+  }
+
   update(dt: number, ctx: StoryContext): void {
     this.idle = ctx.moving ? 0 : this.idle + dt;
     if (ctx.blocked) return;
@@ -98,18 +105,23 @@ export class StoryDirector {
     const firstKey = `first_${ctx.world}` as const;
     if (!spoken.has(firstKey) && GameState.getRecoveredCount(ctx.world) === 0) {
       spoken.add(firstKey);
-      const lines = STORY.ambient[firstKey];
-      lines.slice(1).forEach((t, i) => this.voice.say({ key: `${firstKey}:${i + 1}`, text: t, kind: 'thought' }));
-      return { key: `${firstKey}:0`, text: lines[0], kind: 'thought' };
+      return this.sequence(STORY.ambient[firstKey].map((t, i) => ({ key: `${firstKey}:${i}`, text: t, kind: 'thought' as const })));
     }
 
     // 3. Approaching the active echo
     if (ctx.activeId) {
       const band = echoBand.get(ctx.activeId) ?? 0;
       const site = getSiteStory(ctx.activeId);
-      if (ctx.activeDist < 190 && band < 2 && site) {
+      // Deep space has longer sight lines: the radar call comes earlier
+      const approachRange = ctx.world === 'elsewhere' ? 300 : 190;
+      if (ctx.activeDist < 95 && band < 3 && site?.first_seen) {
+        echoBand.set(ctx.activeId, 3);
+        return { key: `seen:${ctx.activeId}`, text: site.first_seen, kind: 'thought', title: site.title };
+      }
+      if (ctx.activeDist < approachRange && band < 2 && site) {
         echoBand.set(ctx.activeId, 2);
-        return { key: `approach:${ctx.activeId}`, text: site.approach, kind: 'thought', title: 'ECHO' };
+        const lines = typeof site.approach === 'string' ? [site.approach] : site.approach;
+        return this.sequence(lines.map((t, i) => ({ key: `approach:${ctx.activeId}:${i}`, text: t, kind: 'thought' as const, title: 'ECHO' })));
       }
       if (ctx.activeDist < 460 && band < 1) {
         echoBand.set(ctx.activeId, 1);

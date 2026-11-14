@@ -1,4 +1,5 @@
 import { SaveStateV1, SaveStateV1Schema } from '../data/schema.ts';
+import { MOON_CHRONOLOGY, MARS_CHRONOLOGY } from '../data/entries.ts';
 
 const STORAGE_KEY = 'still_out_there_save_v1';
 
@@ -6,8 +7,8 @@ export const DEFAULT_SAVE_STATE: SaveStateV1 = {
   version: 1,
   currentWorld: 'moon',
   currentSiteId: null,
-  marsUnlocked: true,
-  elsewhereUnlocked: true,
+  marsUnlocked: false,
+  elsewhereUnlocked: false,
   prologueSeen: false,
   epilogueSeen: false,
   entries: {},
@@ -47,8 +48,15 @@ export class SaveManager {
             // Saves from before the soundtrack had sound off by default (it was only UI blips).
             // Turn it on once; the player's own choice is kept from then on.
             // Persist the upgrade so it happens only once.
-            parsed.data.marsUnlocked = true;
-            parsed.data.elsewhereUnlocked = true;
+            // Sectors open in order: Mars after every Moon echo, Elsewhere after every Mars echo.
+            const recovered = (id: string) => !!parsed.data.entries[id]?.recovered;
+            // Derived from the record, never trusted from storage: older saves had both forced on.
+            parsed.data.marsUnlocked = MOON_CHRONOLOGY.every(recovered);
+            parsed.data.elsewhereUnlocked = parsed.data.marsUnlocked && MARS_CHRONOLOGY.every(recovered);
+            if (parsed.data.currentWorld === 'mars' && !parsed.data.marsUnlocked) parsed.data.currentWorld = 'moon';
+            if (parsed.data.currentWorld === 'elsewhere' && !parsed.data.elsewhereUnlocked) {
+              parsed.data.currentWorld = parsed.data.marsUnlocked ? 'mars' : 'moon';
+            }
             if (SaveManager.isPreSoundtrackSave(json)) {
               parsed.data.settings.audioEnabled = true;
               this.save(parsed.data);

@@ -25,7 +25,7 @@ export class TitleScene extends Phaser.Scene {
   private cursorText!: Phaser.GameObjects.Text;
   private typedChars: number = 0;
   private typingTimer: number = 0;
-  private readonly fullLogo: string = 'STILL OUT THERE';
+  private readonly fullLogo: string = 'ECHOES OF EXPLORATION';
   private postProcessing!: PostProcessing;
 
   // Pointer parallax
@@ -350,16 +350,17 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private createLogo(W: number): void {
-    this.logoText = this.add.text(W / 2 - 8, 38, '', {
-      fontSize: '18px',
+    // 21 characters: a touch smaller than the old logo so it clears the 640px stage edges
+    this.logoText = this.add.text(W / 2 - 6, 36, '', {
+      fontSize: '15px',
       fontFamily: 'StillOutTherePixel, monospace',
       color: PALETTE.lunarHighlight,
-      letterSpacing: 3,
+      letterSpacing: 2,
     }).setOrigin(0.5, 0.5).setDepth(10)
       .setShadow(0, 2, PALETTE.cyanShadow, 0, false, true);
 
-    this.cursorText = this.add.text(W / 2, 38, '_', {
-      fontSize: '18px',
+    this.cursorText = this.add.text(W / 2, 36, '_', {
+      fontSize: '15px',
       fontFamily: 'StillOutTherePixel, monospace',
       color: PALETTE.cyanGlow,
     }).setOrigin(0, 0.5).setDepth(10);
@@ -373,7 +374,7 @@ export class TitleScene extends Phaser.Scene {
       ease: 'Stepped',
     });
 
-    const tagline = this.add.text(W / 2, 61, 'ABANDONED, BUT NOT FORGOTTEN', {
+    const tagline = this.add.text(W / 2, 57, 'THE NASA SIGNAL ARCHIVE', {
       fontSize: '9px',
       fontFamily: 'StillOutTherePixel, monospace',
       color: PALETTE.beaconGold,

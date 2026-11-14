@@ -1007,11 +1007,11 @@
       }
     ],
     "image": {
-      "nasa_id": "PIA21749",
-      "file": "assets/generated/scenes/scene-elsewhere-deep.png",
-      "credit": "NASA/JPL-Caltech (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/voyager/voyager-1/",
-      "alt": "Voyager spacecraft cruising through deep interstellar starfields beyond the outer solar system"
+      "nasa_id": "PIA23645",
+      "file": "assets/images/artifacts/voyager-1.jpg",
+      "credit": "NASA/JPL-Caltech",
+      "source_url": "https://images.nasa.gov/details/PIA23645",
+      "alt": "Voyager 1's \"Pale Blue Dot\" (2020 reprocessing): Earth appears as a tiny, softly blue speck inside a band of scattered sunlight, photographed from about 6 billion kilometers away in 1990."
     },
     "sources": [
       "https://science.nasa.gov/mission/voyager/voyager-1/",
@@ -1063,11 +1063,11 @@
       }
     ],
     "image": {
-      "nasa_id": "PIA04936",
-      "file": "assets/generated/scenes/scene-elsewhere-deep.png",
-      "credit": "NASA/JPL (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/galileo/",
-      "alt": "Galileo spacecraft orbiting near Jupiter and its volcanic moon Io"
+      "nasa_id": "PIA19048",
+      "file": "assets/images/artifacts/galileo.jpg",
+      "credit": "NASA/JPL-Caltech/SETI Institute",
+      "source_url": "https://images.nasa.gov/details/PIA19048",
+      "alt": "Galileo color view of Jupiter's icy moon Europa: a pale, cracked ice surface crossed by long reddish-brown ridges and bands."
     },
     "sources": [
       "https://science.nasa.gov/mission/galileo/"
@@ -1118,11 +1118,11 @@
       }
     ],
     "image": {
-      "nasa_id": "PIA03141",
-      "file": "assets/generated/scenes/scene-elsewhere-eros.png",
-      "credit": "NASA/JHUAPL (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/near-shoemaker/",
-      "alt": "NEAR Shoemaker spacecraft above asteroid 433 Eros"
+      "nasa_id": "PIA02923",
+      "file": "assets/images/artifacts/near-shoemaker.jpg",
+      "credit": "NASA/JPL/JHUAPL",
+      "source_url": "https://images.nasa.gov/details/PIA02923",
+      "alt": "NEAR Shoemaker mosaic of asteroid 433 Eros: an elongated, saddle-shaped gray rock covered in craters, with a large curved depression on one side."
     },
     "sources": [
       "https://science.nasa.gov/mission/near-shoemaker/"
@@ -1173,10 +1173,10 @@
     ],
     "image": {
       "nasa_id": "PIA08329",
-      "file": "assets/generated/scenes/scene-elsewhere-deep.png",
-      "credit": "NASA/JPL/ESA (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/cassini/",
-      "alt": "Cassini orbiter approaching Saturn's illuminated ring system"
+      "file": "assets/images/artifacts/cassini-huygens.jpg",
+      "credit": "NASA/JPL/Space Science Institute",
+      "source_url": "https://images.nasa.gov/details/PIA08329",
+      "alt": "Cassini's \"In Saturn's Shadow\": Saturn backlit by the Sun, its dark disk ringed by glowing rings, with faint outer rings and Earth as a pale dot."
     },
     "sources": [
       "https://science.nasa.gov/mission/cassini/"
@@ -1226,11 +1226,11 @@
       }
     ],
     "image": {
-      "nasa_id": "PIA02142",
-      "file": "assets/generated/scenes/scene-elsewhere-eros.png",
-      "credit": "NASA/JPL-Caltech/UMD (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/deep-impact/",
-      "alt": "Deep Impact flyby observation of comet Tempel 1"
+      "nasa_id": "PIA02137",
+      "file": "assets/images/artifacts/deep-impact.jpg",
+      "credit": "NASA/JPL-Caltech/UMD",
+      "source_url": "https://images.nasa.gov/details/PIA02137",
+      "alt": "Comet Tempel 1 photographed by the Deep Impact flyby spacecraft 67 seconds after the impactor struck it, with a bright burst of light and debris erupting from the nucleus."
     },
     "sources": [
       "https://science.nasa.gov/mission/deep-impact/"
@@ -1281,10 +1281,10 @@
     ],
     "image": {
       "nasa_id": "PIA19952",
-      "file": "assets/generated/scenes/scene-elsewhere-pluto.png",
-      "credit": "NASA/JHUAPL/SwRI (Rendered Scene Reference)",
-      "source_url": "https://science.nasa.gov/mission/new-horizons/",
-      "alt": "New Horizons sweeping past Pluto with illuminated nitrogen ice plains below"
+      "file": "assets/images/artifacts/new-horizons.jpg",
+      "credit": "NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute",
+      "source_url": "https://images.nasa.gov/details/PIA19952",
+      "alt": "New Horizons enhanced-color view of Pluto from July 14, 2015: a round world in pale blues, yellows and deep reds, with the bright heart-shaped plain of Sputnik Planitia."
     },
     "sources": [
       "https://science.nasa.gov/mission/new-horizons/"

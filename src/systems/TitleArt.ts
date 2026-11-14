@@ -626,6 +626,65 @@ export function buildPlanet(size: number, ramp: string[], seed: number, polarCap
   return canvas;
 }
 
+/**
+ * Ringed gas giant for the outer-system cruise: banded dithered disc lit from
+ * the upper right, with a tilted ring whose far half passes behind the planet.
+ */
+export function buildRingedPlanet(size: number, seed: number): HTMLCanvasElement {
+  const W = Math.round(size * 2.2);
+  const H = size;
+  const [canvas, ctx] = makeCanvas(W, H);
+  const img = ctx.createImageData(W, H);
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = size * 0.36;
+  const tilt = 0.28;
+  const bands = [PALETTE.marsShadowUmber, PALETTE.marsDeepRust, PALETTE.marsTerracotta, PALETTE.marsDustTan, PALETTE.marsHazePeach].map(hexToRgb);
+  const ring = [PALETTE.lunarRegolithDeep, PALETTE.lunarDustLight, PALETTE.lunarCrustCream].map(hexToRgb);
+  const L = [0.62, -0.38, 0.68];
+  const lm = Math.hypot(L[0], L[1], L[2]);
+  const put = (x: number, y: number, c: RGB) => {
+    const o = (y * W + x) * 4;
+    img.data[o] = c[0];
+    img.data[o + 1] = c[1];
+    img.data[o + 2] = c[2];
+    img.data[o + 3] = 255;
+  };
+  const ringAt = (px: number, py: number): RGB | null => {
+    const u = (px + 0.5 - cx) / R;
+    const v = (py + 0.5 - cy) / (R * tilt);
+    const d = Math.hypot(u, v);
+    if (d < 1.35 || d > 2.15 || (d > 1.78 && d < 1.86)) return null;
+    const t = (d - 1.35) / 0.8;
+    const k = Math.max(0, Math.min(ring.length - 1, Math.floor((0.35 + Math.sin(t * 9 + seed) * 0.25 + bayer(px, py) * 0.4) * ring.length)));
+    return ring[k];
+  };
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const dx = (px + 0.5 - cx) / R;
+      const dy = (py + 0.5 - cy) / R;
+      const r2 = dx * dx + dy * dy;
+      const rc = ringAt(px, py);
+      const front = py + 0.5 >= cy;
+      if (r2 <= 1) {
+        if (rc && front) { put(px, py, rc); continue; }
+        const nz = Math.sqrt(1 - r2);
+        const lambert = Math.max(0, (dx * L[0] + dy * L[1] + nz * L[2]) / lm);
+        const band = Math.sin(dy * 9 + noise2(px / 9, py / 3, seed) * 1.6) * 0.18;
+        const v = lambert * (0.82 + band) + bayer(px, py) * 0.16;
+        const idx = Math.max(0, Math.min(bands.length - 1, Math.floor(v * bands.length)));
+        put(px, py, bands[idx]);
+      } else if (rc) {
+        // Planet's shadow falls across the ring behind and to the lower left
+        const shadowed = dx < 0 && Math.abs(dy) < 0.5 && !front;
+        put(px, py, shadowed ? ring[0] : rc);
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
+}
+
 /** 12×30 pixel upper-stage booster, nose up (rotate to fly sideways). */
 export function buildBoosterSprite(): HTMLCanvasElement {
   const [canvas, ctx] = makeCanvas(12, 30);

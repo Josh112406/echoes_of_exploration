@@ -7,7 +7,7 @@ import { Soundscape, TrackId } from '../audio/Soundscape.ts';
 import { CONSTANTS } from '../core/Constants.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
-import { BackdropKind, CIN_MARGIN, getCinematicBackdrop, buildPlanet, buildBoosterSprite } from '../systems/TitleArt.ts';
+import { BackdropKind, CIN_MARGIN, getCinematicBackdrop, buildPlanet, buildRingedPlanet, buildBoosterSprite } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
 import { FINALE, getReel, getReelStats, getFinaleTheory, ReelSlide } from '../data/finale.ts';
 import { sourceHost } from '../data/story.ts';
@@ -115,6 +115,8 @@ export class EndingScene extends Phaser.Scene {
 
   // Act II
   private planets: Phaser.GameObjects.Container | null = null;
+  /** Nebula + ringed giant behind the deep-space (Elsewhere) slides of Act I. */
+  private deepStage: Phaser.GameObjects.Container | null = null;
   private stats: Phaser.GameObjects.Container | null = null;
 
   // Act III
@@ -175,6 +177,7 @@ export class EndingScene extends Phaser.Scene {
     if (!this.reducedMotion) this.cameras.main.fadeIn(900, 5, 7, 15);
 
     for (const kind of ['moon', 'mars', 'space'] as BackdropKind[]) this.backdrops.set(kind, this.buildBackdrop(kind));
+    this.deepStage = this.buildDeepStage();
     this.dim = this.add.rectangle(W / 2, H / 2, W, H, PALETTE.spaceBlackHex, 0).setDepth(5);
 
     this.starGfx = this.add.graphics().setDepth(4);
@@ -226,7 +229,7 @@ export class EndingScene extends Phaser.Scene {
     }));
 
     // II. HOW FAR
-    beats.push({ part: 'II · HOW FAR', enter: () => this.showSection('PART II', 'HOW FAR', 'TWO WORLDS, ONE RECORD', 'ending_far') });
+    beats.push({ part: 'II · HOW FAR', enter: () => this.showSection('PART II', 'HOW FAR', 'THREE SECTORS, ONE RECORD', 'ending_far') });
     beats.push({ part: 'II · HOW FAR', enter: () => this.setupHowFar() });
     FINALE.reflection.forEach((text) => beats.push({ part: 'II · HOW FAR', caption: story(text, 'UNIT-7 // REFLECTION') }));
     const theory = getFinaleTheory();
@@ -397,6 +400,7 @@ export class EndingScene extends Phaser.Scene {
       this.textures.addCanvas('cin_planet_mars', buildPlanet(44, [PALETTE.marsShadowUmber, PALETTE.marsDeepRust, PALETTE.marsTerracotta, PALETTE.marsDustTan], 9, true));
     }
     if (!this.textures.exists('cin_booster')) this.textures.addCanvas('cin_booster', buildBoosterSprite());
+    if (!this.textures.exists('cin_ringed_giant')) this.textures.addCanvas('cin_ringed_giant', buildRingedPlanet(96, 7));
   }
 
   private buildBackdrop(kind: BackdropKind): Phaser.GameObjects.Container {
@@ -414,6 +418,36 @@ export class EndingScene extends Phaser.Scene {
       this.tweens.add({ targets: c, x: -28, duration: 26000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     return c;
+  }
+
+  /** Deep-space stage for Elsewhere slides: soft nebula clouds and a distant ringed giant. */
+  private buildDeepStage(): Phaser.GameObjects.Container {
+    const c = this.add.container(0, 0).setDepth(2).setAlpha(0).setVisible(false);
+    const clouds: [number, number, number, number, number][] = [
+      [120, 90, 4.2, PALETTE.cyanShadowHex, 0.16], [250, 60, 3.0, PALETTE.atmosphericDuskHex, 0.22],
+      [470, 120, 4.8, PALETTE.cyanVoidHex, 0.3], [560, 250, 3.4, PALETTE.cyanShadowHex, 0.12],
+      [330, 230, 5.2, PALETTE.atmosphericDuskHex, 0.16],
+    ];
+    for (const [x, y, s, tint, a] of clouds) {
+      c.add(this.add.image(x, y, 'glow_disk').setScale(s).setTint(tint).setAlpha(a).setBlendMode(Phaser.BlendModes.ADD));
+    }
+    const giant = this.add.image(560, 300, 'cin_ringed_giant').setAlpha(0.85);
+    c.add(giant);
+    if (!this.reducedMotion) {
+      this.tweens.add({ targets: giant, x: 548, duration: 22000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    return c;
+  }
+
+  private setDeepStage(on: boolean): void {
+    const c = this.deepStage;
+    if (!c) return;
+    this.tweens.killTweensOf(c);
+    if (on) c.setVisible(true);
+    this.tweens.add({
+      targets: c, alpha: on ? 1 : 0, duration: this.ms(900), ease: 'Sine.easeInOut',
+      onComplete: () => { if (!on) c.setVisible(false); },
+    });
   }
 
   private showBackdrop(kind: BackdropKind, fade = 1.2): void {
@@ -483,6 +517,7 @@ export class EndingScene extends Phaser.Scene {
     this.fadeOutAndDestroy(this.booster);
     this.booster = null;
     this.warpTarget = 0;
+    this.setDeepStage(false);
     this.showBackdrop(kind, 1.6);
     Soundscape.set({ ambience: kind, ambienceLevel: dusk ? 0.75 : 0.6, fade: 2.5 });
     this.setDim(dusk ? 0.18 : 0, 1400);
@@ -588,7 +623,8 @@ export class EndingScene extends Phaser.Scene {
     this.lastSlideYear = year;
     this.hideRobot();
     this.showBackdrop(entry.world === 'elsewhere' ? 'space' : entry.world, 1.1);
-    this.setDim(0.5);
+    this.setDeepStage(entry.world === 'elsewhere');
+    this.setDim(entry.world === 'elsewhere' ? 0.3 : 0.5);
     this.clearSlide();
     this.moveRuler(i);
     SoundFX.playRadarPing(0.4);
@@ -640,7 +676,10 @@ export class EndingScene extends Phaser.Scene {
         });
       }
     }
-    const credit = this.add.text(fx, fy + fh + 8, `NASA ${entry.image.nasa_id} · ${entry.image.credit}`.toUpperCase(), {
+    const creditLine = entry.image.nasa_id === 'SI-ILLUSTRATION'
+      ? 'SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH'
+      : `NASA ${entry.image.nasa_id} · ${entry.image.credit}`.toUpperCase();
+    const credit = this.add.text(fx, fy + fh + 8, creditLine, {
       fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 1,
       wordWrap: { width: fw, useAdvancedWrap: true },
     });
@@ -649,9 +688,10 @@ export class EndingScene extends Phaser.Scene {
     // Right panel: year, machine, status, sourced summary (each line staggers in)
     const panel: Phaser.GameObjects.GameObject[] = [];
     const px = 356, pw = 252;
-    const accent = entry.world === 'moon' ? PALETTE.lunarCrustCream : PALETTE.marsHazePeach;
+    const accent = entry.world === 'moon' ? PALETTE.lunarCrustCream : entry.world === 'mars' ? PALETTE.marsHazePeach : PALETTE.cyanLaser;
+    const worldName = entry.world === 'moon' ? 'THE MOON' : entry.world === 'mars' ? 'MARS' : 'DEEP SPACE // ELSEWHERE';
     const yearText = this.add.text(px, 52, String(fromYear), { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.beaconGold, letterSpacing: 2 });
-    const worldText = this.add.text(px, 84, entry.world === 'moon' ? 'THE MOON' : 'MARS', { fontFamily: HUD_FONT, fontSize: '7px', color: accent, letterSpacing: 4 });
+    const worldText = this.add.text(px, 84, worldName, { fontFamily: HUD_FONT, fontSize: '7px', color: accent, letterSpacing: 4 });
     panel.push(yearText, worldText);
 
     const hwKey = `hw_${entry.id}`;
@@ -780,7 +820,7 @@ export class EndingScene extends Phaser.Scene {
           ? PALETTE.lunarCrustCreamHex
           : r.entry.world === 'mars'
             ? PALETTE.marsDustTanHex
-            : PALETTE.cyanGlowHex;
+            : PALETTE.cyanLaserHex;
       if (x <= mx + 0.5) {
         g.fillStyle(color, 1).fillRect(x - 1, y - 1, 3, 3);
       } else {
@@ -818,6 +858,7 @@ export class EndingScene extends Phaser.Scene {
     this.clearSlide();
     this.clearRuler();
     this.hideRobot();
+    this.setDeepStage(false);
     this.showBackdrop('space', 1.6);
     Soundscape.set({ ambience: 'space', ambienceLevel: 0.8, fade: 3 });
     this.setDim(0, 1200);
@@ -838,11 +879,13 @@ export class EndingScene extends Phaser.Scene {
         route.fillStyle(color, 0.5).fillRect(Math.round(a.x + (b.x - a.x) * u), Math.round(a.y + (b.y - a.y) * u + arc), 1, 1);
       }
     };
+    // One multi-stage trajectory: Earth → Moon → Mars → deep space, each leg after the last
+    const leg = (start: number) => Phaser.Math.Clamp((progress.u - start) * 3, 0, 1);
     const drawRoute = () => {
       route.clear();
-      dots(earth, moon, PALETTE.lunarCrustCreamHex, Math.min(1, progress.u * 2.6));
-      dots(earth, mars, PALETTE.marsDustTanHex, Math.min(1, progress.u * 1.4));
-      dots(earth, deepSpace, PALETTE.cyanGlowHex, progress.u);
+      dots(earth, moon, PALETTE.lunarCrustCreamHex, leg(0));
+      dots(moon, mars, PALETTE.marsDustTanHex, leg(1 / 3));
+      dots(mars, deepSpace, PALETTE.cyanLaserHex, leg(2 / 3));
     };
     drawRoute();
     c.add(route);
@@ -867,7 +910,15 @@ export class EndingScene extends Phaser.Scene {
     const marsImg = this.add.image(mars.x, mars.y, 'cin_planet_mars');
     world([marsImg, label(mars.x, mars.y + marsImg.height / 2 + 6, 'MARS', PALETTE.marsHazePeach)], 1050);
     const deepGlow = this.add.image(deepSpace.x, deepSpace.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(1.2).setAlpha(0.24);
-    world([deepGlow, label(deepSpace.x, deepSpace.y + 24, 'ELSEWHERE', PALETTE.cyanLaser)], 1450);
+    const giant = this.add.image(deepSpace.x, deepSpace.y, 'cin_ringed_giant').setScale(0.42);
+    world([deepGlow, giant, label(deepSpace.x, deepSpace.y + 24, 'ELSEWHERE', PALETTE.cyanLaser)], 1450);
+    // Beacon counts per sector, taken from the reel itself
+    const count = (w: 'moon' | 'mars' | 'elsewhere') => this.reel.filter((r) => r.entry.world === w).length;
+    world([
+      label(moon.x, moon.y - moonImg.height / 2 - 14, `${count('moon')} BEACONS`, PALETTE.lunarDustLight),
+      label(mars.x, mars.y - marsImg.height / 2 - 14, `${count('mars')} BEACONS`, PALETTE.lunarDustLight),
+      label(deepSpace.x, deepSpace.y - 34, `${count('elsewhere')} BEACONS`, PALETTE.lunarDustLight),
+    ], 2700);
     if (!rm) {
       this.tweens.add({ targets: progress, u: 1, duration: 1800, delay: 400, ease: 'Sine.easeInOut', onUpdate: () => { if (route.active) drawRoute(); } });
       this.tweens.add({ targets: [moonImg, marsImg], y: '-=2', duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 1800 });
@@ -894,7 +945,7 @@ export class EndingScene extends Phaser.Scene {
     // Counters, all derived from the sourced entries
     const s = getReelStats();
     const st = this.add.container(W / 2, rm ? 46 : 38).setDepth(50).setAlpha(0);
-    const cols: [number, string][] = [[s.machines, 'MACHINES'], [s.worlds, 'WORLDS'], [s.span, 'YEARS']];
+    const cols: [number, string][] = [[s.machines, 'MACHINES'], [s.worlds, 'SECTORS'], [s.span, 'YEARS']];
     cols.forEach(([value, unit], k) => {
       const x = (k - 1) * 150;
       const num = this.add.text(x, 0, rm ? String(value) : '0', { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.lunarHighlight, letterSpacing: 2 }).setOrigin(0.5, 0);
@@ -913,7 +964,7 @@ export class EndingScene extends Phaser.Scene {
         },
       });
     });
-    st.add(this.add.text(0, 50, `${s.firstYear} ─── ${s.lastYear}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0));
+    st.add(this.add.text(0, 50, `${s.machines} MACHINES · ${s.worlds} SECTORS · ${s.firstYear} – ${s.lastYear}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0));
     this.stats = st;
     this.tweens.add({ targets: st, alpha: 1, y: 46, duration: this.ms(800), delay: this.ms(300), ease: 'Cubic.easeOut' });
   }
@@ -1098,9 +1149,9 @@ export class EndingScene extends Phaser.Scene {
     card.setAttribute('aria-labelledby', 'finale-title');
     card.innerHTML = `
       <p class="finale-card__kicker">END OF TRANSMISSION</p>
-      <h2 id="finale-title" class="finale-card__title">STILL OUT THERE</h2>
+      <h2 id="finale-title" class="finale-card__title">ECHOES OF EXPLORATION</h2>
       <p class="finale-card__line">${FINALE.card_line}</p>
-      <p class="finale-card__stats">${s.machines} MACHINES · ${s.worlds} WORLDS · ${s.firstYear} – ${s.lastYear} · AND COUNTING</p>
+      <p class="finale-card__stats">${s.machines} MACHINES · ${s.worlds} SECTORS · ${s.firstYear} – ${s.lastYear} · AND COUNTING</p>
       <p class="finale-card__tag">Abandoned, but not forgotten.</p>
       <div class="finale-card__actions">
         <button id="btn-finale-replay" class="menu-btn">↺ REPLAY ENDING</button>
@@ -1126,7 +1177,7 @@ export class EndingScene extends Phaser.Scene {
     void card.offsetWidth;
     card.classList.add('is-in');
     card.querySelector<HTMLButtonElement>('#btn-finale-title')?.focus({ preventScroll: true });
-    if (this.live) this.live.textContent = `End of transmission. Still Out There. ${FINALE.card_line}`;
+    if (this.live) this.live.textContent = `End of transmission. Echoes of Exploration. ${FINALE.card_line}`;
   }
 
   // ---------------------------------------------------------------------------
@@ -1262,6 +1313,7 @@ export class EndingScene extends Phaser.Scene {
     this.activeBackdrop = null;
     this.robot = null;
     this.slide = null;
+    this.deepStage = null;
     this.planets = null;
     this.stats = null;
     this.track = null;

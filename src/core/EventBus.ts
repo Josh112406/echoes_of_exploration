@@ -68,6 +68,7 @@ export const EVENTS = {
   // Game state
   ENTRY_UNLOCKED: 'state:entry:unlocked',
   MARS_UNLOCKED: 'state:mars:unlocked',
+  ELSEWHERE_UNLOCKED: 'state:elsewhere:unlocked',
   PROGRESS_RESET: 'state:reset',
   JOURNAL_UPDATED: 'state:journal:updated',
 } as const;

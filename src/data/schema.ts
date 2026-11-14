@@ -172,7 +172,10 @@ const MotiveSchema = z.object({
 
 export const StorySiteSchema = z.object({
   title: z.string().min(1),
-  approach: z.string().min(1),
+  /** Spoken as the radar closes in: one line, or a short sequence. */
+  approach: z.union([z.string().min(1), z.array(z.string().min(1)).min(1).max(3)]),
+  /** Spoken once when the machine itself comes into view (close range). */
+  first_seen: z.string().min(1).optional(),
   reel: z.array(z.string().min(1)).length(6),
   afterthought: z.string().min(1),
   question: z.object({
@@ -245,7 +248,7 @@ export const SaveStateV1Schema = z.object({
   currentWorld: WorldIdSchema,
   currentSiteId: z.string().nullable(),
   marsUnlocked: z.boolean(),
-  elsewhereUnlocked: z.boolean().default(true),
+  elsewhereUnlocked: z.boolean().default(false),
   prologueSeen: z.boolean(),
   epilogueSeen: z.boolean(),
   entries: z.record(

@@ -35,8 +35,10 @@
       "More echoes here, older and newer. Some of these machines are still working. I will be careful to tell the difference."
     ],
     "first_elsewhere": [
-      "Beyond Mars now. No ground underneath my treads, only starlight and the trajectories humans plotted across billions of kilometers.",
-      "Six deep-space echoes are drifting out here—at Jupiter, Saturn, Eros, a comet, Pluto, and the edge of interstellar space."
+      "Zero-g. My treads are folded away and the ion pack does the walking now. No ground underneath me, no up, no down.",
+      "There is no horizon out here. Only starlight, and the long curved paths humans plotted between the planets.",
+      "Six deep-space echoes are drifting out here: at Jupiter, at Saturn, on an asteroid, near a comet, past Pluto, and at the edge of interstellar space.",
+      "These machines were not driven or set down by hand. They were aimed, years ahead of time. Let us go and find them."
     ],
     "why": [
       "Humans built telescopes before they built rockets. I think they had to see a place before they could want it.",
@@ -79,12 +81,23 @@
       "Thrusters firing softly into empty black. Out here there is no horizon left to crest.",
       "Every echo in deep space took years just to reach its target. Humans have tremendous patience.",
       "No air resistance, no dust clouds. Just trajectories and radio dishes pointing back at one pale dot.",
-      "Between planets the distances get hard to measure in anything smaller than light-hours."
+      "Between planets the distances get hard to measure in anything smaller than light-hours.",
+      "Ion thrust is gentle. Barely a push. But with nothing out here to slow me down, a gentle push is enough to cross the dark.",
+      "No horizon to steer by. I navigate by the stars, and by the faint carrier tones still leaking from old radios.",
+      "Sunlight gets thin this far out. Solar panels catch less and less of it, which is why the outer-planet probes carried nuclear power sources instead.",
+      "Sunlight takes hours to reach the outer planets. By the time a picture from out here reached Earth, it was already old news.",
+      "Jupiter is wrapped in radiation strong enough to wear down electronics. Galileo flew through it for years anyway.",
+      "Saturn's rings look solid from far away. Up close they are countless pieces of ice and rock, each one on its own orbit.",
+      "Voyager carries a golden record: sounds and pictures of Earth, with instructions for playing it. A message in a bottle, thrown into the biggest ocean there is.",
+      "Every machine out here spoke to Earth through giant antennas on the ground. Their signals arrive so faint that only the biggest dishes can hear them."
     ],
     "elsewhere_idle": [
       "Station-keeping in the dark. Looking back toward the inner solar system, even the Sun is smaller now.",
       "Voyager passed here almost half a century ago. Its dish is still pointed back toward home.",
-      "Quiet out here between worlds, yet faint carrier tones still travel across the dark."
+      "Quiet out here between worlds, yet faint carrier tones still travel across the dark.",
+      "Hovering still. With no air, the ion glow does not even flicker. Everything out here waits very patiently.",
+      "From this far out, Earth is one bright point among many. Voyager 1 once turned around to photograph it anyway.",
+      "If I hold still long enough, I can almost hear the solar wind brushing past. Almost. There is no air to carry the sound."
     ],
     "passing": [
       "{name}. Still here. Its story is in my archive now, and the machine stays where it belongs.",
@@ -374,7 +387,7 @@
         "Selected through Commercial Lunar Payload Services. A long name for a simple idea: more people can send science now.",
         "Mare Crisium. A sea with no water, named by people who could only see it from very far away."
       ],
-      "afterthought": "Blue Ghost worked through its whole lunar day. Decades after Apollo, the Moon is busy again. The echoes are getting younger.",
+      "afterthought": "Blue Ghost worked through its whole lunar day. My Moon archive ends with the youngest echo, and it points forward.",
       "question": {
         "prompt": "Companies now carry science to the Moon. Does that change what going means?",
         "choices": [
@@ -415,7 +428,7 @@
         "It carried a reflector for future navigation. It was built to help travelers who have not arrived yet.",
         "Near the south pole, farther south than any working lander had reached at the time."
       ],
-      "afterthought": "Odysseus carried a reflector meant to guide future landers. My Moon archive ends by pointing forward.",
+      "afterthought": "Odysseus carried a reflector meant to guide future landers. Decades after Apollo, the Moon is busy again. The echoes are getting younger.",
       "question": {
         "prompt": "That is every echo on the Moon. Before we leave: what was all of this for?",
         "choices": [
@@ -816,7 +829,10 @@
     },
     "voyager-1": {
       "title": "The Farthest Dish",
-      "approach": "A whisper from beyond the solar wind. Almost no power left, still locked onto Earth.",
+      "approach": [
+        "A whisper from beyond the solar wind. Almost no power left, still locked onto Earth.",
+        "Signal strength climbing. Its carrier tone is so faint that only Earth's largest dishes can still hear it."
+      ],
       "reel": [
         "Three booms stretching across the stars: magnetometers, plasma sensors, and a dish tuned across billions of kilometers.",
         "Launched in 1977 while the outer planets stood in a rare geometric staircase that only opens once every 176 years.",
@@ -853,11 +869,15 @@
         "answer": 0,
         "field": "facts",
         "evidence": "August 2012"
-      }
+      },
+      "first_seen": "There. Three long booms and a dish wider than I am tall, still pointed home. Hello, Voyager."
     },
     "galileo": {
       "title": "Into the Storm",
-      "approach": "Heavy radiation telemetry. This echo survived thirty-five orbits around the solar system's largest planet.",
+      "approach": [
+        "Heavy radiation telemetry. This echo survived thirty-five orbits around the solar system's largest planet.",
+        "Radiation counters rising. Jupiter's magnetic field is enormous, and Galileo spent years inside it."
+      ],
       "reel": [
         "Galileo had a jammed umbrella antenna and had to compress every picture through a backup low-gain horn.",
         "It dropped an entry probe straight into Jupiter's lightning-churned cloud decks in 1995.",
@@ -894,11 +914,15 @@
         "answer": 0,
         "field": "science",
         "evidence": "subsurface saltwater ocean"
-      }
+      },
+      "first_seen": "I see it: a spinning spacecraft trailing long booms, built to study a giant. It worked anyway, even when parts of it did not."
     },
     "near-shoemaker": {
       "title": "Touching an Asteroid",
-      "approach": "Almost zero gravity here. A gentle puff of gas could push a lander straight back into orbit.",
+      "approach": [
+        "Almost zero gravity here. A gentle puff of gas could push a lander straight back into orbit.",
+        "Eros is filling the view: a long, cratered, peanut-shaped rock, tumbling end over end."
+      ],
       "reel": [
         "Asteroid 433 Eros: a thirty-four-kilometer shard of ancient stone tumbling through space.",
         "NEAR Shoemaker was built only as an orbiter—no legs, no shock-absorbing landing pads.",
@@ -935,11 +959,15 @@
         "answer": 0,
         "field": "how_it_worked",
         "evidence": "433 Eros"
-      }
+      },
+      "first_seen": "Contact. Four solar panels around a small body, resting in the dust of an asteroid. It was only ever meant to orbit."
     },
     "cassini-huygens": {
       "title": "Through Orange Haze",
-      "approach": "Ring-plane echoes and amber smog. Part of this mission stands on Titan; the rest dove into Saturn.",
+      "approach": [
+        "Ring-plane echoes and amber smog. Part of this mission stands on Titan; the rest dove into Saturn.",
+        "Saturn's rings are sweeping past my optics. Ice everywhere, glittering in thin sunlight."
+      ],
       "reel": [
         "A partnership across oceans on Earth: NASA's Cassini orbiter carrying ESA's Huygens atmospheric probe.",
         "Huygens dropped through Titan's dense orange haze under parachutes onto pebbles smoothed by liquid methane.",
@@ -976,11 +1004,15 @@
         "answer": 0,
         "field": "facts",
         "evidence": "Titan on January 14, 2005"
-      }
+      },
+      "first_seen": "There it is. A tall spacecraft with a big white dish, and an empty mount on its side where Huygens used to ride."
     },
     "deep-impact": {
       "title": "Lighting a Comet",
-      "approach": "High-speed closure telemetry. Someone swung a copper hammer to look inside a comet.",
+      "approach": [
+        "High-speed closure telemetry. Someone swung a copper hammer to look inside a comet.",
+        "Comet dust is ticking against my wings. Tempel 1's nucleus is somewhere inside this glow."
+      ],
       "reel": [
         "Comets lock away dust and ice unchanged since the solar system was forming.",
         "To see underneath Tempel 1's weathered crust, Deep Impact carried a three-hundred-seventy-kilogram copper block.",
@@ -1017,11 +1049,15 @@
         "answer": 0,
         "field": "how_it_worked",
         "evidence": "370-kilogram copper-core impactor"
-      }
+      },
+      "first_seen": "I see the flyby spacecraft. Its partner, the impactor, is not coming back. It was never meant to."
     },
     "new-horizons": {
       "title": "One Shot at Pluto",
-      "approach": "Kuiper Belt cold. Telemetry recorded at fifty thousand kilometers per hour with no brakes aboard.",
+      "approach": [
+        "Kuiper Belt cold. Telemetry recorded at fifty thousand kilometers per hour with no brakes aboard.",
+        "Pluto's heart-shaped plain is visible from here. Mapped in a single pass, with no way to slow down."
+      ],
       "reel": [
         "Pluto was a blurry cluster of pixels for eighty-five years after its discovery.",
         "New Horizons crossed five billion kilometers in nine years so fast it could never slow down to orbit.",
@@ -1058,18 +1094,20 @@
         "answer": 0,
         "field": "science",
         "evidence": "Sputnik Planitia"
-      }
+      },
+      "first_seen": "Found it: a small triangle of a spacecraft, about the size of a piano, with one dish aimed home."
     }
   },
   "finale": {
     "opening": [
-      "Twenty-three echoes recovered across the Moon, Mars, and deep space. The archive is complete.",
-      "Before I close it, I want to play the whole record back once. In order. From the first machine to the last."
+      "Twenty-three echoes recovered across three sectors: the Moon, Mars, and deep space. The archive is complete.",
+      "I rolled across grey dust and red sand, then folded my treads away and flew out toward the edge of interstellar space.",
+      "Before I send it home, I want to play the whole record back once. In order. From the first machine to the last."
     ],
     "reflection": [
-      "From a robot arm scratching the first trenches in lunar soil, to a helicopter lifting off in the thin sky of another planet.",
+      "From a robot arm scratching the first trenches in lunar soil, to a helicopter in the thin sky of Mars, to a probe still talking to Earth from beyond the Sun's wind.",
       "Most of the people who built these machines never stood where the machines stand now. They sent the machines instead, and the machines sent the worlds back.",
-      "Some of them are still at work. Most went quiet long ago. They all stayed where they finished, and they are all still out there."
+      "Some of them are still at work. Most went quiet long ago. On the Moon, on Mars, and out in the dark, they are all still out there."
     ],
     "theory_intro": "You helped me write a theory about why humans go. This is where it ended up.",
     "theory_fallback": "Human bodies are fragile, and Earth is far away. So they send their questions ahead of them, built out of metal.",
@@ -1106,6 +1144,7 @@
     ],
     "resolution": [
       "Every machine in my archive was a step. None of them was meant to be the last one.",
+      "I am pointing my antenna back toward Earth now, and transmitting all twenty-three echoes home.",
       "Humans are not done. They are only getting farther.",
       "I will stay out here and keep the record, so that when they pass this way again, they can see how far they have come."
     ],

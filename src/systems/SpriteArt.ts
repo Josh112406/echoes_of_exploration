@@ -203,24 +203,24 @@ export class Painter {
 // jet canisters x 3–5 / 18–20 with nozzles on rows 15–16.
 // ---------------------------------------------------------------------------
 
-function paintRobot(frame: number): Painter {
-  const p = new Painter(24, 24);
+/** Antenna, jet canisters, shell, visor and chest: shared by the rover and flight-pack robot. */
+function paintRobotUpper(p: Painter, rcs: boolean): void {
   const S = RAMPS.silver;
 
   // Antenna with beacon
   p.line(15, 2, 15, 4, C.lunarDustLight).set(16, 3, C.lunarRegolithMid);
   p.set(15, 1, C.beaconGold).set(16, 1, C.thrusterOrange);
 
-  // Jet canisters (cylinders) + nozzles
+  // Jet canisters (cylinders) + nozzles; in flight they become cyan RCS pods
   for (const cx of [3, 18]) {
     p.rect(cx, 7, 3, 1, C.lunarCrustCream);
     p.set(cx, 8, C.lunarCrustCream).set(cx + 1, 8, C.lunarDustLight).set(cx + 2, 8, C.lunarRegolithMid);
     for (let y = 9; y <= 14; y++) {
       p.set(cx, y, C.lunarDustLight).set(cx + 1, y, dq(S, 0.45 - (y - 9) * 0.04, cx + 1, y)).set(cx + 2, y, C.lunarRegolithDeep);
     }
-    p.set(cx + 1, 10, C.thrusterOrange).set(cx + 1, 11, C.emberShadow);
+    p.set(cx + 1, 10, rcs ? C.cyanGlow : C.thrusterOrange).set(cx + 1, 11, rcs ? C.cyanDeep : C.emberShadow);
     p.rect(cx, 15, 3, 1, C.shadowNavy).set(cx + 1, 15, C.atmosphericDusk);
-    p.rect(cx, 16, 3, 1, C.emberShadow).set(cx + 1, 16, C.thrusterOrange);
+    p.rect(cx, 16, 3, 1, rcs ? C.cyanShadow : C.emberShadow).set(cx + 1, 16, rcs ? C.cyanLaser : C.thrusterOrange);
   }
 
   // Head/body shell
@@ -242,8 +242,61 @@ function paintRobot(frame: number): Painter {
   p.rect(12, 13, 4, 1, C.lunarRegolithMid).rect(12, 14, 4, 1, C.lunarRegolithDeep);
   // Belly / chassis underside
   p.rect(6, 16, 12, 1, C.lunarRegolithDeep);
-  p.rect(9, 17, 6, 1, C.shadowNavy);
+}
 
+/**
+ * Flight-pack UNIT-7 (24×24) for zero-g sectors: treads folded away, a twin-bell
+ * cyan ion nozzle under the chassis, solar wings / RCS pods on both sides and a
+ * pulsing ion plume (frames 0–2). Same head/visor rows as the rover robot.
+ */
+export function buildFlyingRobotCanvas(frame: 0 | 1 | 2): HTMLCanvasElement {
+  const p = new Painter(24, 24);
+  // Solar wings deployed beside the RCS pods (cells catch the light on top)
+  for (const wx of [0, 21]) p.panel(wx, 8, 3, 6, 1);
+  paintRobotUpper(p, true);
+  // Folded tread housings tucked under the shell
+  p.rect(7, 17, 3, 1, C.lunarBasaltDark).rect(14, 17, 3, 1, C.lunarBasaltDark);
+  // Ion nozzle housing + twin bells
+  p.rect(9, 17, 6, 1, C.lunarRegolithMid).set(9, 17, C.lunarDustLight);
+  p.rect(9, 18, 6, 1, C.shadowNavy);
+  p.rect(9, 19, 2, 1, C.lunarRegolithDeep).rect(13, 19, 2, 1, C.lunarRegolithDeep);
+  p.set(10, 18, C.cyanGlow).set(13, 18, C.cyanGlow);
+  p.outline();
+
+  // Plumes are light, not hardware: drawn after the outline
+  const len = [3, 4, 2][frame];
+  for (const bx of [9, 13]) {
+    for (let i = 0; i < len; i++) {
+      const y = 20 + i;
+      const tip = i === len - 1;
+      p.set(bx, y, tip ? C.cyanDeep : i === 0 ? C.lunarHighlight : C.cyanLaser);
+      p.set(bx + 1, y, tip ? C.cyanShadow : C.cyanGlow);
+    }
+  }
+  // RCS pod sparks flicker on alternating frames
+  if (frame === 1) p.set(4, 17, C.cyanLaser).set(19, 17, C.cyanLaser);
+  if (frame === 2) p.set(4, 17, C.cyanDeep).set(19, 17, C.cyanDeep);
+  return p.toCanvas();
+}
+
+/** Three-frame ion-plume cycle (72×24 sheet) for flying in deep space. */
+export function buildFlyingRobotSheet(): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = 72;
+  canvas.height = 24;
+  const ctx = canvas.getContext('2d')!;
+  ([0, 1, 2] as const).forEach((f) => ctx.drawImage(buildFlyingRobotCanvas(f), f * 24, 0));
+  return canvas;
+}
+
+function paintRobot(frame: number): Painter {
+  const p = new Painter(24, 24);
+  paintRobotUpper(p, false);
+  p.rect(9, 17, 6, 1, C.shadowNavy);
+  return paintRobotTreads(p, frame);
+}
+
+function paintRobotTreads(p: Painter, frame: number): Painter {
   // Treads (rows 17–20)
   for (const tx of [4, 13]) {
     p.rect(tx + 1, 17, 5, 1, C.lunarRegolithMid);

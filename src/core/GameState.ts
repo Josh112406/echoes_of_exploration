@@ -1,7 +1,7 @@
 import { SaveManager } from '../save/SaveManager.ts';
 import { SaveStateV1, WorldId } from '../data/schema.ts';
 import { EventBus, EVENTS } from './EventBus.ts';
-import { MOON_CHRONOLOGY, MARS_CHRONOLOGY, ELSEWHERE_CHRONOLOGY } from '../data/entries.ts';
+import { ALL_ENTRIES, MOON_CHRONOLOGY, MARS_CHRONOLOGY, ELSEWHERE_CHRONOLOGY } from '../data/entries.ts';
 
 export class GameState {
   private static state: SaveStateV1 = SaveManager.load();
@@ -16,6 +16,7 @@ export class GameState {
   }
 
   static setWorld(world: WorldId): void {
+    if (!this.isWorldUnlocked(world)) return;
     this.state.currentWorld = world;
     SaveManager.save(this.state);
   }
@@ -66,10 +67,28 @@ export class GameState {
     return list.filter(id => this.isEntryRecovered(id)).length;
   }
 
-  static isSiteActive(_siteId: string): boolean {
-    // Open-world exploration: any site in the sector can be played immediately,
-    // while radar continues guiding toward the next chronological target.
-    return true;
+  /**
+   * Chronological progression: a site can be played only when its sector is
+   * open and it is the next unrecovered echo by launch date. Recovered echoes
+   * stay open for review and replays.
+   */
+  static isSiteActive(siteId: string): boolean {
+    const world = ALL_ENTRIES[siteId]?.world;
+    if (!world) return false;
+    if (this.isEntryRecovered(siteId)) return true;
+    return this.isWorldUnlocked(world) && this.getNextTarget(world) === siteId;
+  }
+
+  /** True once every echo in all three sectors (Moon, Mars, Elsewhere) is recovered. */
+  static isCampaignComplete(): boolean {
+    return (['moon', 'mars', 'elsewhere'] as const).every((w) => this.isWorldComplete(w));
+  }
+
+  /** Sectors open strictly in order: Mars after every Moon echo, Elsewhere after every Mars echo. */
+  static isWorldUnlocked(world: WorldId): boolean {
+    if (world === 'moon') return true;
+    if (world === 'mars') return this.isWorldComplete('moon');
+    return this.isWorldComplete('moon') && this.isWorldComplete('mars');
   }
 
   static isWorldComplete(world: WorldId): boolean {
@@ -78,6 +97,7 @@ export class GameState {
   }
 
   static unlockEntry(id: string, assisted: boolean = false, fuelLeft: number | null = null, landingSpeed: number | null = null): void {
+    if (!this.isSiteActive(id)) return; // out of chronological order
     if (!this.state.entries[id]) {
       this.state.entries[id] = {
         recovered: true,
@@ -95,14 +115,14 @@ export class GameState {
     // Reset failure counter for this level
     this.failCounters.delete(id);
 
-    // Check Mars Unlock condition: all 8 Moon relics completed chronologically
-    if (!this.state.marsUnlocked) {
-      const moonComplete = this.isWorldComplete('moon');
-
-      if (moonComplete) {
-        this.state.marsUnlocked = true;
-        EventBus.emit(EVENTS.MARS_UNLOCKED);
-      }
+    // Sector progression: Moon → Mars → Elsewhere (deep space) → Grand Finale
+    if (!this.state.marsUnlocked && this.isWorldUnlocked('mars')) {
+      this.state.marsUnlocked = true;
+      EventBus.emit(EVENTS.MARS_UNLOCKED);
+    }
+    if (!this.state.elsewhereUnlocked && this.isWorldUnlocked('elsewhere')) {
+      this.state.elsewhereUnlocked = true;
+      EventBus.emit(EVENTS.ELSEWHERE_UNLOCKED);
     }
 
     SaveManager.save(this.state);

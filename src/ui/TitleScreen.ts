@@ -66,8 +66,8 @@ export class TitleScreen {
     const mars = GameState.getRecoveredCount('mars');
     const elsewhere = GameState.getRecoveredCount('elsewhere');
     const total = moon + mars + elsewhere;
-    const marsUnlocked = GameState.getState().marsUnlocked;
-    const elsewhereUnlocked = GameState.getState().elsewhereUnlocked;
+    const marsUnlocked = GameState.isWorldUnlocked('mars');
+    const elsewhereUnlocked = GameState.isWorldUnlocked('elsewhere');
 
     this.items = this.isWorldSelectOpen
       ? this.worldItems(moon, mars, elsewhere, marsUnlocked, elsewhereUnlocked)
@@ -76,7 +76,7 @@ export class TitleScreen {
     const small = this.items.filter((i) => i.size === 'small');
 
     this.container.innerHTML = `
-      <h1 class="sr-only">STILL OUT THERE</h1>
+      <h1 class="sr-only">ECHOES OF EXPLORATION — THE NASA SIGNAL ARCHIVE</h1>
       <nav class="tmenu ${this.isWorldSelectOpen ? 'tmenu--worlds' : ''}" aria-label="${this.isWorldSelectOpen ? 'Select destination' : 'Main menu'}">
         ${this.isWorldSelectOpen ? '<p class="tmenu__heading">SELECT DESTINATION</p>' : ''}
         <ul class="tmenu__list">
@@ -156,14 +156,14 @@ export class TitleScreen {
         id: 'btn-select-mars',
         label: 'MARS',
         disabled: !marsUnlocked,
-        hint: marsUnlocked ? `${mars} of ${MARS_TOTAL} echoes found. Ochre dust and a thin, restless wind.` : 'Out of range. Recover all eight Moon echoes to unlock the booster.',
+        hint: marsUnlocked ? `${mars} of ${MARS_TOTAL} echoes found. Ochre dust and a thin, restless wind.` : 'Out of range. Recover all 8 Moon echoes to ignite the Mars transfer stage.',
         extra: `<span class="tmenu__meta">${this.pips(mars, MARS_TOTAL, 'mars')}<span>${mars}/${MARS_TOTAL}</span>${marsUnlocked ? '' : '<span class="lock-tag">LOCKED</span>'}</span>`,
       },
       {
         id: 'btn-select-elsewhere',
         label: 'ELSEWHERE',
         disabled: !elsewhereUnlocked,
-        hint: elsewhereUnlocked ? `${elsewhere} of ${ELSEWHERE_TOTAL} echoes found. Saturn, Jupiter, Eros, Pluto, and the interstellar dark.` : 'Out of range.',
+        hint: elsewhereUnlocked ? `${elsewhere} of ${ELSEWHERE_TOTAL} echoes found. Saturn, Jupiter, Eros, Pluto, and the interstellar dark.` : 'Deep space telemetry offline. Recover all 9 Mars echoes to ignite the outer-system ion drive.',
         extra: `<span class="tmenu__meta">${this.pips(elsewhere, ELSEWHERE_TOTAL, 'elsewhere')}<span>${elsewhere}/${ELSEWHERE_TOTAL}</span>${elsewhereUnlocked ? '' : '<span class="lock-tag">LOCKED</span>'}</span>`,
       },
       { id: 'btn-back-main', label: 'BACK', size: 'small', hint: 'Back to the main menu.' },
@@ -326,7 +326,17 @@ export class TitleScreen {
     on('btn-play-expedition', () => {
       SoundFX.playClick();
       this.leave();
-      EventBus.emit(EVENTS.START_EXPLORATION);
+      const world = GameState.getWorld();
+      // The player left before a sector launch played: pick the campaign up where it stopped.
+      if (world === 'moon' && GameState.isWorldComplete('moon') && GameState.getRecoveredCount('mars') === 0) {
+        EventBus.emit(EVENTS.START_TRANSITION, 'mars');
+      } else if (world === 'mars' && GameState.isWorldComplete('mars') && GameState.getRecoveredCount('elsewhere') === 0) {
+        EventBus.emit(EVENTS.START_TRANSITION, 'elsewhere');
+      } else if (GameState.isCampaignComplete() && !GameState.getState().epilogueSeen) {
+        EventBus.emit(EVENTS.SHOW_FINALE);
+      } else {
+        EventBus.emit(EVENTS.START_EXPLORATION);
+      }
     });
 
     on('btn-world-select', () => {
@@ -345,7 +355,7 @@ export class TitleScreen {
     });
 
     on('btn-select-mars', () => {
-      if (!GameState.getState().marsUnlocked) return;
+      if (!GameState.isWorldUnlocked('mars')) return;
       SoundFX.playClick();
       GameState.setWorld('mars');
       this.leave();
@@ -353,7 +363,7 @@ export class TitleScreen {
     });
 
     on('btn-select-elsewhere', () => {
-      if (!GameState.getState().elsewhereUnlocked) return;
+      if (!GameState.isWorldUnlocked('elsewhere')) return;
       SoundFX.playClick();
       GameState.setWorld('elsewhere');
       this.leave();

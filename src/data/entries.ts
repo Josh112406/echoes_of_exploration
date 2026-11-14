@@ -3,16 +3,16 @@ import artifactsJson from './artifacts.json';
 
 export const ALL_ENTRIES: Record<string, ArtifactEntry> = artifactsJson as unknown as Record<string, ArtifactEntry>;
 
-// Strict chronological ordering for progression
+// Strict chronological ordering for progression (by launch date; checked by tools/validate-entries.mjs)
 export const MOON_CHRONOLOGY: string[] = [
   'surveyor-3',
   'apollo-11-site',
-  'apollo-12-site',
   'apollo-retroreflectors',
+  'apollo-12-site',
   'apollo-15-lrv',
   'apollo-17-site',
-  'blue-ghost-1',
   'im-1-odysseus',
+  'blue-ghost-1',
 ];
 
 export const MARS_CHRONOLOGY: string[] = [
@@ -52,7 +52,7 @@ export const MOON_WORLD_COORDS: WorldArtifactCoord[] = [
   { id: 'apollo-retroreflectors', x: 1200, y: 720, name: 'Laser Retroreflectors', year: '1969' },
   { id: 'apollo-15-lrv', x: 1550, y: 520, name: 'Apollo 15 LRV', year: '1971' },
   { id: 'apollo-17-site', x: 1850, y: 880, name: 'Apollo 17 Site', year: '1972' },
-  { id: 'blue-ghost-1', x: 920, y: 1240, name: 'Blue Ghost 1', year: '2024' },
+  { id: 'blue-ghost-1', x: 920, y: 1240, name: 'Blue Ghost 1', year: '2025' },
   { id: 'im-1-odysseus', x: 1720, y: 1350, name: 'IM-1 Odysseus', year: '2024' },
 ];
 

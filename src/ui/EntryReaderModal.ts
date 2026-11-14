@@ -34,6 +34,17 @@ const PAGE_TITLES = [
   'UNIT-7 ASKS YOU',
 ];
 
+/** Generated stand-in art (no public-domain photo in the repo yet): never credited to NASA. */
+function isIllustration(nasaId: string): boolean {
+  return nasaId === 'SI-ILLUSTRATION';
+}
+
+/** Card 6 reads as deep-space telemetry for the Elsewhere sector. */
+function pageTitle(page: number, world: string | undefined): string {
+  if (page === 5 && world === 'elsewhere') return 'DEEP SPACE TELEMETRY COORDINATES';
+  return PAGE_TITLES[page];
+}
+
 let portraitUrl: string | null = null;
 function robotPortrait(): string {
   if (!portraitUrl) portraitUrl = buildRobotCanvas().toDataURL();
@@ -242,8 +253,9 @@ export class EntryReaderModal {
     EventBus.emit(EVENTS.ENTRY_CLOSED, entry?.id ?? null);
     if (this.mode !== 'briefing') return;
     const world = GameState.getWorld();
-    if (GameState.isWorldComplete('moon') && world === 'moon') EventBus.emit(EVENTS.START_TRANSITION);
-    else if (GameState.isWorldComplete('mars') && world === 'mars') EventBus.emit(EVENTS.SHOW_FINALE);
+    if (GameState.isWorldComplete('moon') && world === 'moon') EventBus.emit(EVENTS.START_TRANSITION, 'mars');
+    else if (GameState.isWorldComplete('mars') && world === 'mars') EventBus.emit(EVENTS.START_TRANSITION, 'elsewhere');
+    else if (GameState.isWorldComplete('elsewhere') && world === 'elsewhere') EventBus.emit(EVENTS.SHOW_FINALE);
   }
 
   private showPage(page: number, animate: boolean, dir: 1 | -1 = 1): void {
@@ -451,7 +463,7 @@ export class EntryReaderModal {
     const dots = Array.from({ length: total }, (_v, i) => {
       const reachable = i <= this.maxSeen && i !== this.page && !(this.page === QUIZ_PAGE && this.quizState !== 'ask');
       const cls = i === this.page ? 'active' : i <= this.maxSeen ? 'seen' : '';
-      return `<button class="reel-dot ${cls}" data-page="${i}" aria-label="Page ${i + 1}: ${PAGE_TITLES[i]}" ${reachable ? '' : 'disabled'}></button>`;
+      return `<button class="reel-dot ${cls}" data-page="${i}" aria-label="Page ${i + 1}: ${pageTitle(i, this.entry?.world)}" ${reachable ? '' : 'disabled'}></button>`;
     }).join('');
     const showSkipToQuiz = this.page < QUIZ_PAGE && this.hasQuiz && !this.canClose;
     top.innerHTML = `
@@ -492,7 +504,7 @@ export class EntryReaderModal {
     stage.innerHTML = `
       <section class="briefing__card ${isQuiz ? 'briefing__card--quiz' : ''} ${this.reducedMotion ? '' : enterCls}" aria-labelledby="briefing-card-title">
         <header class="briefing__card-head">
-          <span id="briefing-card-title">${this.page + 1}. ${PAGE_TITLES[this.page]}</span>
+          <span id="briefing-card-title">${this.page + 1}. ${pageTitle(this.page, this.entry?.world)}</span>
           <span class="chip ${isQuiz ? 'chip--story' : 'chip--record'}">${isQuiz ? 'GAME STORY · CHECK THE RECORD' : 'VERIFIED RECORD'}</span>
         </header>
         <div class="briefing__card-body">${isQuiz ? this.quizHtml() : this.pageHtml(this.page)}</div>
@@ -530,8 +542,11 @@ export class EntryReaderModal {
         return `
           <div class="briefing__photo"><img src="${e.image.file}" alt="${e.image.alt}" /></div>
           <div class="briefing__meta">
-            <span>NASA ID: ${e.image.nasa_id} · CREDIT: ${e.image.credit}</span>
-            <a href="${e.image.source_url}" target="_blank" rel="noreferrer">[ORIGINAL IMAGE ↗]</a>
+            ${isIllustration(e.image.nasa_id)
+              ? `<span>SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH</span>
+            <a href="${e.image.source_url}" target="_blank" rel="noreferrer">[REAL NASA IMAGERY ↗]</a>`
+              : `<span>NASA ID: ${e.image.nasa_id} · CREDIT: ${e.image.credit}</span>
+            <a href="${e.image.source_url}" target="_blank" rel="noreferrer">[ORIGINAL IMAGE ↗]</a>`}
           </div>`;
       case 1:
         return `
@@ -555,7 +570,7 @@ export class EntryReaderModal {
             <li><div>${f.text}</div><a href="${f.source_url}" target="_blank" rel="noreferrer">[NASA CITATION ${i + 1} · ${sourceHost(f.source_url).toUpperCase()} ↗]</a></li>`).join('')}
           </ul>`;
       default:
-        return `<h3 class="briefing__h briefing__h--small">Surface Landing Coordinates</h3>
+        return `<h3 class="briefing__h briefing__h--small">${e.world === 'elsewhere' ? 'Heliocentric / Target Coordinates' : 'Surface Landing Coordinates'}</h3>
           ${e.locations.map((l) => `
             <div class="briefing__loc">
               <strong>${l.label}</strong>
@@ -635,8 +650,9 @@ export class EntryReaderModal {
   private finishLabel(): string {
     if (this.mode === 'briefing') {
       const world = GameState.getWorld();
-      if (GameState.isWorldComplete('moon') && world === 'moon') return 'PREPARE BOOSTER ➔';
-      if (GameState.isWorldComplete('mars') && world === 'mars') return 'VIEW FINALE ➔';
+      if (GameState.isWorldComplete('moon') && world === 'moon') return 'LAUNCH TO MARS ➔';
+      if (GameState.isWorldComplete('mars') && world === 'mars') return 'LAUNCH TO DEEP SPACE ➔';
+      if (GameState.isWorldComplete('elsewhere') && world === 'elsewhere') return 'VIEW GRAND FINALE ➔';
       return 'RESUME EXPLORATION ➔';
     }
     return 'DONE ➔';

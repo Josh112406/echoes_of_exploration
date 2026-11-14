@@ -13,10 +13,12 @@ import {
   CIN_MARGIN,
   getCinematicBackdrop,
   buildPlanet,
+  buildRingedPlanet,
   buildBoosterSprite,
   RidgeLayer,
 } from './TitleArt.ts';
 import { ensureBackdropTextures } from './BackdropTextures.ts';
+import { buildRockCanvas } from './SpriteArt.ts';
 
 interface ExhaustParticle {
   x: number;
@@ -42,7 +44,7 @@ const SF = { sky: 0.6, celestial: 0.8, far: 0.8, mid: 0.9, near: 1 } as const;
 
 /** Where each sprite's "feet" are, so `ground` placement and thrusters line up. */
 function originFor(texture: string): [number, number] {
-  if (texture === 'robot_idle') return [0.5, 21 / 24];
+  if (texture === 'robot_idle' || texture === 'robot_fly_idle') return [0.5, 21 / 24];
   if (texture === 'cin_booster') return [0.5, 1];
   if (texture.startsWith('hw_')) return [0.5, 27 / 32];
   return [0.5, 0.5];
@@ -87,7 +89,8 @@ export class CinematicPlayer {
   private isTyping: boolean = false;
   private talk = new TalkClock();
   /** Timeline time before which the next caption may not start (UNIT-7 is still talking, then a short read). */
-  private captionReadyAt: number = 0;
+  /** Real seconds of reading time left before the timeline may pass the next caption. */
+  private captionHold: number = 0;
 
   constructor(scene: Phaser.Scene, timeline: CinematicTimeline, onComplete: () => void) {
     this.scene = scene;
@@ -185,6 +188,13 @@ export class CinematicPlayer {
     if (!tex.exists('cin_booster')) {
       tex.addCanvas('cin_booster', buildBoosterSprite());
     }
+    if (!tex.exists('cin_ringed_giant')) {
+      tex.addCanvas('cin_ringed_giant', buildRingedPlanet(96, 7));
+    }
+    for (let i = 0; i < 4; i++) {
+      const key = `cin_asteroid_${i}`;
+      if (!tex.exists(key)) tex.addCanvas(key, buildRockCanvas(7 + i * 4, 'elsewhere', 91 + i * 13));
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -264,6 +274,27 @@ export class CinematicPlayer {
       const dot = this.scene.add.image(448, 92, 'earth_mars');
       add(glow, 2);
       add(dot, 2);
+    } else if (this.timeline.world === 'mars') {
+      // Outer-system cruise from Mars: the red planet recedes, the asteroid belt
+      // tumbles past and a ringed gas giant waits beyond the frost line
+      const mars = this.scene.add.image(96, 236, 'cin_planet_mars').setScale(0.8);
+      const giantGlow = this.scene.add.image(520, 104, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(2.6).setAlpha(0.08);
+      const giant = this.scene.add.image(520, 104, 'cin_ringed_giant');
+      add(mars, 2);
+      add(giantGlow, 2);
+      add(giant, 2);
+      const rocks: [number, number, number, number][] = [
+        [210, 88, 0, 0.9], [300, 262, 1, 0.7], [372, 146, 2, 0.8], [446, 300, 3, 0.6],
+        [150, 160, 1, 0.5], [600, 236, 0, 0.8], [256, 196, 2, 0.45],
+      ];
+      rocks.forEach(([x, y, k, s], i) => {
+        const rock = this.scene.add.image(x, y, `cin_asteroid_${k}`).setScale(s).setTint(PALETTE.lunarDustLightHex);
+        add(rock, 2);
+        if (!this.reducedMotion) {
+          this.scene.tweens.add({ targets: rock, angle: i % 2 ? -360 : 360, duration: 9000 + i * 1700, repeat: -1 });
+          this.scene.tweens.add({ targets: rock, x: x - 40 - i * 6, duration: 16000, ease: 'Linear' });
+        }
+      });
     } else {
       // Interplanetary cruise: Earth and Moon receding left, Mars ahead right
       const earth = this.scene.add.sprite(118, 128, 'earth_spin', 0).setScale(0.5);
@@ -461,12 +492,12 @@ export class CinematicPlayer {
         this.talk.finish();
         this.captionText.setText(this.talk.visible);
         this.isTyping = false;
-        this.captionReadyAt = this.elapsedTime + 0.35;
+        this.captionHold = 0.35;
         this.continueMark.setVisible(this.fullCaption.length > 0);
         SoundFX.playClick();
         return;
       }
-      this.captionReadyAt = 0;
+      this.captionHold = 0;
       if (this.eventIndex < this.timeline.events.length) {
         const nextEvt = this.timeline.events[this.eventIndex];
         this.elapsedTime = Math.max(this.elapsedTime, nextEvt.time);
@@ -497,7 +528,8 @@ export class CinematicPlayer {
     // Hold the timeline before the next caption until UNIT-7 has finished the current one.
     const nextCaption = this.timeline.events.slice(this.eventIndex).find((e) => e.caption);
     const gate = Math.min(nextCaption ? nextCaption.time : Infinity, this.timeline.totalDuration);
-    if (this.elapsedTime < this.captionReadyAt || this.isTyping) {
+    if (!this.isTyping) this.captionHold = Math.max(0, this.captionHold - dt);
+    if (this.captionHold > 0 || this.isTyping) {
       this.elapsedTime = Math.min(this.elapsedTime, gate - 0.001);
     }
 
@@ -510,7 +542,7 @@ export class CinematicPlayer {
       if (this.talk.tick(dt)) this.captionText.setText(this.talk.visible);
       if (this.talk.done) {
         this.isTyping = false;
-        this.captionReadyAt = this.elapsedTime + 1.2;
+        this.captionHold = 1.2;
       }
     }
     this.continueMark.setVisible(!this.isTyping && this.fullCaption.length > 0);
@@ -600,6 +632,8 @@ export class CinematicPlayer {
         .setAlpha(cue.alpha ?? 1)
         .setDepth(cue.depth ?? 20));
       this.sprites.set(cue.id, sprite);
+      // The flight-pack robot's ion plume is part of its own animation
+      if (tex === 'robot_fly_idle' && this.scene.anims.exists('robot_fly_anim') && !this.reducedMotion) sprite.play('robot_fly_anim');
     } else {
       // A new cue replaces any motion still running from the previous one
       this.scene.tweens.killTweensOf(sprite);
@@ -685,7 +719,7 @@ export class CinematicPlayer {
     this.fullCaption = text;
     this.talk.start(text, { instant: this.reducedMotion });
     this.isTyping = !this.talk.done;
-    this.captionReadyAt = this.isTyping ? Infinity : this.elapsedTime + 1.2;
+    this.captionHold = this.isTyping ? 0 : 1.2;
     this.captionText.setText(this.talk.visible);
   }
 

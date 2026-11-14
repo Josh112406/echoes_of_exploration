@@ -80,7 +80,7 @@ export class ArchiveModal {
     this.container.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:14px;">
         <div>
-          <h2 style="font-size:18px; font-weight:700; letter-spacing:0.02em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">HISTORICAL MISSION ARCHIVE</h2>
+          <h2 style="font-size:18px; font-weight:700; letter-spacing:0.02em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">ECHOES OF EXPLORATION // MISSION ARCHIVE</h2>
           <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.cyanGlow}; margin-top:2px;">23 NASA HARDWARE ARTIFACTS // MOON, MARS &amp; DEEP SPACE</p>
         </div>
         <div style="display:flex; gap:8px;">

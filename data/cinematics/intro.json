@@ -68,16 +68,16 @@
       "camera": { "x": 320, "y": 180, "zoom": 1.0, "duration": 3.0 },
       "sound": { "cue": "ping", "state": true },
       "caption": {
-        "tag": "RADAR_SWEEP",
-        "text": "Sensors detecting faint radio telemetry across the regolith... relics of past voyages."
+        "tag": "ECHOES_OF_EXPLORATION",
+        "text": "Sensors detecting faint radio echoes across the regolith... echoes of exploration, left by past voyages."
       }
     },
     {
       "time": 21.5,
       "sound": { "cue": "click", "state": true },
       "caption": {
-        "tag": "OBJECTIVE_LOCKED",
-        "text": "If I trace their journey chronologically from the beginning, I will understand why humans explore."
+        "tag": "OBJECTIVE_LOCKED // THE NASA SIGNAL ARCHIVE",
+        "text": "If I trace their echoes from the Moon to Mars and out into deep space, I will understand why humans explore."
       }
     }
   ]

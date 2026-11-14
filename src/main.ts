@@ -89,6 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 4. Start Site Minigame (Landing / Rover / Laser / Rotor / Flyby)
   EventBus.on(EVENTS.START_LANDING, (siteId: string, assisted?: boolean) => {
+    if (!GameState.isSiteActive(siteId)) return; // chronological order
     hideAllOverlays();
     setTopBarVisible(false);
     stopActivePlayScenes();
@@ -97,15 +98,17 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // 5. Interplanetary Transition (Moon -> Mars / Elsewhere)
-  EventBus.on(EVENTS.START_TRANSITION, () => {
+  EventBus.on(EVENTS.START_TRANSITION, (targetWorld?: 'mars' | 'elsewhere') => {
+    if (!GameState.isWorldUnlocked(targetWorld ?? 'mars')) return;
     hideAllOverlays();
     setTopBarVisible(false);
     stopActivePlayScenes();
-    game.scene.start('TransitionScene');
+    game.scene.start('TransitionScene', { targetWorld: targetWorld ?? 'mars' });
   });
 
   // 6. Grand Finale (All 23 recovered)
   EventBus.on(EVENTS.SHOW_FINALE, () => {
+    if (!GameState.isCampaignComplete()) return;
     hideAllOverlays();
     setTopBarVisible(false);
     stopActivePlayScenes();

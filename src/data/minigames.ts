@@ -73,10 +73,10 @@ export const SITE_MINIGAMES: Record<string, MinigameSceneKey> = {
   'perseverance-landing-hardware': 'LandingScene',
   ingenuity: 'RotorScene',
 
-  // Elsewhere // Deep Space (6)
-  'near-shoemaker': 'LandingScene',
+  // Elsewhere // Deep Space (6): nothing lands out here, so no landing or surface games
+  'near-shoemaker': 'FlybyScene',
   galileo: 'FlybyScene',
-  'cassini-huygens': 'RotorScene',
+  'cassini-huygens': 'FlybyScene',
   'deep-impact': 'FlybyScene',
   'voyager-1': 'LaserScene',
   'new-horizons': 'FlybyScene',
@@ -89,3 +89,4 @@ export function getMinigameKeyForSite(siteId: string): MinigameSceneKey {
 export function getMinigameMetaForSite(siteId: string): MinigameMeta {
   return MINIGAME_META[getMinigameKeyForSite(siteId)];
 }
+
