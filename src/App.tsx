@@ -24,6 +24,7 @@ import {
 import { SurveyorEncounterPreview } from './game/SurveyorEncounterPreview';
 import narrativeJson from './text/narrative.json';
 
+type RoutePath = '/' | '/archive' | '/sources' | '/game';
 type ArchivePanelView = 'missions' | 'sources' | 'evidence' | 'methodology';
 type ChapterFilter = 'all' | 'moon' | 'mars' | 'elsewhere' | 'featured';
 type StatusGroupFilter = 'all' | 'active' | 'passive' | 'dormant' | 'ended';
@@ -43,26 +44,31 @@ const NARRATIVE = narrativeJson as unknown as NarrativeBundle;
 
 const ARCHIVE_MENU_OPTIONS: Array<{
   id: ArchivePanelView;
+  href: string;
   label: string;
   desc: string;
 }> = [
   {
     id: 'missions',
+    href: '/archive',
     label: 'Mission Archives (31)',
     desc: 'Filterable catalog of NASA spacecraft on the Moon, Mars, and deep space',
   },
   {
     id: 'sources',
+    href: '/sources',
     label: 'Primary NASA Sources (33)',
     desc: 'Official NASA, JPL, NSSDCA, ILRS, and PDS reference registry',
   },
   {
     id: 'evidence',
+    href: '/archive?view=evidence',
     label: 'Encounter Evidence Chains (9)',
     desc: 'Learning intents, observation chains, and simplification disclosures',
   },
   {
     id: 'methodology',
+    href: '/archive?view=methodology',
     label: 'Glossary, SI Disclosure & Save Data',
     desc: 'Scientific standards, SI disclosure, and JSON save export/import',
   },
@@ -117,8 +123,24 @@ const CHAPTER_CARDS: Array<{
   },
 ];
 
-function normalizeRoutePath(pathname: string): '/' | '/game' {
-  return pathname === '/game' ? '/game' : '/';
+function normalizeRoutePath(pathname: string): RoutePath {
+  if (pathname === '/game') return '/game';
+  if (pathname === '/sources') return '/sources';
+  if (pathname === '/archive' || pathname === '/archives') return '/archive';
+  return '/';
+}
+
+function getArchiveViewFromUrl(pathname: string, search: string): ArchivePanelView {
+  if (pathname === '/sources') return 'sources';
+  try {
+    const view = new URLSearchParams(search).get('view');
+    if (view === 'missions' || view === 'sources' || view === 'evidence' || view === 'methodology') {
+      return view;
+    }
+  } catch {
+    // Ignore malformed query string
+  }
+  return 'missions';
 }
 
 function getQueryEncounterId(): string | null {
@@ -131,16 +153,18 @@ function getQueryEncounterId(): string | null {
 }
 
 export function App() {
-  const [routePath, setRoutePath] = useState<'/' | '/game'>(() =>
+  const [routePath, setRoutePath] = useState<RoutePath>(() =>
     normalizeRoutePath(window.location.pathname)
   );
   const [crtActive, setCrtActive] = useState<boolean>(false);
   const [audioMuted, setAudioMuted] = useState<boolean>(false);
   const [utcTime, setUtcTime] = useState<string>('');
 
-  // Main Page state
+  // Archive & Sources page state
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-  const [archivePanel, setArchivePanel] = useState<ArchivePanelView>('missions');
+  const [archivePanel, setArchivePanel] = useState<ArchivePanelView>(() =>
+    getArchiveViewFromUrl(window.location.pathname, window.location.search)
+  );
   const [filterChapter, setFilterChapter] = useState<ChapterFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusGroupFilter>('all');
   const [sourceOrgFilter, setSourceOrgFilter] = useState<string>('ALL');
@@ -189,7 +213,6 @@ export function App() {
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const dropdownTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const archiveSectionRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const missions = MISSIONS;
@@ -225,12 +248,15 @@ export function App() {
 
   const selectedDatasetEncounter = datasetEncounterMap.get(selectedEncounter.id);
 
-  // Sync browser history & URL (?encounter=...)
+  // Sync browser history & URL (?encounter=..., ?view=...)
   useEffect(() => {
     const onPopState = () => {
       const nextRoute = normalizeRoutePath(window.location.pathname);
       setRoutePath(nextRoute);
       setDropdownOpen(false);
+      if (nextRoute === '/archive' || nextRoute === '/sources') {
+        setArchivePanel(getArchiveViewFromUrl(window.location.pathname, window.location.search));
+      }
       const q = getQueryEncounterId();
       if (nextRoute === '/game' && q) {
         const found = NARRATIVE.encounters.find((e) => e.id === q);
@@ -295,19 +321,24 @@ export function App() {
   }, []);
 
   const navigateTo = useCallback(
-    (target: '/' | '/game', options?: { encounterId?: string; mode?: GameMode }) => {
+    (target: RoutePath, options?: { encounterId?: string; mode?: GameMode; view?: ArchivePanelView }) => {
       telemetryAudio.playChirp(target === '/game' ? 980 : 820, 0.04);
       setDropdownOpen(false);
+      const nextRoute: RoutePath = options?.view === 'sources' ? '/sources' : target;
       const url =
-        target === '/game' && options?.encounterId
+        nextRoute === '/game' && options?.encounterId
           ? `/game?encounter=${encodeURIComponent(options.encounterId)}`
-          : target;
+          : nextRoute === '/archive' && options?.view && options.view !== 'missions'
+            ? `/archive?view=${encodeURIComponent(options.view)}`
+            : nextRoute;
       if (window.location.pathname + window.location.search !== url) {
         window.history.pushState({}, '', url);
       }
-      setRoutePath(target);
+      setRoutePath(nextRoute);
 
-      if (target === '/game') {
+      if (nextRoute === '/archive' || nextRoute === '/sources') {
+        setArchivePanel(nextRoute === '/sources' ? 'sources' : (options?.view ?? 'missions'));
+      } else if (nextRoute === '/game') {
         if (options?.encounterId) {
           const found = narrative.encounters.find((e) => e.id === options.encounterId);
           if (found) {
@@ -324,15 +355,8 @@ export function App() {
 
   const handleSelectArchivePanel = (panel: ArchivePanelView) => {
     telemetryAudio.playChirp(860, 0.03);
-    setArchivePanel(panel);
     setDropdownOpen(false);
-    if (routePath !== '/') {
-      navigateTo('/');
-    }
-    window.setTimeout(() => {
-      const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-      archiveSectionRef.current?.scrollIntoView({ behavior, block: 'start' });
-    }, 40);
+    navigateTo(panel === 'sources' ? '/sources' : '/archive', { view: panel });
   };
 
   const handleEncounterComplete = useCallback((badgeId: string) => {
@@ -532,6 +556,99 @@ export function App() {
       </header>
 
       <div className="app-container">
+        {/* TOP NAVIGATION BAR (Main Page + Dedicated Archives/Sources Webpage) */}
+        {routePath !== '/game' && (
+          <nav className="top-nav" aria-label="Primary navigation">
+            <div className="nav-links">
+              <a
+                href="/"
+                className="btn-secondary btn-sm"
+                aria-current={routePath === '/' ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/');
+                }}
+              >
+                [ OBSERVATORY HOME ]
+              </a>
+
+              {/* Required Dropdown linking to Dedicated Archives & Sources Webpage */}
+              <div className="archive-dropdown" ref={dropdownRef}>
+                <button
+                  ref={dropdownTriggerRef}
+                  type="button"
+                  className="btn-secondary btn-sm dropdown-trigger"
+                  aria-haspopup="menu"
+                  aria-expanded={dropdownOpen}
+                  onClick={() => {
+                    telemetryAudio.playChirp(840, 0.03);
+                    setDropdownOpen((o) => !o);
+                  }}
+                >
+                  <span>[ SOURCES &amp; ARCHIVES ]</span>
+                  <span aria-hidden="true">{dropdownOpen ? '▲' : '▾'}</span>
+                </button>
+
+                {dropdownOpen && (
+                  <div
+                    className="dropdown-menu"
+                    role="menu"
+                    aria-label="Sources and Archives Menu"
+                  >
+                    {ARCHIVE_MENU_OPTIONS.map((item) => (
+                      <a
+                        key={item.id}
+                        href={item.href}
+                        role="menuitem"
+                        className={`dropdown-item ${(routePath === '/archive' || routePath === '/sources') && archivePanel === item.id ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSelectArchivePanel(item.id);
+                        }}
+                      >
+                        <div>
+                          <span className="dropdown-item-title">{item.label}</span>
+                          <span className="dropdown-item-sub">{item.desc}</span>
+                        </div>
+                        <span className="mono" style={{ color: 'var(--cyan)', fontSize: '12px' }}>
+                          →
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {(routePath === '/archive' || routePath === '/sources') && (
+                <a
+                  href="/game"
+                  className="btn-observatory btn-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/game', { mode: 'map' });
+                  }}
+                >
+                  ▶ START GAME
+                </a>
+              )}
+            </div>
+
+            <div className="nav-progress" title="Reconstructed mission encounters">
+              <span className="label">
+                {callSign} · Signals: {completedCount}/{narrative.encounters.length}
+              </span>
+              <div
+                className="gauge"
+                aria-label={`${completedCount} of ${narrative.encounters.length} signals reconstructed`}
+              >
+                {narrative.encounters.map((enc) => (
+                  <i key={enc.id} className={isEncounterCompleted(enc.id) ? 'on' : ''} />
+                ))}
+              </div>
+            </div>
+          </nav>
+        )}
+
         {/* MAIN PAGE ROUTE: / */}
         {routePath === '/' && (
           <main
@@ -539,80 +656,6 @@ export function App() {
             aria-label="Observatory Main Page"
             style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
           >
-            {/* Top Navigation Bar with Start Game + Sources & Archives Dropdown */}
-            <nav className="top-nav" aria-label="Main page navigation">
-              <div className="nav-links">
-                <a
-                  href="/"
-                  className="btn-secondary btn-sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('/');
-                  }}
-                >
-                  [ OBSERVATORY HOME ]
-                </a>
-
-                {/* Required Main Page Dropdown for Sources & Archives */}
-                <div className="archive-dropdown" ref={dropdownRef}>
-                  <button
-                    ref={dropdownTriggerRef}
-                    type="button"
-                    className="btn-secondary btn-sm dropdown-trigger"
-                    aria-haspopup="menu"
-                    aria-expanded={dropdownOpen}
-                    onClick={() => {
-                      telemetryAudio.playChirp(840, 0.03);
-                      setDropdownOpen((o) => !o);
-                    }}
-                  >
-                    <span>[ SOURCES &amp; ARCHIVES ]</span>
-                    <span aria-hidden="true">{dropdownOpen ? '▲' : '▾'}</span>
-                  </button>
-
-                  {dropdownOpen && (
-                    <div
-                      className="dropdown-menu"
-                      role="menu"
-                      aria-label="Sources and Archives Menu"
-                    >
-                      {ARCHIVE_MENU_OPTIONS.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="menuitem"
-                          className={`dropdown-item ${archivePanel === item.id ? 'active' : ''}`}
-                          onClick={() => handleSelectArchivePanel(item.id)}
-                        >
-                          <div>
-                            <span className="dropdown-item-title">{item.label}</span>
-                            <span className="dropdown-item-sub">{item.desc}</span>
-                          </div>
-                          <span className="mono" style={{ color: 'var(--cyan)', fontSize: '12px' }}>
-                            →
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="nav-progress" title="Reconstructed mission encounters">
-                <span className="label">
-                  {callSign} · Signals: {completedCount}/{narrative.encounters.length}
-                </span>
-                <div
-                  className="gauge"
-                  aria-label={`${completedCount} of ${narrative.encounters.length} signals reconstructed`}
-                >
-                  {narrative.encounters.map((enc) => (
-                    <i key={enc.id} className={isEncounterCompleted(enc.id) ? 'on' : ''} />
-                  ))}
-                </div>
-              </div>
-            </nav>
-
             {/* HERO OBSERVATORY */}
             <section className="hero-observatory">
               <div className="hero-text">
@@ -657,20 +700,26 @@ export function App() {
                   >
                     ▶ START GAME
                   </a>
-                  <button
-                    type="button"
+                  <a
+                    href="/archive"
                     className="btn-secondary"
-                    onClick={() => handleSelectArchivePanel('missions')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSelectArchivePanel('missions');
+                    }}
                   >
                     MISSION ARCHIVES ({missions.length})
-                  </button>
-                  <button
-                    type="button"
+                  </a>
+                  <a
+                    href="/sources"
                     className="btn-secondary"
-                    onClick={() => handleSelectArchivePanel('sources')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSelectArchivePanel('sources');
+                    }}
                   >
                     NASA SOURCES ({sourcesList.length})
-                  </button>
+                  </a>
                 </div>
               </div>
 
@@ -772,16 +821,17 @@ export function App() {
                             paddingTop: '8px',
                           }}
                         >
-                          <button
-                            type="button"
+                          <a
+                            href="/archive"
                             className="btn-secondary btn-sm"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
                               setFilterChapter(ch.id);
                               handleSelectArchivePanel('missions');
                             }}
                           >
                             ARCHIVE ({chapterCounts[ch.id]})
-                          </button>
+                          </a>
                         </div>
                       </div>
                     </article>
@@ -789,23 +839,30 @@ export function App() {
                 })}
               </div>
             </section>
+          </main>
+        )}
 
-            {/* SOURCES & ARCHIVES SECTION (CONTROLLED BY DROPDOWN ON MAIN PAGE) */}
+        {/* SEPARATE WEBPAGE: /archive & /sources */}
+        {(routePath === '/archive' || routePath === '/sources') && (
+          <main
+            id="main-content"
+            aria-label="Sources and Archives Webpage"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
+          >
             <section
-              ref={archiveSectionRef}
               className="archive-section hud-panel"
               style={{ padding: '22px' }}
               aria-label="Sources and Archives Explorer"
             >
               <div className="section-head">
                 <div>
-                  <h2>{activeArchiveOption.label}</h2>
+                  <h1>{activeArchiveOption.label}</h1>
                   <p className="muted" style={{ fontSize: '14px', marginTop: '4px' }}>
                     {activeArchiveOption.desc}
                   </p>
                 </div>
 
-                {/* Accessible Native Select Dropdown synced with Main Nav Dropdown */}
+                {/* Accessible Native Select Dropdown synced with Navigation Tabs */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <label htmlFor="archive-view-select" className="label">
                     VIEW:
@@ -823,6 +880,23 @@ export function App() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="filter-chips" role="navigation" aria-label="Archives and Sources Views">
+                {ARCHIVE_MENU_OPTIONS.map((opt) => (
+                  <a
+                    key={opt.id}
+                    href={opt.href}
+                    className={`filter-chip ${archivePanel === opt.id ? 'active' : ''}`}
+                    aria-current={archivePanel === opt.id ? 'page' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSelectArchivePanel(opt.id);
+                    }}
+                  >
+                    {opt.label}
+                  </a>
+                ))}
               </div>
 
               {/* VIEW A: MISSION ARCHIVES (31) */}

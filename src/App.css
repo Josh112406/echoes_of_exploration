@@ -163,6 +163,7 @@
   color: var(--ink);
   padding: 10px 12px;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -543,6 +544,9 @@
   text-transform: uppercase;
   min-height: 34px;
   padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
@@ -737,6 +741,7 @@
   border: 1px solid var(--line);
   padding: 10px 12px;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   display: flex;
   flex-direction: column;
