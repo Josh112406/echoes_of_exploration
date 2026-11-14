@@ -86,13 +86,20 @@ export class Unit7Voice {
   }
 
   /**
-   * SPACE / Q / click. While UNIT-7 is talking the input is swallowed (the
-   * player reads along); once the line is finished it dismisses the line.
+   * SPACE / Q / click. While UNIT-7 is typing, the first press completes the
+   * current line immediately; pressing again dismisses it.
    * Returns true when a line is on screen, so callers do not start another.
    */
   advance(): boolean {
     if (!this.current) return false;
-    if (this.talking || this.hiding) return true;
+    if (this.hiding) return true;
+    if (this.talking) {
+      this.talk.finish();
+      this.body.setText(this.talk.visible);
+      this.hold = this.holdTime(this.current.text);
+      this.hint.setText('[SPACE]').setAlpha(1);
+      return true;
+    }
     this.hide();
     return true;
   }
@@ -102,7 +109,7 @@ export class Unit7Voice {
     if (!this.talk.done) {
       if (this.talk.tick(dt)) this.body.setText(this.talk.visible);
       if (this.talk.done) this.hold = this.holdTime(this.current.text);
-      this.hint.setText('...').setAlpha(Math.floor(this.scene.time.now / 300) % 2 ? 0.7 : 0.3);
+      this.hint.setText('[SPACE] SKIP').setAlpha(Math.floor(this.scene.time.now / 300) % 2 ? 0.7 : 0.3);
     } else {
       this.hold -= dt;
       this.hint.setText('[SPACE]').setAlpha(Math.floor(this.scene.time.now / 450) % 2 ? 1 : 0.35);

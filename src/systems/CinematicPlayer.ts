@@ -457,8 +457,15 @@ export class CinematicPlayer {
 
   private setupInputListeners(): void {
     const handleAdvance = () => {
-      // While UNIT-7 is talking, input is ignored: the player reads along.
-      if (this.isTyping) return;
+      if (this.isTyping) {
+        this.talk.finish();
+        this.captionText.setText(this.talk.visible);
+        this.isTyping = false;
+        this.captionReadyAt = this.elapsedTime + 0.35;
+        this.continueMark.setVisible(this.fullCaption.length > 0);
+        SoundFX.playClick();
+        return;
+      }
       this.captionReadyAt = 0;
       if (this.eventIndex < this.timeline.events.length) {
         const nextEvt = this.timeline.events[this.eventIndex];

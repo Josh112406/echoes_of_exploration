@@ -169,12 +169,25 @@ export class EntryReaderModal {
   // Flow
   // ---------------------------------------------------------------------------
 
+  private completeCurrentLine(): void {
+    const line = this.lines[this.lineIdx];
+    if (!line) return;
+    this.talk.finish();
+    this.shown = line.text.length;
+    this.stopTyping();
+    this.onLineDone();
+  }
+
   /**
-   * Click / Space: the next line, then the next page. Input is ignored while
-   * UNIT-7 is still talking, so the player reads along with the robot.
+   * Click / Space: if UNIT-7 is still typing, reveal the line immediately;
+   * otherwise move to the next line or the next page.
    */
   private advance(): void {
-    if (!this.entry || this.sliding || this.typing) return;
+    if (!this.entry || this.sliding) return;
+    if (this.typing) {
+      this.completeCurrentLine();
+      return;
+    }
     if (this.lineIdx < this.lines.length - 1) {
       this.startLine(this.lineIdx + 1);
       return;
@@ -190,12 +203,21 @@ export class EntryReaderModal {
     }
   }
 
+  private skipPageOrAdvance(): void {
+    if (!this.entry || this.sliding) return;
+    if (this.typing) {
+      this.completeCurrentLine();
+      return;
+    }
+    this.advance();
+  }
+
   private nextPage(): void {
     if (this.page < this.lastPage) this.showPage(this.page + 1, true, 1);
   }
 
   private prevPage(): void {
-    if (this.sliding || this.typing) return;
+    if (this.sliding) return;
     if (this.page === QUIZ_PAGE && this.quizState !== 'ask') return;
     if (this.page > 0) this.showPage(this.page - 1, true, -1);
   }
@@ -294,7 +316,8 @@ export class EntryReaderModal {
   }
 
   private answer(choice: number): void {
-    if (this.page !== QUIZ_PAGE || this.quizState !== 'ask' || this.typing || this.lineIdx < this.lines.length - 1) return;
+    if (this.page !== QUIZ_PAGE || this.quizState !== 'ask') return;
+    this.stopTyping();
     const e = this.entry!;
     const quiz = getSiteStory(e.id)!.quiz;
     this.picked = choice;
@@ -416,7 +439,7 @@ export class EntryReaderModal {
       this.advance();
     });
     this.container.querySelector('#btn-reel-back')!.addEventListener('click', () => this.prevPage());
-    this.container.querySelector('#btn-reel-next')!.addEventListener('click', () => this.advance());
+    this.container.querySelector('#btn-reel-next')!.addEventListener('click', () => this.skipPageOrAdvance());
   }
 
   private renderTop(): void {
@@ -430,19 +453,27 @@ export class EntryReaderModal {
       const cls = i === this.page ? 'active' : i <= this.maxSeen ? 'seen' : '';
       return `<button class="reel-dot ${cls}" data-page="${i}" aria-label="Page ${i + 1}: ${PAGE_TITLES[i]}" ${reachable ? '' : 'disabled'}></button>`;
     }).join('');
+    const showSkipToQuiz = this.page < QUIZ_PAGE && this.hasQuiz && !this.canClose;
     top.innerHTML = `
       <span class="briefing__verified" style="color:${e.last_verified ? 'var(--verified)' : 'var(--muted)'};">${verifiedLabel}</span>
       <div class="briefing__dots" role="group" aria-label="Reel progress">${dots}</div>
       <div class="briefing__actions">
-        ${this.canClose ? '<button id="btn-toggle-single-page" class="btn">READ AS ONE PAGE</button><button id="btn-close-entry" class="btn">CLOSE [X]</button>' : ''}
+        ${showSkipToQuiz ? '<button id="btn-skip-to-quiz" class="btn">SKIP TO QUIZ ➔</button>' : ''}
+        <button id="btn-toggle-single-page" class="btn">READ AS ONE PAGE</button>
+        ${this.canClose ? '<button id="btn-close-entry" class="btn">CLOSE [X]</button>' : ''}
       </div>`;
     top.querySelectorAll<HTMLButtonElement>('.reel-dot').forEach((b) => {
       b.addEventListener('click', () => {
-        // No jumping away while UNIT-7 is still talking
-        if (this.typing || this.sliding) return;
+        if (this.sliding) return;
         const p = parseInt(b.dataset.page ?? '0', 10);
         if (p <= this.maxSeen && p !== this.page) this.showPage(p, true, p > this.page ? 1 : -1);
       });
+    });
+    top.querySelector('#btn-skip-to-quiz')?.addEventListener('click', () => {
+      if (this.sliding) return;
+      this.stopTyping();
+      this.maxSeen = Math.max(this.maxSeen, QUIZ_PAGE);
+      this.showPage(QUIZ_PAGE, true, 1);
     });
     top.querySelector('#btn-close-entry')?.addEventListener('click', () => this.finish());
     top.querySelector('#btn-toggle-single-page')?.addEventListener('click', () => {
@@ -474,10 +505,10 @@ export class EntryReaderModal {
 
   private quizHtml(): string {
     const quiz = getSiteStory(this.entry!.id)!.quiz;
-    // Choices unlock in onLineDone(), once UNIT-7 has finished asking.
+    const lockChoices = this.quizState !== 'ask';
     const buttons = this.quizOrder.map((ci, n) => {
       const state = this.picked === ci ? (this.quizState === 'right' ? 'is-right' : 'is-wrong') : '';
-      return `<button class="quiz-choice ${state}" data-choice="${ci}" disabled>
+      return `<button class="quiz-choice ${state}" data-choice="${ci}" ${lockChoices ? 'disabled' : ''}>
           <span class="quiz-choice__key">${String.fromCharCode(65 + n)}</span><span>${quiz.choices[ci]}</span>
         </button>`;
     }).join('');
@@ -573,23 +604,27 @@ export class EntryReaderModal {
     back.style.visibility = back.disabled ? 'hidden' : 'visible';
 
     let label = '';
-    if (!talking) {
-      if (!onQuiz) {
-        if (this.page < this.lastPage) label = this.page === QUIZ_PAGE - 1 ? 'TO THE QUESTION ➔' : 'NEXT ➔';
-        else label = this.finishLabel();
-      } else if (this.quizState === 'wrong') label = 'READ AGAIN ↺';
-      else if (this.quizState === 'right') label = this.finishLabel();
+    if (this.typing) {
+      label = 'SKIP ➔';
+    } else if (this.lineIdx < this.lines.length - 1) {
+      label = 'NEXT ➔';
+    } else if (!onQuiz) {
+      if (this.page < this.lastPage) label = this.page === QUIZ_PAGE - 1 ? 'TO THE QUESTION ➔' : 'NEXT ➔';
+      else label = this.finishLabel();
+    } else if (this.quizState === 'wrong') {
+      label = 'READ AGAIN ↺';
+    } else if (this.quizState === 'right') {
+      label = this.finishLabel();
     }
-    // While UNIT-7 is talking NEXT stays in place but dimmed and disabled (as in the finale);
-    // it is hidden only while a question waits for an answer on the card.
-    const waitingForAnswer = !talking && onQuiz && this.quizState === 'ask';
+
+    const waitingForAnswer = !this.typing && this.lineIdx >= this.lines.length - 1 && onQuiz && this.quizState === 'ask';
     next.style.visibility = waitingForAnswer ? 'hidden' : 'visible';
     next.disabled = !label;
-    next.classList.toggle('is-waiting', !label);
-    next.textContent = label || (this.page < this.lastPage ? 'NEXT ➔' : this.finishLabel());
+    next.classList.toggle('is-waiting', false);
+    next.textContent = label || 'NEXT ➔';
 
     hint.textContent = this.typing
-      ? 'UNIT-7 IS TALKING …'
+      ? 'CLICK / SPACE TO SKIP ▼'
       : talking
       ? 'CLICK / SPACE TO CONTINUE ▼'
       : onQuiz && this.quizState === 'ask'

@@ -285,19 +285,33 @@ export class EndingScene extends Phaser.Scene {
     if (this.lockT > 0) this.lockT -= dt;
     if (this.capTyping) {
       if (this.talk.tick(dt)) this.capText.setText(this.talk.visible);
-      if (this.talk.done) this.capTyping = false;
+      if (this.talk.done) {
+        this.capTyping = false;
+        this.nextReady = null;
+      }
     }
     this.refreshNextButton();
   }
 
-  /** True once the current beat may be left: its line has finished and its entrance has played. */
+  /** True while not finished and beats remain (typing can be skipped immediately). */
   private canAdvance(): boolean {
-    return !this.finished && !this.capTyping && this.lockT <= 0 && this.beatIdx < this.beats.length - 1;
+    return !this.finished && this.beatIdx < this.beats.length - 1;
   }
 
   private advance(): void {
-    // While UNIT-7 is talking, input is ignored: the player reads along.
-    if (!this.canAdvance()) return;
+    if (this.finished) return;
+    if (this.capTyping) {
+      this.talk.finish();
+      this.capText.setText(this.talk.visible);
+      this.capTyping = false;
+      this.lockT = 0;
+      this.nextReady = null;
+      SoundFX.playClick();
+      this.refreshNextButton();
+      return;
+    }
+    if (this.beatIdx >= this.beats.length - 1) return;
+    this.lockT = 0;
     SoundFX.playClick();
     this.nextBeat();
   }
@@ -347,11 +361,13 @@ export class EndingScene extends Phaser.Scene {
     }
     this.talk.start(c.text, { instant: this.reducedMotion, record: c.kind !== 'story' });
     this.capTyping = !this.talk.done;
+    this.nextReady = null;
     this.capText.setText(this.talk.visible);
   }
 
   private clearCaption(): void {
     this.capTyping = false;
+    this.nextReady = null;
     if (!this.capShown) return;
     this.capShown = false;
     this.tweens.killTweensOf(this.capLayer);
@@ -1181,6 +1197,7 @@ export class EndingScene extends Phaser.Scene {
     const bx = x + w - bw - 8, by = y + h - bh - 7;
     this.nextBg.clear();
     NineSliceHUD.drawFrame(this.nextBg, bx, by, bw, bh, ready ? (this.nextHover ? 'primary' : 'secondary') : 'muted');
+    this.nextTxt.setText(this.capTyping ? 'SKIP ▶' : 'NEXT ▶');
     this.nextTxt.setColor(ready ? (this.nextHover ? PALETTE.lunarHighlight : PALETTE.cyanLaser) : PALETTE.slateMuted);
     this.tweens.killTweensOf(this.nextBg);
     this.nextBg.setAlpha(ready ? 1 : 0.55);

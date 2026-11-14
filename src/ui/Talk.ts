@@ -66,6 +66,12 @@ export class TalkClock {
     return this.text.slice(0, this.shownCount);
   }
 
+  /** Immediately reveal the entire line. */
+  finish(): void {
+    this.shownCount = this.text.length;
+    this.wait = 0;
+  }
+
   /** Advance by dt seconds; returns true when the visible text changed. */
   tick(dt: number): boolean {
     if (this.done) return false;
@@ -111,12 +117,23 @@ export function typeInto(
   let last = performance.now();
   let raf = 0;
   let cancelled = false;
+  const finishNow = () => {
+    if (cancelled || clock.done) return;
+    cancelled = true;
+    cancelAnimationFrame(raf);
+    el.removeEventListener('click', finishNow);
+    clock.finish();
+    el.textContent = clock.visible;
+    opts.onDone?.();
+  };
+  el.addEventListener('click', finishNow, { once: true });
   const frame = (now: number) => {
     if (cancelled) return;
     const dt = (now - last) / 1000;
     last = now;
     if (clock.tick(dt)) el.textContent = clock.visible;
     if (clock.done) {
+      el.removeEventListener('click', finishNow);
       opts.onDone?.();
       return;
     }
@@ -125,6 +142,7 @@ export function typeInto(
   raf = requestAnimationFrame(frame);
   return () => {
     cancelled = true;
+    el.removeEventListener('click', finishNow);
     cancelAnimationFrame(raf);
   };
 }

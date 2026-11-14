@@ -178,21 +178,19 @@ export class ArchiveModal {
     this.speakReply();
   }
 
-  /** The reply to a just-answered chapter is spoken: typed out at UNIT-7's talking pace. */
+  /** The reply to a just-answered chapter is spoken: typed out at UNIT-7's talking pace (clickable to skip). */
   private speakReply(): void {
+    this.cancelTalk();
+    this.cancelTalk = () => {};
     const id = this.speakReplyFor;
     this.speakReplyFor = null;
     if (!id) return;
     const el = this.container.querySelector<HTMLElement>(`.journal-reply[data-reply-for="${id}"]`);
     if (!el) return;
     const text = el.textContent ?? '';
-    const choices = this.container.querySelectorAll<HTMLButtonElement>('.journal-choice');
-    // While UNIT-7 is talking, the player cannot answer another chapter.
-    choices.forEach((b) => (b.disabled = true));
     el.setAttribute('aria-label', text);
     this.cancelTalk = typeInto(el, text, {
       instant: GameState.getState().settings.reducedMotion,
-      onDone: () => choices.forEach((b) => (b.disabled = false)),
     });
   }
 
