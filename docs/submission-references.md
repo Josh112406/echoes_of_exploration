@@ -53,6 +53,7 @@ Coverage: 23 playable echoes, a 31-mission catalog, 9 designed encounters (2 wit
 - nssdc.gsfc.nasa.gov: https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A
 - ode.rsl.wustl.edu: https://ode.rsl.wustl.edu/mars/pagehelp/Content/Missions_Instruments/Landing_Sites.htm
 - science.nasa.gov: https://science.nasa.gov/mission/cassini/grand-finale/
+- science.nasa.gov: https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/
 - science.nasa.gov: https://science.nasa.gov/mission/mars-polar-lander-deep-space-2/
 - science.nasa.gov: https://science.nasa.gov/mission/viking-1/
 - science.nasa.gov: https://science.nasa.gov/mission/viking-2/
@@ -62,8 +63,6 @@ Coverage: 23 playable echoes, a 31-mission catalog, 9 designed encounters (2 wit
 - giss.nasa.gov: https://www.giss.nasa.gov/tools/mars24/help/landers.html
 - jpl.nasa.gov: https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter
 - jpl.nasa.gov: https://www.jpl.nasa.gov/missions/insight
-- jpl.nasa.gov: https://www.jpl.nasa.gov/missions/mars-exploration-rovers-spirit-and-opportunity
-- jpl.nasa.gov: https://www.jpl.nasa.gov/missions/mars-pathfinder-sojourner
 - jpl.nasa.gov: https://www.jpl.nasa.gov/missions/phoenix
 - jpl.nasa.gov: https://www.jpl.nasa.gov/news/nasas-ingenuity-mars-helicopter-succeeds-in-historic-first-flight
 - nasa.gov: https://www.nasa.gov/clps

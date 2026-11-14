@@ -34,8 +34,8 @@
   "science": "Discovered hematite blueberries and silica deposits proving liquid water once covered ancient Martian terrain.",
   "facts": [
     {
-      "text": "Opportunity drove more than 45 kilometers on Mars, setting an off-world driving record.",
-      "source_url": "https://www.jpl.nasa.gov/missions/mars-exploration-rovers-spirit-and-opportunity"
+      "text": "Opportunity drove more than 45 kilometers on Mars, an off-world driving record that stood until Perseverance passed it.",
+      "source_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
     },
     {
       "text": "Spirit discovered ancient hydrothermal silica deposits while dragging a broken front wheel.",
@@ -50,7 +50,7 @@
     "alt": "Self-portrait by the Opportunity rover on Mars in January 2014, about three weeks before completing a decade of work"
   },
   "sources": [
-    "https://www.jpl.nasa.gov/missions/mars-exploration-rovers-spirit-and-opportunity"
+    "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
   ],
   "written_by": "agent:content-author",
   "verified_by": "agent:source-verifier",

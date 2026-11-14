@@ -263,9 +263,9 @@ export class FlybyScene extends Phaser.Scene {
     }
     if (this.siteId === 'pioneer-11') {
       return {
-        kind: 'giant', title: 'JUPITER POLAR PASS', subtitle: "PIONEER 11 · THE FIRST LOOK AT JUPITER'S POLES", oblate: 0.93, ramp: jupiter, bands: 9,
+        kind: 'giant', title: 'JUPITER POLAR PASS', subtitle: "PIONEER 11 · JUPITER'S NORTH POLAR REGION", oblate: 0.93, ramp: jupiter, bands: 9,
         spots: [[-22, 60, 0.17, 11]],
-        targets: [['NORTH POLAR REGION', 62, 120], ['GREAT RED SPOT', -22, 60], ['SOUTH POLAR REGION', -60, 260]],
+        targets: [['NORTH POLAR REGION', 62, 120], ['GREAT RED SPOT', -22, 60], ['NORTH TEMPERATE BELT', 24, 250]],
         debris: 'RADIATION GLITCHES',
       };
     }

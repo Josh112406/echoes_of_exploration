@@ -119,7 +119,7 @@ export const CATALOG_PRACTICE: Record<string, CatalogPractice> = {
   },
   'pioneer-11': {
     scene: 'FlybyScene', siteId: 'pioneer-11',
-    note: "Pioneer 11 passed Jupiter's polar regions in 1974, then became the first spacecraft to fly past Saturn in 1979.",
+    note: "Pioneer 11 swung past Jupiter on a polar path in 1974 and sent back the first images of its north polar region, then became the first spacecraft to fly past Saturn in 1979.",
   },
   'voyager-2': {
     scene: 'FlybyScene', siteId: 'voyager-2',
@@ -127,7 +127,7 @@ export const CATALOG_PRACTICE: Record<string, CatalogPractice> = {
   },
   dawn: {
     scene: 'FlybyScene', siteId: 'dawn',
-    note: 'Dawn orbited the asteroid Vesta and then the dwarf planet Ceres, where it is still in orbit, now silent. One pass stands in for years of orbits.',
+    note: 'Dawn orbited the asteroid Vesta and then the dwarf planet Ceres. Its mission ended in 2018, but it was left in a stable orbit and still circles Ceres. One pass stands in for years of orbits.',
   },
   kepler: {
     scene: 'LaserScene', siteId: 'voyager-1',

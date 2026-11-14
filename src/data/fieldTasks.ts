@@ -85,22 +85,22 @@ export const FIELD_TASKS: FieldTask[] = [
     encounterId: 'question-in-the-soil',
     entryId: 'viking-1-2',
     title: 'A QUESTION IN THE SOIL',
-    intro: "In 1976 each Viking lander scooped Martian soil into a small onboard lab. Three of its experiments are below, simplified. Read them all before you decide.",
+    intro: "In 1976 each Viking lander scooped Martian soil into its onboard instruments. It ran three biology experiments (Pyrolytic Release, Labeled Release and Gas Exchange) and, separately, searched the soil for organic molecules. Three of those results are below, simplified. Read them all before you decide.",
     cards: [
       {
         name: 'LABELED RELEASE',
         test: 'Added a nutrient broth marked with radioactive carbon to the soil.',
-        result: 'Radioactive gas came off, the way it might if microbes were eating. Soil that was heated first to sterilize it gave almost none.',
+        result: 'Radioactive gas came off, a result that at first looked like microbes eating. Soil that was heated first to sterilize it gave almost none.',
       },
       {
-        name: 'GAS CHROMATOGRAPH–MASS SPECTROMETER',
+        name: 'ORGANIC MOLECULE SEARCH (GCMS)',
         test: 'Heated soil and searched the vapour for organic (carbon-based) molecules, the building blocks of living things.',
         result: 'It did not identify any Martian organic molecules.',
       },
       {
         name: 'GAS EXCHANGE',
-        test: 'Moistened the soil and measured the gases around it.',
-        result: 'The soil released oxygen quickly, even after it had been heated, which points to reactive chemistry rather than life.',
+        test: 'Moistened the soil and measured the gases it gave off or took in.',
+        result: 'Oxygen came off quickly once the soil was moistened, and the carbon dioxide changed later. Reactive chemicals in the soil could explain this without life.',
       },
     ],
     prompt: 'Which conclusion does ALL of the evidence support?',
@@ -116,9 +116,9 @@ export const FIELD_TASKS: FieldTask[] = [
         feedback: 'A few scoops of soil at two landing sites cannot rule out life everywhere, and scientists still discuss these results.',
       },
       {
-        text: 'Reactive soil chemistry explains the results better than life does, but they do not settle whether Mars has or had life.',
+        text: 'The results do not establish life. Chemistry in the soil could explain them, but other explanations, including biology, could not be fully ruled out.',
         correct: true,
-        feedback: 'That is the cautious reading most scientists took: no clear sign of life, and an open question.',
+        feedback: 'That is the careful reading the Viking scientists reported: no clear sign of life, chemistry as a likely explanation, and the question left open.',
       },
       {
         text: 'The experiments must have been broken.',
@@ -157,7 +157,7 @@ export const FIELD_TASKS: FieldTask[] = [
         label: '2012 · LEAVING THE BUBBLE',
         budget: 7,
         situation: "Voyager 1 is about to cross into interstellar space. Keep what can measure the space it's flying through.",
-        good: 'Plan fits. In 2012 its fields-and-particles instruments showed it had left the Sun\'s bubble of solar wind.',
+        good: 'Plan fits. In August 2012 its fields-and-particles instruments showed it had crossed the heliopause, the edge of the Sun\'s bubble of solar wind, into interstellar space.',
         hint: { ifOn: 'uv', text: 'This fits, but out here the instruments that measure fields and particles matter most.' },
       },
       {
