@@ -312,6 +312,12 @@ export class SiteScene extends Phaser.Scene {
       this.tutorialContainer.setVisible(false);
       if (!this.voice.advance()) this.story.requestThought(world);
     });
+    this.input.keyboard?.on('keydown-M', () => {
+      if (this.isUiBlocked()) return;
+      if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+      SoundFX.playClick();
+      EventBus.emit(EVENTS.NAVIGATE_TO_HUB);
+    });
 
     // After closing the entry reader for a site just recovered, UNIT-7 reflects on it
     const onEntryClosed = (id: string) => {
@@ -795,13 +801,14 @@ export class SiteScene extends Phaser.Scene {
       letterSpacing: 2,
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
-    // 2. Top-Right Progress panel + separate MENU button
+    // 2. Top-Right Progress panel + MAP & MENU buttons
     const rightBox = this.add.graphics().setScrollFactor(0).setDepth(100);
-    NineSliceHUD.drawFrame(rightBox, W - 250, 10, 182, 24, 'panel');
-    NineSliceHUD.drawStatusDot(rightBox, W - 241, 21);
+    NineSliceHUD.drawFrame(rightBox, W - 298, 10, 182, 24, 'panel');
+    NineSliceHUD.drawStatusDot(rightBox, W - 289, 21);
+    NineSliceHUD.drawFrame(rightBox, W - 110, 10, 44, 24, 'secondary');
     NineSliceHUD.drawFrame(rightBox, W - 62, 10, 50, 24, 'secondary');
 
-    this.hudProgressText = this.add.text(W - 234, 22, '', {
+    this.hudProgressText = this.add.text(W - 282, 22, '', {
       fontSize: '7px',
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
@@ -809,6 +816,26 @@ export class SiteScene extends Phaser.Scene {
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
     this.updateHUDProgress(world);
+
+    // Map button
+    const mapBtn = this.add.zone(W - 88, 22, 44, 24)
+      .setScrollFactor(0).setDepth(102).setInteractive({ cursor: 'pointer' });
+    mapBtn.on('pointerdown', () => {
+      if (this.robot) {
+        GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+      }
+      SoundFX.playClick();
+      EventBus.emit(EVENTS.NAVIGATE_TO_HUB);
+    });
+
+    const mapText = this.add.text(W - 88, 22, 'MAP', {
+      fontSize: '7px',
+      fontFamily: HUD_FONT,
+      color: PALETTE.lunarHighlight,
+      letterSpacing: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+    mapBtn.on('pointerover', () => mapText.setColor(PALETTE.cyanLaser));
+    mapBtn.on('pointerout', () => mapText.setColor(PALETTE.lunarHighlight));
 
     // Menu button
     const menuBtn = this.add.zone(W - 37, 22, 50, 24)

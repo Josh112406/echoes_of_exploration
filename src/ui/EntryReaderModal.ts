@@ -95,6 +95,7 @@ export class EntryReaderModal {
   private slideTimer = 0;
   private cardClosed = false;
   private sliding = false;
+  private wasAlreadyReadOnOpen = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -130,6 +131,7 @@ export class EntryReaderModal {
     if (!entry) return;
     this.entry = entry;
     this.mode = mode;
+    this.wasAlreadyReadOnOpen = GameState.isEntryRead(entry.id);
     this.isSinglePageView = false;
     this.attempt = 0;
     this.resetRun();
@@ -244,6 +246,7 @@ export class EntryReaderModal {
 
   private finish(): void {
     const entry = this.entry;
+    if (entry) GameState.markEntryRead(entry.id);
     this.stopTyping();
     window.clearTimeout(this.resetTimer);
     window.clearTimeout(this.slideTimer);
@@ -252,8 +255,8 @@ export class EntryReaderModal {
     this.container.classList.remove('briefing-mode');
     this.container.innerHTML = '';
     EventBus.emit(EVENTS.ENTRY_CLOSED, entry?.id ?? null);
-    if (this.mode !== 'briefing') return;
-    const world = GameState.getWorld();
+    if (this.mode !== 'briefing' || this.wasAlreadyReadOnOpen) return;
+    const world = entry?.world ?? GameState.getWorld();
     if (GameState.isWorldComplete('moon') && world === 'moon') EventBus.emit(EVENTS.START_TRANSITION, 'mars');
     else if (GameState.isWorldComplete('mars') && world === 'mars') EventBus.emit(EVENTS.START_TRANSITION, 'elsewhere');
     else if (GameState.isWorldComplete('elsewhere') && world === 'elsewhere') EventBus.emit(EVENTS.SHOW_FINALE);

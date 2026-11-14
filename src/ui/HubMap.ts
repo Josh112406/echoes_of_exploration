@@ -68,12 +68,15 @@ export class HubMap {
             ${elsewhereUnlocked ? '[ELSEWHERE // ' : '[LOCKED // ELSEWHERE // '}${Object.values(ALL_ENTRIES).filter(e => e.world === 'elsewhere').length} SITES]
           </button>
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="btn-quick-land" class="btn" style="background:#0e2a38; border-color:#06b6d4; color:#38bdf8;">
             [SIMULATION: DIRECT MINIGAME]
           </button>
           <button id="btn-toggle-view" class="btn">
             ${this.isListView ? '[VIEW: PROJECTION MAP]' : '[VIEW: ROSTER TABLE]'}
+          </button>
+          <button id="btn-close-hub" class="btn">
+            CLOSE [X]
           </button>
         </div>
       </div>
@@ -85,7 +88,7 @@ export class HubMap {
           <button id="btn-close-quick-land" class="btn" style="padding:2px 8px; font-size:10px; font-family:var(--font-mono);">CLOSE [X]</button>
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px;">
-          ${Object.values(ALL_ENTRIES).map(e => {
+          ${Object.values(ALL_ENTRIES).filter(e => GameState.isWorldUnlocked(e.world)).map(e => {
             const mg = getMinigameMetaForSite(e.id);
             const sectorColor = e.world === 'moon' ? '#cbd5e1' : e.world === 'mars' ? '#f97316' : '#38bdf8';
             return `
@@ -279,6 +282,11 @@ export class HubMap {
       if (quickMenu) quickMenu.style.display = 'none';
     });
 
+    this.container.querySelector('#btn-close-hub')?.addEventListener('click', () => {
+      SoundFX.playClick();
+      this.container.classList.add('hidden');
+    });
+
     this.container.querySelectorAll('.btn-direct-pick').forEach(btn => {
       btn.addEventListener('click', (e) => {
         SoundFX.playWhoosh();
@@ -360,12 +368,22 @@ export class HubMap {
   }
 
   private flyToSite(siteId: string): void {
+    const entry = ALL_ENTRIES[siteId];
+    if (entry) {
+      if (!GameState.isWorldUnlocked(entry.world)) return;
+      GameState.setWorld(entry.world);
+    }
     GameState.setCurrentSiteId(siteId);
     this.container.classList.add('hidden');
     EventBus.emit(EVENTS.NAVIGATE_TO_SITE, siteId);
   }
 
   private directLand(siteId: string): void {
+    const entry = ALL_ENTRIES[siteId];
+    if (entry) {
+      if (!GameState.isWorldUnlocked(entry.world)) return;
+      GameState.setWorld(entry.world);
+    }
     GameState.setCurrentSiteId(siteId);
     this.container.classList.add('hidden');
     EventBus.emit(EVENTS.START_LANDING, siteId);

@@ -27,7 +27,7 @@ export const ART_CREDIT = 'Elsewhere map, planets, sprites and backgrounds: orig
 
 export const AUDIO_CREDIT = 'Music and sound effects: original, synthesized live in the browser with the Web Audio API. No recorded or licensed audio.';
 
-export const AI_DISCLOSURE = 'Parts of the code, the procedural pixel art and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic). A team member reviewed the generated code, and every fact was checked by a person against the linked NASA sources. Illustrations made this way are labelled as illustrations, never presented as NASA photographs.';
+export const AI_DISCLOSURE = 'Parts of the code, the procedural pixel art and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic and Gemini / Antigravity by Google DeepMind). A human team member reviewed all generated code, and every fact was checked by a person against the linked NASA sources. Illustrations made this way are labelled as illustrations, never presented as NASA photographs.';
 
 export const MEDIA_GUIDELINES_URL = 'https://www.nasa.gov/nasa-brand-center/images-and-media/';
 
