@@ -1,0 +1,47 @@
+{
+  "id": "phoenix",
+  "name": "Phoenix Mars Lander",
+  "world": "mars",
+  "tier": "standard",
+  "status": "ended",
+  "launch_date": "2007-08-04",
+  "end_date": "2008-11-02",
+  "locations": [
+    {
+      "id": "phoenix-site",
+      "label": "Green Valley, Vastitas Borealis",
+      "lat": 68.22,
+      "lon": -125.75,
+      "source_url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+      "approximate": false
+    }
+  ],
+  "summary": "Phoenix landed in the Martian arctic to study water ice beneath the surface soil.",
+  "hook": "I dug into the arctic soils of northern Mars and verified subsurface water ice in 2008.",
+  "how_it_worked": "Stationary lander equipped with a 2.35-meter robotic trenching arm and thermal oven analyzers.",
+  "science": "Exposed chunks of bright white water ice that sublimated into vapor over several days.",
+  "facts": [
+    {
+      "text": "Phoenix detected perchlorate salts in the soil, which lower the freezing point of water.",
+      "source_url": "https://science.nasa.gov/mission/phoenix/"
+    },
+    {
+      "text": "Mission ended when solar panels lost sunlight during the onset of the deep northern Martian winter.",
+      "source_url": "https://www.jpl.nasa.gov/missions/phoenix"
+    }
+  ],
+  "image": {
+    "nasa_id": "PIA11719",
+    "file": "assets/images/artifacts/phoenix.jpg",
+    "credit": "NASA/JPL-Caltech/University of Arizona/Texas A&M University",
+    "source_url": "https://images.nasa.gov/details/PIA11719",
+    "alt": "Phoenix lander self-portrait on Mars, showing its deck and solar panels from above"
+  },
+  "sources": [
+    "https://science.nasa.gov/mission/phoenix/"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

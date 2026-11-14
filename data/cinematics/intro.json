@@ -1,0 +1,84 @@
+{
+  "id": "intro",
+  "world": "moon",
+  "totalDuration": 25.0,
+  "events": [
+    {
+      "time": 0.5,
+      "camera": { "x": 320, "y": 180, "zoom": 1.0, "duration": 0 },
+      "sprites": [
+        {
+          "id": "rocket",
+          "texture": "hw_apollo-11-site",
+          "x": 392,
+          "y": 280,
+          "ground": true,
+          "scale": 2,
+          "depth": 20,
+          "targetX": 404,
+          "targetY": -140,
+          "duration": 14.0,
+          "thruster": true,
+          "visible": true
+        },
+        {
+          "id": "robot",
+          "texture": "robot_idle",
+          "x": 250,
+          "y": 285,
+          "ground": true,
+          "scale": 2,
+          "depth": 22,
+          "visible": true
+        }
+      ],
+      "sound": { "cue": "thruster", "state": true },
+      "caption": {
+        "tag": "SYS_TELEMETRY",
+        "text": "CRITICAL ALERT: Connection to Human Crew Ascent Module severed."
+      }
+    },
+    {
+      "time": 5.0,
+      "camera": { "x": 270, "y": 228, "zoom": 1.25, "duration": 3.0 },
+      "sound": { "cue": "thruster", "state": false },
+      "caption": {
+        "tag": "UNIT-7_INTERNAL",
+        "text": "Optics online. Location: Ocean of Storms. Cold vacuum."
+      }
+    },
+    {
+      "time": 9.5,
+      "camera": { "x": 420, "y": 140, "zoom": 1.15, "duration": 4.0 },
+      "caption": {
+        "tag": "UNIT-7_INTERNAL",
+        "text": "The crew has ascended toward the blue marble of Earth... leaving this unit alone in the dust."
+      }
+    },
+    {
+      "time": 14.0,
+      "camera": { "x": 452, "y": 96, "zoom": 1.4, "duration": 3.5 },
+      "caption": {
+        "tag": "UNIT-7_QUERY",
+        "text": "Why did humans cross the silent darkness just to stand here?"
+      }
+    },
+    {
+      "time": 18.0,
+      "camera": { "x": 320, "y": 180, "zoom": 1.0, "duration": 3.0 },
+      "sound": { "cue": "ping", "state": true },
+      "caption": {
+        "tag": "RADAR_SWEEP",
+        "text": "Sensors detecting faint radio telemetry across the regolith... relics of past voyages."
+      }
+    },
+    {
+      "time": 21.5,
+      "sound": { "cue": "click", "state": true },
+      "caption": {
+        "tag": "OBJECTIVE_LOCKED",
+        "text": "If I trace their journey chronologically from the beginning, I will understand why humans explore."
+      }
+    }
+  ]
+}

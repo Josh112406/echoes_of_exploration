@@ -1,0 +1,63 @@
+{
+  "id": "apollo-retroreflectors",
+  "name": "Apollo Laser Retroreflectors",
+  "world": "moon",
+  "tier": "standard",
+  "status": "active",
+  "launch_date": "1969-07-16",
+  "end_date": null,
+  "locations": [
+    {
+      "id": "lrrr-apollo-11",
+      "label": "Apollo 11 LRRR, Mare Tranquillitatis",
+      "lat": 0.67337,
+      "lon": 23.47293,
+      "source_url": "https://science.nasa.gov/mission/apollo-11/",
+      "approximate": false
+    },
+    {
+      "id": "lrrr-apollo-14",
+      "label": "Apollo 14 LRRR, Fra Mauro",
+      "lat": -3.64421,
+      "lon": -17.4788,
+      "source_url": "https://science.nasa.gov/mission/apollo-14/",
+      "approximate": false
+    },
+    {
+      "id": "lrrr-apollo-15",
+      "label": "Apollo 15 LRRR, Hadley-Apennine",
+      "lat": 26.13333,
+      "lon": 3.62837,
+      "source_url": "https://science.nasa.gov/mission/apollo-15/",
+      "approximate": false
+    }
+  ],
+  "summary": "Laser ranging retroreflectors are optical prism arrays still used for research today.",
+  "hook": "I require zero power and scientists on Earth still bounce laser beams off my prisms.",
+  "how_it_worked": "Corner-cube fused-silica prisms reflect incident laser pulses back toward their precise origin on Earth.",
+  "science": "Confirmed that the Moon is spiraling away from Earth at a rate of 3.8 centimeters per year.",
+  "facts": [
+    {
+      "text": "These retroreflectors are the only Apollo surface experiments still in active operational scientific use.",
+      "source_url": "https://www.nasa.gov/missions/artemis/clps/nasa-anticipates-lunar-findings-from-next-generation-retroreflector"
+    },
+    {
+      "text": "The Apollo 15 reflector array contains 300 corner cubes, three times larger than Apollo 11.",
+      "source_url": "https://history.nasa.gov/alsj/a15/a15.html"
+    }
+  ],
+  "image": {
+    "nasa_id": "as11-37-5551",
+    "file": "assets/images/artifacts/apollo-retroreflectors.jpg",
+    "credit": "NASA",
+    "source_url": "https://images.nasa.gov/details/as11-37-5551",
+    "alt": "Apollo 11 Laser Ranging Retro-Reflector and seismic experiment deployed on the lunar surface, seen from the Lunar Module"
+  },
+  "sources": [
+    "https://www.nasa.gov/missions/artemis/clps/nasa-anticipates-lunar-findings-from-next-generation-retroreflector"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

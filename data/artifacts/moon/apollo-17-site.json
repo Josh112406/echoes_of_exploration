@@ -1,0 +1,47 @@
+{
+  "id": "apollo-17-site",
+  "name": "Apollo 17 Landing Site",
+  "world": "moon",
+  "tier": "standard",
+  "status": "dormant",
+  "launch_date": "1972-12-07",
+  "end_date": "1972-12-19",
+  "locations": [
+    {
+      "id": "apollo-17-lm",
+      "label": "Challenger LM Descent Stage, Taurus-Littrow",
+      "lat": 20.1908,
+      "lon": 30.77168,
+      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html",
+      "approximate": false
+    }
+  ],
+  "summary": "Apollo 17 was the final Apollo mission to land astronauts on the Moon.",
+  "hook": "I was the final Apollo human landing site in the Taurus-Littrow valley in 1972.",
+  "how_it_worked": "Supported the longest human stay on the lunar surface: over 74 hours with three moonwalks.",
+  "science": "Discovered orange soil beads formed by ancient volcanic fire-fountain eruptions on the Moon.",
+  "facts": [
+    {
+      "text": "Harrison Schmitt, the Lunar Module Pilot on Apollo 17, was the first professional geologist on the Moon.",
+      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+    },
+    {
+      "text": "The crew traveled over 35 kilometers in their rover and gathered 110 kg of soil and rock samples.",
+      "source_url": "https://history.nasa.gov/alsj/a17/a17.html"
+    }
+  ],
+  "image": {
+    "nasa_id": "as17-134-20382",
+    "file": "assets/images/artifacts/apollo-17-site.jpg",
+    "credit": "NASA",
+    "source_url": "https://images.nasa.gov/details/as17-134-20382",
+    "alt": "Harrison Schmitt beside the flag at Taurus-Littrow, with the Lunar Module and Lunar Roving Vehicle in the background"
+  },
+  "sources": [
+    "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

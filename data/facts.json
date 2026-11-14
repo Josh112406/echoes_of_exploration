@@ -1,0 +1,65 @@
+{
+  "facts": [
+    {
+      "id": "sojourner_speed",
+      "text": "The Sojourner rover on Mars traveled at a top speed of 1 centimeter per second to ensure hazard-detection lasers could stop the rover before encountering dangerous drop-offs.",
+      "source_url": "https://mars.nasa.gov/mer/mission/technology/mobility/",
+      "trigger": "exploration_time_90s"
+    },
+    {
+      "id": "curiosity_wheel_holes",
+      "text": "Curiosity's aluminum wheels feature puncture patterns that spell 'JPL' in Morse code (.--- .--. .-..), which imprint in the Martian regolith to calculate wheel slip by visual odometry.",
+      "source_url": "https://mars.nasa.gov/msl/spacecraft/rover/wheels/",
+      "trigger": "exploration_time_180s"
+    },
+    {
+      "id": "ingenuity_rotor_speed",
+      "text": "Because the Martian atmosphere is less than 1% the density of Earth's at sea level, the Ingenuity helicopter spun its carbon-fiber composite rotors at over 2,400 RPM to generate aerodynamic lift.",
+      "source_url": "https://mars.nasa.gov/technology/helicopter/",
+      "trigger": "exploration_time_270s"
+    },
+    {
+      "id": "lunar_laser_ranging",
+      "text": "The Apollo laser retroreflectors left on the Moon require zero electrical power and continue reflecting laser pulses back to Earth observatories, proving the Moon recedes by 3.8 centimeters annually.",
+      "source_url": "https://science.nasa.gov/mission/apollo-11/",
+      "trigger": "exploration_time_360s"
+    },
+    {
+      "id": "insight_seismometer",
+      "text": "The InSight lander's ultra-sensitive SEIS seismometer on Mars was enclosed under a vacuum sphere beneath a thermal shield capable of measuring vibrations smaller than the diameter of an atom.",
+      "source_url": "https://mars.nasa.gov/insight/spacecraft/instruments/seis/",
+      "trigger": "exploration_time_450s"
+    },
+    {
+      "id": "fact_06",
+      "text": "TODO: Source verified NASA fact regarding Surveyor 3 surface sampler operations.",
+      "source_url": "https://www.nasa.gov/",
+      "trigger": "exploration_time_540s"
+    },
+    {
+      "id": "fact_07",
+      "text": "TODO: Source verified NASA fact regarding Viking 1 and 2 biology experiments.",
+      "source_url": "https://www.nasa.gov/",
+      "trigger": "exploration_time_630s"
+    },
+    {
+      "id": "fact_08",
+      "text": "TODO: Source verified NASA fact regarding Apollo 15 LRV navigation computer.",
+      "source_url": "https://www.nasa.gov/",
+      "trigger": "exploration_time_720s"
+    },
+    {
+      "id": "fact_09",
+      "text": "TODO: Source verified NASA fact regarding Phoenix thermal evolved gas analysis.",
+      "source_url": "https://www.nasa.gov/",
+      "trigger": "exploration_time_810s"
+    },
+    {
+      "id": "fact_10",
+      "text": "TODO: Source verified NASA fact regarding Blue Ghost commercial lunar payload delivery.",
+      "source_url": "https://www.nasa.gov/",
+      "trigger": "exploration_time_900s"
+    }
+  ]
+}
+

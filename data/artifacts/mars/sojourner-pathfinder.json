@@ -1,0 +1,47 @@
+{
+  "id": "sojourner-pathfinder",
+  "name": "Mars Pathfinder & Sojourner",
+  "world": "mars",
+  "tier": "flagship",
+  "status": "ended",
+  "launch_date": "1996-12-04",
+  "end_date": "1997-09-27",
+  "locations": [
+    {
+      "id": "pathfinder-site",
+      "label": "Carl Sagan Memorial Station, Ares Vallis",
+      "lat": 19.47,
+      "lon": -33.25,
+      "source_url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+      "approximate": false
+    }
+  ],
+  "summary": "Mars Pathfinder landed the first wheeled rover ever operated on Mars.",
+  "hook": "I carried the microwave-sized Sojourner rover across the ancient floodplains of Ares Vallis.",
+  "how_it_worked": "Used an innovative parachute, retro-rocket, and airbag bounce-landing system on the Martian surface.",
+  "science": "Determined that rocks in Ares Vallis were rounded and sorted by catastrophic prehistoric water floods.",
+  "facts": [
+    {
+      "text": "The Sojourner microrover weighed only 10.6 kg and operated for nearly three months.",
+      "source_url": "https://science.nasa.gov/mission/mars-pathfinder/"
+    },
+    {
+      "text": "Pathfinder returned 16,500 images and 8.5 million measurements of atmospheric pressure and temperature.",
+      "source_url": "https://www.jpl.nasa.gov/missions/mars-pathfinder-sojourner"
+    }
+  ],
+  "image": {
+    "nasa_id": "PIA01120",
+    "file": "assets/images/artifacts/sojourner-pathfinder.jpg",
+    "credit": "NASA/JPL",
+    "source_url": "https://images.nasa.gov/details/PIA01120",
+    "alt": "Mars Pathfinder lander on the surface of Mars"
+  },
+  "sources": [
+    "https://science.nasa.gov/mission/mars-pathfinder/"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

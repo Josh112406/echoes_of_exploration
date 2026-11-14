@@ -1,0 +1,47 @@
+{
+  "id": "mars-polar-lander",
+  "name": "Mars Polar Lander",
+  "world": "mars",
+  "tier": "standard",
+  "status": "lost",
+  "launch_date": "1999-01-03",
+  "end_date": "1999-12-03",
+  "locations": [
+    {
+      "id": "mpl-loss-zone",
+      "label": "Ultimi Scopuli, South Polar Layered Terrain",
+      "lat": -76.57,
+      "lon": 165.2,
+      "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A",
+      "approximate": true
+    }
+  ],
+  "summary": "Mars Polar Lander was an ambitious robotic probe sent to study the Martian south pole.",
+  "hook": "Contact was lost during my atmospheric descent into the southern polar terrain of Mars in 1999.",
+  "how_it_worked": "Designed to use thrusters to touch down softly on layered polar deposits and analyze soil ice.",
+  "science": "Highlighted the critical need for continuous telemetry during off-world atmospheric descent and landing.",
+  "facts": [
+    {
+      "text": "Telemetry was lost seconds before atmospheric entry, leading NASA to redesign landing monitoring for all future missions.",
+      "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A"
+    },
+    {
+      "text": "Carried two microprobes designed to penetrate the surface soil upon high-speed impact.",
+      "source_url": "https://science.nasa.gov/mission/mars-polar-lander/"
+    }
+  ],
+  "image": {
+    "nasa_id": "KSC-98pc1212",
+    "file": "assets/images/artifacts/mars-polar-lander.jpg",
+    "credit": "NASA",
+    "source_url": "https://images.nasa.gov/details/KSC-98pc1212",
+    "alt": "Mars Polar Lander awaiting testing at Kennedy Space Center before launch"
+  },
+  "sources": [
+    "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

@@ -1,0 +1,47 @@
+{
+  "id": "perseverance-landing-hardware",
+  "name": "Perseverance Landing Hardware",
+  "world": "mars",
+  "tier": "standard",
+  "status": "dormant",
+  "launch_date": "2020-07-30",
+  "end_date": "2021-02-18",
+  "locations": [
+    {
+      "id": "perseverance-debris",
+      "label": "Octavia E. Butler Landing Debris Field, Jezero Crater",
+      "lat": 18.4447,
+      "lon": 77.4508,
+      "source_url": "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter",
+      "approximate": true
+    }
+  ],
+  "summary": "The parachute and backshell that protected the Perseverance rover during atmospheric entry.",
+  "hook": "My parachute and backshell brought Perseverance to Jezero Crater and were later photographed by Ingenuity.",
+  "how_it_worked": "A supersonic nylon parachute and protective aeroshell slowed the entry vehicle from orbital velocities.",
+  "science": "Provided valuable engineering data on high-speed entry parachute dynamics in the thin Martian atmosphere.",
+  "facts": [
+    {
+      "text": "The 70-foot supersonic parachute carried a coded binary pattern spelling Dare Mighty Things in its canopy.",
+      "source_url": "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter"
+    },
+    {
+      "text": "The debris field was imaged from an aerial vantage point by the Ingenuity helicopter during Flight 26.",
+      "source_url": "https://mars.nasa.gov/mars2020/"
+    }
+  ],
+  "image": {
+    "nasa_id": "PIA25218",
+    "file": "assets/images/artifacts/perseverance-landing-hardware.jpg",
+    "credit": "NASA/JPL-Caltech",
+    "source_url": "https://images.nasa.gov/details/PIA25218",
+    "alt": "Debris field of the Perseverance backshell and parachute photographed from the air by Ingenuity"
+  },
+  "sources": [
+    "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

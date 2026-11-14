@@ -1,0 +1,47 @@
+{
+  "id": "im-1-odysseus",
+  "name": "IM-1 Odysseus",
+  "world": "moon",
+  "tier": "standard",
+  "status": "dormant",
+  "launch_date": "2024-02-15",
+  "end_date": "2024-02-29",
+  "locations": [
+    {
+      "id": "im-1-odysseus-site",
+      "label": "Near Malapert A, Lunar South Polar Region",
+      "lat": -80.13,
+      "lon": 1.44,
+      "source_url": "https://www.nasa.gov/clps",
+      "approximate": true
+    }
+  ],
+  "summary": "IM-1 Odysseus achieved the first American commercial soft landing on the Moon.",
+  "hook": "I touched down near the lunar south pole in 2024 under NASA Commercial Lunar Payload Services.",
+  "how_it_worked": "Used liquid methane and liquid oxygen propulsion along with NASA Doppler Lidar sensor guidance.",
+  "science": "Demonstrated precision landing sensors and captured radio astronomy measurements in the south polar region.",
+  "facts": [
+    {
+      "text": "Landed at roughly 80 degrees South, the southernmost point reached by an operational lunar lander at the time.",
+      "source_url": "https://www.nasa.gov/clps"
+    },
+    {
+      "text": "Carried a retroreflector instrument for future precision navigation around the Moon.",
+      "source_url": "https://science.nasa.gov/moon/"
+    }
+  ],
+  "image": {
+    "nasa_id": "IM_00309",
+    "file": "assets/images/artifacts/im-1-odysseus.jpg",
+    "credit": "Intuitive Machines",
+    "source_url": "https://images.nasa.gov/details/IM_00309",
+    "alt": "Intuitive Machines Nova-C lunar lander for the IM-1 mission"
+  },
+  "sources": [
+    "https://www.nasa.gov/clps"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

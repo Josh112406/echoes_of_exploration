@@ -1,0 +1,47 @@
+{
+  "id": "apollo-15-lrv",
+  "name": "Apollo 15 Lunar Roving Vehicle",
+  "world": "moon",
+  "tier": "flagship",
+  "status": "dormant",
+  "launch_date": "1971-07-26",
+  "end_date": "1971-08-07",
+  "locations": [
+    {
+      "id": "apollo-15-lrv-site",
+      "label": "Hadley-Apennine (near Falcon LM Descent Stage)",
+      "lat": 26.13222,
+      "lon": 3.63386,
+      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html",
+      "approximate": true
+    }
+  ],
+  "summary": "The Apollo 15 Lunar Roving Vehicle was the first motorized vehicle driven on the Moon.",
+  "hook": "I was the first rover driven on the Moon and traveled over 27 kilometers across Hadley Rille.",
+  "how_it_worked": "Powered by non-rechargeable silver-zinc batteries and four electric wheel motors with wire-mesh tires.",
+  "science": "Allowed astronauts to travel far from the lander and retrieve the 4-billion-year-old Genesis Rock.",
+  "facts": [
+    {
+      "text": "The rover was parked about 160 meters from the Lunar Module so its camera could film liftoff.",
+      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+    },
+    {
+      "text": "Its tires were made of woven zinc-coated piano wire with titanium chevrons for grip.",
+      "source_url": "https://www.nasa.gov/history/alsj/a15/a15.lrvface.html"
+    }
+  ],
+  "image": {
+    "nasa_id": "as15-86-11603",
+    "file": "assets/images/artifacts/apollo-15-lrv.jpg",
+    "credit": "NASA",
+    "source_url": "https://images.nasa.gov/details/as15-86-11603",
+    "alt": "Astronaut James Irwin works at the Lunar Roving Vehicle at Hadley-Apennine, with Mount Hadley behind"
+  },
+  "sources": [
+    "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

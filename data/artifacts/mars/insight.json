@@ -1,0 +1,47 @@
+{
+  "id": "insight",
+  "name": "InSight Mars Lander",
+  "world": "mars",
+  "tier": "standard",
+  "status": "ended",
+  "launch_date": "2018-05-05",
+  "end_date": "2022-12-15",
+  "locations": [
+    {
+      "id": "insight-site",
+      "label": "Homestead Hollow, Elysium Planitia",
+      "lat": 4.5,
+      "lon": 135.62,
+      "source_url": "https://www.jpl.nasa.gov/missions/insight",
+      "approximate": false
+    }
+  ],
+  "summary": "InSight studied the interior structure of Mars by measuring seismic tremors.",
+  "hook": "I placed a seismometer on the Martian plains to record marsquakes and map the planet interior.",
+  "how_it_worked": "Stationary geophysical lander carrying an ultra-sensitive seismometer protected by a wind and thermal shield.",
+  "science": "Recorded over 1,300 marsquakes, revealing the thickness of Mars crust and the size of its liquid core.",
+  "facts": [
+    {
+      "text": "InSight recorded a magnitude 5 marsquake in May 2022, the strongest ever detected on another planet.",
+      "source_url": "https://www.jpl.nasa.gov/missions/insight"
+    },
+    {
+      "text": "Dust accumulation on its solar panels steadily reduced power until transmission ceased in late 2022.",
+      "source_url": "https://science.nasa.gov/mission/insight/"
+    }
+  ],
+  "image": {
+    "nasa_id": "PIA22876",
+    "file": "assets/images/artifacts/insight.jpg",
+    "credit": "NASA/JPL-Caltech",
+    "source_url": "https://images.nasa.gov/details/PIA22876",
+    "alt": "InSight lander selfie showing its solar panels and deck on Mars"
+  },
+  "sources": [
+    "https://www.jpl.nasa.gov/missions/insight"
+  ],
+  "written_by": "agent:content-author",
+  "verified_by": "agent:source-verifier",
+  "last_verified": "2026-11-09",
+  "recovery": "jetpack"
+}

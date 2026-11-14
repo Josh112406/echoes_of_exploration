@@ -1,0 +1,1258 @@
+import Phaser from 'phaser';
+import { GameState } from '../core/GameState.ts';
+import { EventBus, EVENTS } from '../core/EventBus.ts';
+import { TalkClock } from '../ui/Talk.ts';
+import { SoundFX } from '../audio/SoundEffects.ts';
+import { Soundscape, TrackId } from '../audio/Soundscape.ts';
+import { CONSTANTS } from '../core/Constants.ts';
+import { PALETTE } from '../ui/theme.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { BackdropKind, CIN_MARGIN, getCinematicBackdrop, buildPlanet, buildBoosterSprite } from '../systems/TitleArt.ts';
+import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
+import { FINALE, getReel, getReelStats, getFinaleTheory, ReelSlide } from '../data/finale.ts';
+import { sourceHost } from '../data/story.ts';
+import type { MachineStatus } from '../data/schema.ts';
+
+/** How a caption is framed: UNIT-7's thought, a sourced NASA record, or a machine's own record line. */
+type CaptionKind = 'story' | 'record' | 'machine';
+
+interface Caption {
+  tag: string;
+  text: string;
+  kind: CaptionKind;
+}
+
+interface Beat {
+  /** Runs once when the beat starts (scene changes, slides, animations). */
+  enter?: () => void;
+  caption?: Caption;
+  /** Label for the top-right counter. */
+  part?: string;
+}
+
+const W = CONSTANTS.CANVAS.WIDTH;
+const H = CONSTANTS.CANVAS.HEIGHT;
+const M = CIN_MARGIN;
+
+/** After a beat starts, input is ignored this long so its entrance animation is seen. */
+const BEAT_LOCK = 0.35;
+
+/** Where the robot stands on the surface shots, and Earth in the Mars sky. */
+const ROBOT_X = 232;
+const EARTH_IN_MARS_SKY = { x: 448, y: 92 };
+
+const STATUS_COLOR: Record<MachineStatus, number> = {
+  active: PALETTE.cyanGlowHex,
+  dormant: PALETTE.beaconGoldHex,
+  ended: PALETTE.lunarDustLightHex,
+  lost: PALETTE.marsDustTanHex,
+  drifting: PALETTE.cyanDeepHex,
+};
+
+const CAPTION_COLOR: Record<CaptionKind, string> = {
+  story: PALETTE.cyanLaser,
+  record: PALETTE.beaconGold,
+  machine: PALETTE.beaconGold,
+};
+
+/**
+ * The finale. Four acts, all skippable and replayable:
+ *  I.   THE RECORD : every recovered machine, in launch order, with its real NASA photo.
+ *  II.  HOW FAR    : the worlds pull back; machines, worlds and years counted up.
+ *  III. FARTHER    : NASA's next steps (sourced): Artemis, Europa Clipper, Dragonfly, Voyager.
+ *  IV.  NOT DONE   : UNIT-7's resolution, then an end card with REPLAY ENDING.
+ *
+ * Nothing advances on a timer: each beat waits for a click, Space/Enter/→ or the
+ * NEXT button, so the player sets the pace. Every change between beats is animated
+ * (slides glide, the date ruler travels, years roll, titles track in), and all of it
+ * collapses to instant cuts under reduced motion.
+ */
+export class EndingScene extends Phaser.Scene {
+  private reducedMotion = false;
+  private beats: Beat[] = [];
+  private beatIdx = -1;
+  private lockT = 0;
+  private finished = false;
+
+  // Caption console
+  private capLayer!: Phaser.GameObjects.Container;
+  private capTag!: Phaser.GameObjects.Text;
+  private capPart!: Phaser.GameObjects.Text;
+  private capText!: Phaser.GameObjects.Text;
+  private capBox!: Phaser.GameObjects.Graphics;
+  private capShown = false;
+  private capVariant: FrameVariant | null = null;
+  private capTyping = false;
+  private talk = new TalkClock();
+  private live: HTMLElement | null = null;
+
+  // NEXT button
+  private nextBg!: Phaser.GameObjects.Graphics;
+  private nextTxt!: Phaser.GameObjects.Text;
+  private nextZone!: Phaser.GameObjects.Zone;
+  private nextReady: boolean | null = null;
+  private nextHover = false;
+
+  // Scenery
+  private backdrops = new Map<BackdropKind, Phaser.GameObjects.Container>();
+  private activeBackdrop: BackdropKind | null = null;
+  private dim!: Phaser.GameObjects.Rectangle;
+  private robot: Phaser.GameObjects.Image | null = null;
+
+  // Act I
+  private reel: ReelSlide[] = [];
+  private slide: Phaser.GameObjects.Container | null = null;
+  private slideMask: Phaser.GameObjects.Graphics | null = null;
+  private lastSlideYear: number | null = null;
+  private rulerLayer!: Phaser.GameObjects.Container;
+  private ruler!: Phaser.GameObjects.Graphics;
+  private rulerFirst!: Phaser.GameObjects.Text;
+  private rulerLast!: Phaser.GameObjects.Text;
+  private rulerCur!: Phaser.GameObjects.Text;
+  private rulerPing!: Phaser.GameObjects.Image;
+  /** Animated marker state: x in px (-1 = not placed yet) and the year it reads. */
+  private rulerAnim = { x: -1, year: 0 };
+
+  // Act II
+  private planets: Phaser.GameObjects.Container | null = null;
+  private stats: Phaser.GameObjects.Container | null = null;
+
+  // Act III
+  private track: Phaser.GameObjects.Container | null = null;
+  private trackGfx: Phaser.GameObjects.Graphics | null = null;
+  private trackLabels: Phaser.GameObjects.Text[] = [];
+  private trackNodes: string[] = [];
+  private trackLevel = 0;
+  private trackAnim = { v: 0 };
+  private booster: Phaser.GameObjects.Image | null = null;
+  private flame!: Phaser.GameObjects.Graphics;
+  private stars: { x: number; y: number; z: number }[] = [];
+  private starGfx!: Phaser.GameObjects.Graphics;
+  private warp = 0;
+  private warpTarget = 0;
+
+  // Section titles
+  private section: Phaser.GameObjects.Container | null = null;
+
+  // End card
+  private card: HTMLElement | null = null;
+
+  constructor() {
+    super('EndingScene');
+  }
+
+  preload(): void {
+    for (const { entry } of getReel()) {
+      const key = `photo_${entry.id}`;
+      if (!this.textures.exists(key)) this.load.image(key, entry.image.file);
+    }
+  }
+
+  create(): void {
+    document.body.classList.remove('in-game');
+    GameState.setEpilogueSeen(true);
+    // Same rule as the other scenes: the in-game Reduced Motion setting decides.
+    this.reducedMotion = GameState.getState().settings.reducedMotion;
+    this.finished = false;
+    this.beatIdx = -1;
+    this.lockT = 0;
+    this.capShown = false;
+    this.capVariant = null;
+    this.nextReady = null;
+    this.nextHover = false;
+    this.lastSlideYear = null;
+    this.rulerAnim = { x: -1, year: 0 };
+    this.trackAnim = { v: 0 };
+    this.reel = getReel();
+
+    // Real photos render smoothly; everything else stays pixel-crisp.
+    for (const { entry } of this.reel) {
+      const tex = this.textures.get(`photo_${entry.id}`);
+      if (tex && tex.key !== '__MISSING') tex.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+    this.ensureTextures();
+    this.cameras.main.setBackgroundColor(PALETTE.spaceBlack);
+    if (!this.reducedMotion) this.cameras.main.fadeIn(900, 5, 7, 15);
+
+    for (const kind of ['moon', 'mars', 'space'] as BackdropKind[]) this.backdrops.set(kind, this.buildBackdrop(kind));
+    this.dim = this.add.rectangle(W / 2, H / 2, W, H, PALETTE.spaceBlackHex, 0).setDepth(5);
+
+    this.starGfx = this.add.graphics().setDepth(4);
+    this.stars = Array.from({ length: 90 }, (_v, i) => ({ x: (i * 137) % W, y: (i * 71) % (H - 80), z: 0.3 + ((i * 53) % 70) / 100 }));
+    this.flame = this.add.graphics().setDepth(31);
+    this.createRuler();
+
+    this.createScreenFx();
+    this.createCaptionConsole();
+    this.createNextButton();
+    this.createSkipButton();
+    this.createLiveRegion();
+    this.bindInput();
+
+    // Opening and Part I: the record, remembered
+    Soundscape.set({ music: 'ending_record', ambience: 'mars', ambienceLevel: 0.6, fade: 2.5 });
+    this.beats = this.buildBeats();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
+    this.nextBeat();
+  }
+
+  /** Animation length, collapsed to an instant cut under reduced motion. */
+  private ms(n: number): number {
+    return this.reducedMotion ? 0 : n;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Script
+  // ---------------------------------------------------------------------------
+
+  private buildBeats(): Beat[] {
+    const beats: Beat[] = [];
+    const story = (text: string, tag = 'UNIT-7 // FINAL LOG'): Caption => ({ tag, text, kind: 'story' });
+    const stats = getReelStats();
+
+    // Opening: Mars, the robot, the pale blue dot
+    FINALE.opening.forEach((text, i) => beats.push({
+      part: 'TRANSMISSION COMPLETE',
+      enter: i === 0 ? () => this.setupSurface('mars') : undefined,
+      caption: story(text),
+    }));
+
+    // I. THE RECORD
+    beats.push({ part: 'I · THE RECORD', enter: () => this.showSection('PART I', 'THE RECORD', `${stats.firstYear} – ${stats.lastYear}`) });
+    this.reel.forEach((r, i) => beats.push({
+      part: `I · THE RECORD · ${String(i + 1).padStart(2, '0')} / ${String(this.reel.length).padStart(2, '0')}`,
+      enter: () => this.showSlide(i),
+      caption: { tag: `${r.entry.name.toUpperCase()} · ${r.year} · ${r.entry.world.toUpperCase()}`, text: `"${r.entry.hook}"`, kind: 'machine' },
+    }));
+
+    // II. HOW FAR
+    beats.push({ part: 'II · HOW FAR', enter: () => this.showSection('PART II', 'HOW FAR', 'TWO WORLDS, ONE RECORD', 'ending_far') });
+    beats.push({ part: 'II · HOW FAR', enter: () => this.setupHowFar() });
+    FINALE.reflection.forEach((text) => beats.push({ part: 'II · HOW FAR', caption: story(text, 'UNIT-7 // REFLECTION') }));
+    const theory = getFinaleTheory();
+    beats.push({ part: 'II · HOW FAR', caption: story(FINALE.theory_intro, 'UNIT-7 // REFLECTION') });
+    beats.push({
+      part: 'II · HOW FAR',
+      caption: story(theory.text, theory.fromPlayer ? 'UNIT-7 THEORY // BUILT FROM YOUR JOURNAL' : 'UNIT-7 THEORY'),
+    });
+
+    // III. FARTHER
+    beats.push({ part: 'III · FARTHER', enter: () => this.showSection('PART III', 'FARTHER', 'WHAT COMES NEXT', 'transition') });
+    beats.push({ part: 'III · FARTHER', enter: () => this.setupFarther(), caption: story(FINALE.horizon_intro, 'UNIT-7 // REFLECTION') });
+    FINALE.horizon.forEach((h, i) => {
+      beats.push({
+        part: `III · FARTHER · ${h.destination}`,
+        enter: () => this.advanceTrack(i),
+        caption: { tag: `VERIFIED RECORD · ${sourceHost(h.source_url).toUpperCase()}`, text: h.text, kind: 'record' },
+      });
+      if (h.thought) beats.push({ part: `III · FARTHER · ${h.destination}`, caption: story(h.thought, 'UNIT-7 // REFLECTION') });
+    });
+
+    // IV. NOT DONE: dusk deepens line by line, then the end card
+    beats.push({ part: 'IV · NOT DONE', enter: () => this.showSection('PART IV', 'NOT DONE', '', 'ending_resolve') });
+    FINALE.resolution.forEach((text, i) => beats.push({
+      part: 'IV · NOT DONE',
+      enter: i === 0 ? () => this.setupSurface('mars', true) : () => this.setDim(Math.min(0.4, 0.18 + i * 0.06), 2400),
+      caption: story(text),
+    }));
+    beats.push({ part: 'END OF TRANSMISSION', enter: () => this.showEndCard() });
+    return beats;
+  }
+
+  private nextBeat(): void {
+    if (this.finished) return;
+    this.beatIdx++;
+    const beat = this.beats[this.beatIdx];
+    if (!beat) return;
+    this.lockT = this.reducedMotion ? 0 : BEAT_LOCK;
+    this.hideSection();
+    beat.enter?.();
+    if (this.finished) return;
+    if (beat.caption) {
+      this.setCaption(beat.caption, beat.part ?? '');
+    } else {
+      this.clearCaption();
+      if (this.live && beat.part) this.live.textContent = `${beat.part}. Press Next to continue.`;
+    }
+  }
+
+  update(_time: number, delta: number): void {
+    const dt = Math.min(delta, 50) / 1000;
+    this.updateStars(dt);
+    this.updateBooster();
+    if (this.finished) return;
+
+    if (this.lockT > 0) this.lockT -= dt;
+    if (this.capTyping) {
+      if (this.talk.tick(dt)) this.capText.setText(this.talk.visible);
+      if (this.talk.done) this.capTyping = false;
+    }
+    this.refreshNextButton();
+  }
+
+  /** True once the current beat may be left: its line has finished and its entrance has played. */
+  private canAdvance(): boolean {
+    return !this.finished && !this.capTyping && this.lockT <= 0 && this.beatIdx < this.beats.length - 1;
+  }
+
+  private advance(): void {
+    // While UNIT-7 is talking, input is ignored: the player reads along.
+    if (!this.canAdvance()) return;
+    SoundFX.playClick();
+    this.nextBeat();
+  }
+
+  private skipToEnd(): void {
+    if (this.finished) return;
+    SoundFX.playClick();
+    this.hideSection();
+    Soundscape.set({ music: 'ending_resolve', fade: 2 });
+    this.beatIdx = this.beats.length - 2;
+    this.setupSurface('mars', true);
+    this.nextBeat();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Captions
+  // ---------------------------------------------------------------------------
+
+  private setCaption(c: Caption, part: string): void {
+    const variant: FrameVariant = c.kind === 'story' ? 'panel' : 'amber';
+    this.tweens.killTweensOf(this.capLayer);
+    this.tweens.killTweensOf(this.capTag);
+    if (variant !== this.capVariant || !this.capShown) {
+      this.capBox.clear();
+      this.drawCaptionBox(variant);
+      this.capVariant = variant;
+    }
+    this.capTag.setText(c.tag).setColor(CAPTION_COLOR[c.kind]);
+    this.capPart.setText(part).setVisible(true);
+    if (this.live) this.live.textContent = `${c.tag}: ${c.text}`;
+
+    if (!this.capShown) {
+      // The console rises in when it was hidden
+      this.capLayer.setAlpha(0).setY(this.reducedMotion ? 0 : 8);
+      this.tweens.add({ targets: this.capLayer, alpha: 1, y: 0, duration: this.ms(320), ease: 'Cubic.easeOut' });
+    } else {
+      this.capLayer.setAlpha(1).setY(0);
+      this.capTag.setAlpha(0);
+      this.tweens.add({ targets: this.capTag, alpha: 1, duration: this.ms(220) });
+    }
+    this.capShown = true;
+
+    if (!GameState.getState().settings.captionsEnabled) {
+      this.capText.setText('');
+      this.capTyping = false;
+      return;
+    }
+    this.talk.start(c.text, { instant: this.reducedMotion, record: c.kind !== 'story' });
+    this.capTyping = !this.talk.done;
+    this.capText.setText(this.talk.visible);
+  }
+
+  private clearCaption(): void {
+    this.capTyping = false;
+    if (!this.capShown) return;
+    this.capShown = false;
+    this.tweens.killTweensOf(this.capLayer);
+    this.tweens.add({
+      targets: this.capLayer, alpha: 0, y: this.reducedMotion ? 0 : 6, duration: this.ms(260), ease: 'Cubic.easeIn',
+      onComplete: () => {
+        if (this.capShown) return;
+        this.capBox.clear();
+        this.capVariant = null;
+        this.capText.setText('');
+        this.capTag.setText('');
+        this.capPart.setText('');
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Scenery
+  // ---------------------------------------------------------------------------
+
+  private ensureTextures(): void {
+    for (const kind of ['moon', 'mars', 'space'] as BackdropKind[]) ensureBackdropTextures(this.textures, kind);
+    if (!this.textures.exists('cin_planet_moon')) {
+      this.textures.addCanvas('cin_planet_moon', buildPlanet(22, [PALETTE.deepIndigo, PALETTE.lunarRegolithDeep, PALETTE.lunarDustLight, PALETTE.lunarCrustCream], 5, false));
+    }
+    if (!this.textures.exists('cin_planet_mars')) {
+      this.textures.addCanvas('cin_planet_mars', buildPlanet(44, [PALETTE.marsShadowUmber, PALETTE.marsDeepRust, PALETTE.marsTerracotta, PALETTE.marsDustTan], 9, true));
+    }
+    if (!this.textures.exists('cin_booster')) this.textures.addCanvas('cin_booster', buildBoosterSprite());
+  }
+
+  private buildBackdrop(kind: BackdropKind): Phaser.GameObjects.Container {
+    const c = this.add.container(0, 0).setDepth(0).setAlpha(0).setVisible(false);
+    const data = getCinematicBackdrop(kind);
+    c.add(this.add.image(-M, -M, `cin_${kind}_sky`).setOrigin(0, 0));
+    if (kind === 'mars') {
+      c.add(this.add.image(EARTH_IN_MARS_SKY.x, EARTH_IN_MARS_SKY.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(0.35).setAlpha(0.35).setName('earthGlow'));
+      c.add(this.add.image(EARTH_IN_MARS_SKY.x, EARTH_IN_MARS_SKY.y, 'earth_mars'));
+    }
+    if (data.far) c.add(this.add.image(-M, -M, `cin_${kind}_far`).setOrigin(0, 0));
+    if (data.mid) c.add(this.add.image(-M, -M, `cin_${kind}_mid`).setOrigin(0, 0));
+    if (data.near) c.add(this.add.image(-M, -M, `cin_${kind}_near`).setOrigin(0, 0));
+    if (!this.reducedMotion) {
+      this.tweens.add({ targets: c, x: -28, duration: 26000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    return c;
+  }
+
+  private showBackdrop(kind: BackdropKind, fade = 1.2): void {
+    if (this.activeBackdrop === kind) return;
+    const prev = this.activeBackdrop ? this.backdrops.get(this.activeBackdrop) : null;
+    const next = this.backdrops.get(kind)!;
+    this.activeBackdrop = kind;
+    next.setVisible(true).setDepth(1);
+    prev?.setDepth(0);
+    const ms = this.ms(fade * 1000);
+    this.tweens.add({ targets: next, alpha: 1, duration: ms, ease: 'Sine.easeInOut' });
+    if (prev) this.tweens.add({ targets: prev, alpha: 0, duration: ms, ease: 'Sine.easeInOut', onComplete: () => prev.setVisible(false) });
+  }
+
+  private setDim(alpha: number, duration = 900): void {
+    this.tweens.killTweensOf(this.dim);
+    this.tweens.add({ targets: this.dim, fillAlpha: alpha, duration: this.ms(duration), ease: 'Sine.easeInOut' });
+  }
+
+  private groundAt(kind: BackdropKind, x: number): number {
+    const near = getCinematicBackdrop(kind).near;
+    if (!near) return H - 60;
+    return near.heights[Phaser.Math.Clamp(Math.round(x) + M, 0, near.heights.length - 1)] - M + 1;
+  }
+
+  /** The robot settles onto the surface, then idles with a slow hover bob. */
+  private showRobot(kind: 'moon' | 'mars'): void {
+    if (!this.robot) {
+      this.robot = this.add.image(ROBOT_X, 0, 'robot_idle').setOrigin(0.5, 21 / 24).setScale(2).setDepth(20).setAlpha(0);
+    }
+    const r = this.robot;
+    this.tweens.killTweensOf(r);
+    const gy = this.groundAt(kind, ROBOT_X);
+    const fresh = !r.visible || r.alpha < 0.99;
+    r.setVisible(true);
+    const bob = () => {
+      if (!this.reducedMotion && r.active) this.tweens.add({ targets: r, y: gy - 1, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    };
+    if (fresh && !this.reducedMotion) {
+      r.setPosition(ROBOT_X, gy - 10);
+      this.tweens.add({ targets: r, alpha: 1, y: gy, duration: 900, delay: 350, ease: 'Cubic.easeOut', onComplete: bob });
+    } else {
+      r.setPosition(ROBOT_X, gy).setAlpha(1);
+      bob();
+    }
+  }
+
+  private hideRobot(): void {
+    const r = this.robot;
+    if (!r || !r.visible) return;
+    this.tweens.killTweensOf(r);
+    this.tweens.add({ targets: r, alpha: 0, duration: this.ms(350), onComplete: () => r.setVisible(false) });
+  }
+
+  /** The robot on a world's surface, looking at the sky. */
+  private setupSurface(kind: 'moon' | 'mars', dusk = false): void {
+    this.clearSlide();
+    this.clearRuler();
+    this.fadeOutAndDestroy(this.planets);
+    this.planets = null;
+    this.fadeOutAndDestroy(this.stats);
+    this.stats = null;
+    this.fadeOutAndDestroy(this.track);
+    this.track = null;
+    this.trackGfx = null;
+    this.trackLabels = [];
+    this.fadeOutAndDestroy(this.booster);
+    this.booster = null;
+    this.warpTarget = 0;
+    this.showBackdrop(kind, 1.6);
+    Soundscape.set({ ambience: kind, ambienceLevel: dusk ? 0.75 : 0.6, fade: 2.5 });
+    this.setDim(dusk ? 0.18 : 0, 1400);
+    this.showRobot(kind);
+  }
+
+  /** Destroys an object and its children, stopping their looping tweens first. */
+  private destroyDeep(obj: Phaser.GameObjects.GameObject): void {
+    const all: Phaser.GameObjects.GameObject[] = [];
+    const walk = (o: Phaser.GameObjects.GameObject) => {
+      all.push(o);
+      if (o instanceof Phaser.GameObjects.Container) o.list.forEach(walk);
+    };
+    walk(obj);
+    this.tweens.killTweensOf(all);
+    obj.destroy();
+  }
+
+  private fadeOutAndDestroy(obj: Phaser.GameObjects.Container | Phaser.GameObjects.Image | null, duration = 500): void {
+    if (!obj) return;
+    this.tweens.killTweensOf(obj);
+    this.tweens.add({ targets: obj, alpha: 0, duration: this.ms(duration), onComplete: () => this.destroyDeep(obj) });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Section titles
+  // ---------------------------------------------------------------------------
+
+  /** A title card that tracks in, and stays until the player moves on. */
+  private showSection(kicker: string, title: string, sub: string, music?: TrackId): void {
+    // Each act turns the page in the music too
+    if (music) Soundscape.set({ music, fade: 3 });
+    this.hideSection();
+    this.clearSlide();
+    this.clearRuler();
+    this.hideRobot();
+    const c = this.add.container(W / 2, H / 2 - 30).setDepth(60);
+    const barTop = this.add.rectangle(0, -26, 80, 1, PALETTE.cyanGlowHex).setScale(this.reducedMotion ? 1 : 0, 1);
+    const barBot = this.add.rectangle(0, 30, 80, 1, PALETTE.cyanGlowHex).setScale(this.reducedMotion ? 1 : 0, 1);
+    const k = this.add.text(0, -20, kicker, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0);
+    const t = this.add.text(0, -6, title, { fontFamily: HUD_FONT, fontSize: '21px', color: PALETTE.lunarHighlight, letterSpacing: 6 }).setOrigin(0.5, 0);
+    c.add([barTop, barBot, k, t]);
+    let s: Phaser.GameObjects.Text | null = null;
+    if (sub) {
+      s = this.add.text(0, 36, sub, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0);
+      c.add(s);
+    }
+    this.section = c;
+    this.setDim(0.6, 700);
+    SoundFX.playWhoosh();
+    if (this.reducedMotion) return;
+
+    this.tweens.add({ targets: [barTop, barBot], scaleX: 1, duration: 700, ease: 'Cubic.easeOut' });
+    k.setAlpha(0).setY(-26);
+    this.tweens.add({ targets: k, alpha: 1, y: -20, duration: 600, delay: 150, ease: 'Cubic.easeOut' });
+    // The title "tracks in": wide letter spacing closing to its resting width
+    t.setAlpha(0).setLetterSpacing(22);
+    const spacing = { v: 22 };
+    this.tweens.add({ targets: t, alpha: 1, duration: 700, delay: 250, ease: 'Sine.easeOut' });
+    this.tweens.add({
+      targets: spacing, v: 6, duration: 1100, delay: 250, ease: 'Cubic.easeOut',
+      onUpdate: () => { if (t.active) t.setLetterSpacing(Math.round(spacing.v)); },
+    });
+    if (s) {
+      s.setAlpha(0).setY(42);
+      this.tweens.add({ targets: s, alpha: 1, y: 36, duration: 600, delay: 750, ease: 'Cubic.easeOut' });
+    }
+    // A slow breath while the card waits for the player
+    this.tweens.add({ targets: [barTop, barBot], alpha: 0.45, duration: 1600, delay: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+  }
+
+  private hideSection(): void {
+    const c = this.section;
+    if (!c) return;
+    this.section = null;
+    this.tweens.killTweensOf(c);
+    this.tweens.add({ targets: c, alpha: 0, y: c.y - 10, duration: this.ms(380), ease: 'Cubic.easeIn', onComplete: () => this.destroyDeep(c) });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Act I: the reel
+  // ---------------------------------------------------------------------------
+
+  /** The current slide glides out to the left as the next one arrives. */
+  private clearSlide(): void {
+    if (!this.slide) return;
+    const old = this.slide;
+    const mask = this.slideMask;
+    this.slide = null;
+    this.slideMask = null;
+    this.tweens.killTweensOf(old);
+    this.tweens.add({
+      targets: old, alpha: 0, x: old.x - (this.reducedMotion ? 0 : 40), duration: this.ms(380), ease: 'Cubic.easeIn',
+      onUpdate: () => { if (mask) mask.x = old.x; },
+      onComplete: () => { this.destroyDeep(old); mask?.destroy(); },
+    });
+  }
+
+  private showSlide(i: number): void {
+    const { entry, year } = this.reel[i];
+    const fromYear = this.lastSlideYear ?? year;
+    const following = this.slide !== null;
+    this.lastSlideYear = year;
+    this.hideRobot();
+    this.showBackdrop(entry.world === 'elsewhere' ? 'space' : entry.world, 1.1);
+    this.setDim(0.5);
+    this.clearSlide();
+    this.moveRuler(i);
+    SoundFX.playRadarPing(0.4);
+
+    const enter = this.ms(following ? 260 : 150);
+    const c = this.add.container(this.reducedMotion ? 0 : 44, 0).setDepth(30).setAlpha(0);
+    this.slide = c;
+
+    // Photo, framed and masked: a scan line reveals it top to bottom, then a slow push-in
+    const fx = 30, fy = 56, fw = 304, fh = 196;
+    const frame = this.add.graphics();
+    frame.fillStyle(PALETTE.spaceBlackHex, 0.9).fillRect(fx - 4, fy - 4, fw + 8, fh + 8);
+    frame.lineStyle(1, PALETTE.beaconGoldHex, 0.7).strokeRect(fx - 4.5, fy - 4.5, fw + 9, fh + 9);
+    c.add(frame);
+    const key = `photo_${entry.id}`;
+    if (this.textures.exists(key)) {
+      const photo = this.add.image(fx + fw / 2, fy + fh / 2, key);
+      const cover = Math.max(fw / photo.width, fh / photo.height);
+      const contain = Math.min(fw / photo.width, fh / photo.height);
+      // Very wide or tall photos would lose the machine when cropped: show them whole.
+      const ratio = (photo.width / photo.height) / (fw / fh);
+      const base = ratio > 1.6 || ratio < 0.6 ? contain : cover;
+      const shape = this.make.graphics({}, false);
+      shape.x = c.x;
+      this.slideMask = shape;
+      const reveal = { h: this.reducedMotion ? fh : 0 };
+      const drawMask = () => shape.clear().fillStyle(0xffffff).fillRect(fx, fy, fw, Math.max(1, reveal.h));
+      drawMask();
+      photo.setMask(shape.createGeometryMask());
+      c.add(photo);
+
+      if (this.reducedMotion) {
+        photo.setScale(base);
+      } else {
+        const scan = this.add.rectangle(fx + fw / 2, fy, fw, 2, PALETTE.cyanLaserHex, 0.9).setBlendMode(Phaser.BlendModes.ADD);
+        c.add(scan);
+        this.tweens.add({
+          targets: reveal, h: fh, duration: 900, delay: enter + 120, ease: 'Sine.easeInOut',
+          onUpdate: () => { if (shape.active) { drawMask(); scan.y = fy + reveal.h; } },
+          onComplete: () => { if (scan.active) this.tweens.add({ targets: scan, alpha: 0, duration: 260, onComplete: () => scan.destroy() }); },
+        });
+        photo.setScale(base * 1.12);
+        const drift = i % 2 ? 8 : -8;
+        this.tweens.add({
+          targets: photo, scale: base * 1.02, duration: 1400, delay: enter, ease: 'Cubic.easeOut',
+          onComplete: () => {
+            if (photo.active) this.tweens.add({ targets: photo, scale: base * 1.08, x: photo.x + drift, duration: 12000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
+          },
+        });
+      }
+    }
+    const credit = this.add.text(fx, fy + fh + 8, `NASA ${entry.image.nasa_id} · ${entry.image.credit}`.toUpperCase(), {
+      fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 1,
+      wordWrap: { width: fw, useAdvancedWrap: true },
+    });
+    c.add(credit);
+
+    // Right panel: year, machine, status, sourced summary (each line staggers in)
+    const panel: Phaser.GameObjects.GameObject[] = [];
+    const px = 356, pw = 252;
+    const accent = entry.world === 'moon' ? PALETTE.lunarCrustCream : PALETTE.marsHazePeach;
+    const yearText = this.add.text(px, 52, String(fromYear), { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.beaconGold, letterSpacing: 2 });
+    const worldText = this.add.text(px, 84, entry.world === 'moon' ? 'THE MOON' : 'MARS', { fontFamily: HUD_FONT, fontSize: '7px', color: accent, letterSpacing: 4 });
+    panel.push(yearText, worldText);
+
+    const hwKey = `hw_${entry.id}`;
+    if (this.textures.exists(hwKey)) {
+      const gx = px + pw - 30, gy = 88;
+      const hw = this.add.container(0, 0);
+      hw.add(this.add.image(gx, gy - 14, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(0.9).setAlpha(0.18));
+      const sprite = this.add.image(gx, gy, hwKey).setOrigin(0.5, 27 / 32).setScale(2);
+      hw.add(sprite);
+      const beacon = this.add.image(gx, gy - 46, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setScale(0.25).setAlpha(0.9);
+      hw.add(beacon);
+      if (!this.reducedMotion) {
+        this.tweens.add({ targets: beacon, alpha: 0.1, duration: 160, hold: 260, repeatDelay: 1400, yoyo: true, repeat: -1 });
+        this.tweens.add({ targets: sprite, y: gy - 2, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: enter + 600 });
+      }
+      panel.push(hw);
+    }
+
+    const name = this.add.text(px, 102, entry.name.toUpperCase(), {
+      fontFamily: HUD_FONT, fontSize: '14px', color: PALETTE.lunarHighlight, letterSpacing: 1,
+      wordWrap: { width: pw, useAdvancedWrap: true }, lineSpacing: 2,
+    });
+    panel.push(name);
+    let y = 102 + name.height + 8;
+
+    const status = this.add.container(0, 0);
+    const statusText = this.add.text(px + 6, y + 3, entry.status.toUpperCase(), { fontFamily: HUD_FONT, fontSize: '7px', color: '#' + STATUS_COLOR[entry.status].toString(16).padStart(6, '0'), letterSpacing: 2 });
+    const badge = this.add.graphics();
+    badge.lineStyle(1, STATUS_COLOR[entry.status], 1).strokeRect(px + 0.5, y + 0.5, statusText.width + 12, 13);
+    status.add([badge, statusText]);
+    status.add(this.add.text(px + statusText.width + 20, y + 3, `LAUNCHED ${entry.launch_date}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 1 }));
+    panel.push(status);
+    y += 22;
+
+    panel.push(this.add.text(px, y, entry.summary, {
+      fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarCrustCream, letterSpacing: 1,
+      wordWrap: { width: pw, useAdvancedWrap: true }, lineSpacing: 4,
+    }));
+    c.add(panel);
+
+    // The slide glides in from the right; its mask rides along
+    this.tweens.add({
+      targets: c, alpha: 1, x: 0, duration: this.ms(560), delay: enter, ease: 'Cubic.easeOut',
+      onUpdate: () => { if (this.slideMask && this.slide === c) this.slideMask.x = c.x; },
+    });
+    if (this.reducedMotion) {
+      yearText.setText(String(year));
+      return;
+    }
+    panel.forEach((obj, k) => {
+      const o = obj as Phaser.GameObjects.Text | Phaser.GameObjects.Container;
+      const y0 = o.y;
+      o.setAlpha(0).setY(y0 + 8);
+      this.tweens.add({ targets: o, alpha: 1, y: y0, duration: 480, delay: enter + 200 + k * 90, ease: 'Cubic.easeOut' });
+    });
+    // The year rolls from the previous launch to this one
+    const roll = { v: fromYear };
+    this.tweens.add({
+      targets: roll, v: year, duration: fromYear === year ? 0 : 800, delay: enter + 150, ease: 'Cubic.easeOut',
+      onUpdate: () => { if (yearText.active) yearText.setText(String(Math.round(roll.v))); },
+      onComplete: () => { if (yearText.active) yearText.setText(String(year)); },
+    });
+  }
+
+  private createRuler(): void {
+    this.rulerLayer = this.add.container(0, 0).setDepth(40).setAlpha(0);
+    this.ruler = this.add.graphics();
+    const style = { fontFamily: HUD_FONT, fontSize: '7px', letterSpacing: 1 };
+    this.rulerFirst = this.add.text(0, 0, '', { ...style, color: PALETTE.lunarDustLight }).setOrigin(0, 0);
+    this.rulerLast = this.add.text(0, 0, '', { ...style, color: PALETTE.lunarDustLight }).setOrigin(1, 0);
+    this.rulerCur = this.add.text(0, 0, '', { ...style, color: PALETTE.beaconGold }).setOrigin(0.5, 0);
+    this.rulerPing = this.add.image(0, 0, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setTint(PALETTE.beaconGoldHex);
+    this.rulerLayer.add([this.ruler, this.rulerPing, this.rulerFirst, this.rulerLast, this.rulerCur]);
+  }
+
+  private readonly rulerGeom = { x0: 46, x1: W - 46, y: 30 };
+
+  private rulerXOf(i: number): number {
+    const { x0, x1 } = this.rulerGeom;
+    const t = (d: string) => Date.parse(d);
+    const first = t(this.reel[0].entry.launch_date);
+    const last = t(this.reel[this.reel.length - 1].entry.launch_date);
+    return x0 + ((t(this.reel[i].entry.launch_date) - first) / Math.max(1, last - first)) * (x1 - x0);
+  }
+
+  /** The marker travels along the timeline to the next launch, the year counting with it. */
+  private moveRuler(i: number): void {
+    const target = this.rulerXOf(i);
+    const year = this.reel[i].year;
+    this.tweens.killTweensOf(this.rulerLayer);
+    this.tweens.add({ targets: this.rulerLayer, alpha: 1, duration: this.ms(400) });
+    this.tweens.killTweensOf(this.rulerAnim);
+    if (this.rulerAnim.x < 0) this.rulerAnim = { x: this.rulerGeom.x0, year: this.reel[0].year };
+    const arrive = () => {
+      this.renderRuler();
+      if (this.reducedMotion) return;
+      this.rulerPing.setPosition(Math.round(target), this.rulerGeom.y).setScale(0.08).setAlpha(1);
+      this.tweens.add({ targets: this.rulerPing, scale: 0.4, alpha: 0, duration: 520, ease: 'Cubic.easeOut' });
+    };
+    if (this.reducedMotion) {
+      this.rulerAnim.x = target;
+      this.rulerAnim.year = year;
+      arrive();
+      return;
+    }
+    this.tweens.add({
+      targets: this.rulerAnim, x: target, year, duration: 850, ease: 'Cubic.easeInOut',
+      onUpdate: () => this.renderRuler(),
+      onComplete: arrive,
+    });
+    this.renderRuler();
+  }
+
+  /** A timeline across the top: every launch from the first year to the last. */
+  private renderRuler(): void {
+    const { x0, x1, y } = this.rulerGeom;
+    const mx = this.rulerAnim.x;
+    const g = this.ruler;
+    g.clear();
+    g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(x0, y, x1 - x0, 1);
+    g.fillStyle(PALETTE.beaconGoldHex, 0.85).fillRect(x0, y, Math.max(0, mx - x0), 1);
+    this.reel.forEach((r, i) => {
+      const x = Math.round(this.rulerXOf(i));
+      const color =
+        r.entry.world === 'moon'
+          ? PALETTE.lunarCrustCreamHex
+          : r.entry.world === 'mars'
+            ? PALETTE.marsDustTanHex
+            : PALETTE.cyanGlowHex;
+      if (x <= mx + 0.5) {
+        g.fillStyle(color, 1).fillRect(x - 1, y - 1, 3, 3);
+      } else {
+        g.fillStyle(PALETTE.lunarRegolithDeepHex, 1).fillRect(x, y - 1, 1, 3);
+      }
+    });
+    const cx = Math.round(mx);
+    g.lineStyle(1, PALETTE.beaconGoldHex, 1).strokeRect(cx - 3.5, y - 3.5, 7, 7);
+
+    const lx = Phaser.Math.Clamp(cx, x0 + 12, x1 - 12);
+    this.rulerFirst.setText(String(this.reel[0].year)).setPosition(x0, y + 6);
+    this.rulerLast.setText(String(this.reel[this.reel.length - 1].year)).setPosition(x1, y + 6);
+    // End labels fade as the moving marker label comes near them
+    this.rulerFirst.setAlpha(Phaser.Math.Clamp((lx - x0 - 30) / 20, 0, 1));
+    this.rulerLast.setAlpha(Phaser.Math.Clamp((x1 - lx - 30) / 20, 0, 1));
+    this.rulerCur.setText(String(Math.round(this.rulerAnim.year))).setPosition(lx, y + 6);
+  }
+
+  private clearRuler(): void {
+    if (this.rulerAnim.x < 0) return;
+    this.tweens.killTweensOf(this.rulerAnim);
+    this.tweens.killTweensOf(this.rulerLayer);
+    this.tweens.add({
+      targets: this.rulerLayer, alpha: 0, duration: this.ms(400),
+      onComplete: () => { this.ruler.clear(); this.rulerAnim = { x: -1, year: 0 }; },
+    });
+    this.lastSlideYear = null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Act II: how far
+  // ---------------------------------------------------------------------------
+
+  private setupHowFar(): void {
+    this.clearSlide();
+    this.clearRuler();
+    this.hideRobot();
+    this.showBackdrop('space', 1.6);
+    Soundscape.set({ ambience: 'space', ambienceLevel: 0.8, fade: 3 });
+    this.setDim(0, 1200);
+
+    const c = this.add.container(0, 0).setDepth(10);
+    const earth = { x: 84, y: 196 }, moon = { x: 162, y: 160 }, mars = { x: 356, y: 188 }, deepSpace = { x: 540, y: 148 };
+    const rm = this.reducedMotion;
+
+    // The route humans and their machines took, dotted, drawn out from Earth
+    const route = this.add.graphics();
+    const progress = { u: rm ? 1 : 0 };
+    const dots = (a: { x: number; y: number }, b: { x: number; y: number }, color: number, upTo: number) => {
+      const n = Math.floor(Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y) / 7);
+      for (let k = 1; k < n; k++) {
+        const u = k / n;
+        if (u > upTo) break;
+        const arc = Math.sin(u * Math.PI) * -26;
+        route.fillStyle(color, 0.5).fillRect(Math.round(a.x + (b.x - a.x) * u), Math.round(a.y + (b.y - a.y) * u + arc), 1, 1);
+      }
+    };
+    const drawRoute = () => {
+      route.clear();
+      dots(earth, moon, PALETTE.lunarCrustCreamHex, Math.min(1, progress.u * 2.6));
+      dots(earth, mars, PALETTE.marsDustTanHex, Math.min(1, progress.u * 1.4));
+      dots(earth, deepSpace, PALETTE.cyanGlowHex, progress.u);
+    };
+    drawRoute();
+    c.add(route);
+
+    const world = (items: Phaser.GameObjects.GameObject[], delay: number) => {
+      const g = this.add.container(0, 0, items);
+      c.add(g);
+      if (rm) return g;
+      g.setAlpha(0).setY(10);
+      this.tweens.add({ targets: g, alpha: 1, y: 0, duration: 900, delay, ease: 'Cubic.easeOut' });
+      return g;
+    };
+    const label = (x: number, y: number, text: string, color: string) =>
+      this.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: '7px', color, letterSpacing: 3 }).setOrigin(0.5, 0);
+
+    const earthGlow = this.add.image(earth.x, earth.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(1.8).setAlpha(0.16);
+    const earthSprite = this.add.sprite(earth.x, earth.y, 'earth_spin', 0).setScale(0.6);
+    if (!rm && this.anims.exists('earth_rotate')) earthSprite.play('earth_rotate');
+    world([earthGlow, earthSprite, label(earth.x, earth.y + 28, 'EARTH', PALETTE.cyanLaser)], 200);
+    const moonImg = this.add.image(moon.x, moon.y, 'cin_planet_moon');
+    world([moonImg, label(moon.x, moon.y + moonImg.height / 2 + 6, 'THE MOON', PALETTE.lunarCrustCream)], 650);
+    const marsImg = this.add.image(mars.x, mars.y, 'cin_planet_mars');
+    world([marsImg, label(mars.x, mars.y + marsImg.height / 2 + 6, 'MARS', PALETTE.marsHazePeach)], 1050);
+    const deepGlow = this.add.image(deepSpace.x, deepSpace.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(1.2).setAlpha(0.24);
+    world([deepGlow, label(deepSpace.x, deepSpace.y + 24, 'ELSEWHERE', PALETTE.cyanLaser)], 1450);
+    if (!rm) {
+      this.tweens.add({ targets: progress, u: 1, duration: 1800, delay: 400, ease: 'Sine.easeInOut', onUpdate: () => { if (route.active) drawRoute(); } });
+      this.tweens.add({ targets: [moonImg, marsImg], y: '-=2', duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 1800 });
+    }
+
+    // One beacon per machine, still out there on its world, popping on as the route arrives
+    const beacons = (w: 'moon' | 'mars' | 'elsewhere', cx: number, cy: number, r: number, start: number) => {
+      this.reel.filter((s) => s.entry.world === w).forEach((s, k) => {
+        const a = k * 2.399; // golden angle spread
+        const d = r * Math.sqrt((k + 0.5) / 10);
+        const b = this.add.image(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 'glow_thruster')
+          .setBlendMode(Phaser.BlendModes.ADD).setScale(rm ? 0.12 : 0).setTint(s.entry.status === 'active' ? PALETTE.cyanLaserHex : PALETTE.beaconGoldHex);
+        c.add(b);
+        if (rm) return;
+        this.tweens.add({ targets: b, scale: 0.12, duration: 380, delay: start + k * 110, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: b, alpha: 0.15, duration: 300, hold: 200, repeatDelay: 900 + k * 170, yoyo: true, repeat: -1, delay: start + 600 + k * 120 });
+      });
+    };
+    beacons('moon', moon.x, moon.y, moonImg.width * 0.36, 1300);
+    beacons('mars', mars.x, mars.y, marsImg.width * 0.38, 1950);
+    beacons('elsewhere', deepSpace.x, deepSpace.y, 26, 2500);
+    this.planets = c;
+
+    // Counters, all derived from the sourced entries
+    const s = getReelStats();
+    const st = this.add.container(W / 2, rm ? 46 : 38).setDepth(50).setAlpha(0);
+    const cols: [number, string][] = [[s.machines, 'MACHINES'], [s.worlds, 'WORLDS'], [s.span, 'YEARS']];
+    cols.forEach(([value, unit], k) => {
+      const x = (k - 1) * 150;
+      const num = this.add.text(x, 0, rm ? String(value) : '0', { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.lunarHighlight, letterSpacing: 2 }).setOrigin(0.5, 0);
+      st.add(num);
+      st.add(this.add.text(x, 34, unit, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0));
+      if (rm) return;
+      const counter = { v: 0 };
+      this.tweens.add({
+        targets: counter, v: value, duration: 1600, delay: 600 + k * 300, ease: 'Cubic.easeOut',
+        onUpdate: () => { if (num.active) num.setText(String(Math.round(counter.v))); },
+        onComplete: () => {
+          if (!num.active) return;
+          num.setText(String(value));
+          SoundFX.playClick();
+          this.tweens.add({ targets: num, scale: 1.15, duration: 120, yoyo: true, ease: 'Sine.easeOut' });
+        },
+      });
+    });
+    st.add(this.add.text(0, 50, `${s.firstYear} ─── ${s.lastYear}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0));
+    this.stats = st;
+    this.tweens.add({ targets: st, alpha: 1, y: 46, duration: this.ms(800), delay: this.ms(300), ease: 'Cubic.easeOut' });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Act III: farther
+  // ---------------------------------------------------------------------------
+
+  private setupFarther(): void {
+    this.fadeOutAndDestroy(this.stats, 400);
+    this.stats = null;
+    this.showBackdrop('space', 0);
+    this.trackNodes = ['EARTH', ...FINALE.horizon.map((h) => h.destination).filter((d, i, a) => a.indexOf(d) === i)];
+    this.trackLevel = 0;
+    this.trackAnim = { v: 0 };
+
+    const c = this.add.container(0, this.reducedMotion ? 0 : -8).setDepth(50).setAlpha(0);
+    this.track = c;
+    this.trackGfx = this.add.graphics();
+    c.add(this.trackGfx);
+    c.add(this.add.text(W / 2, 16, 'HOW FAR NEXT', { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 4 }).setOrigin(0.5, 0));
+    this.trackLabels = this.trackNodes.map((name, i) => {
+      const t = this.add.text(Math.round(this.trackX(i)), 43, name, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarRegolithMid, letterSpacing: 2 }).setOrigin(0.5, 0);
+      c.add(t);
+      return t;
+    });
+    this.drawTrack();
+    this.tweens.add({ targets: c, alpha: 1, y: 0, duration: this.ms(700), ease: 'Cubic.easeOut' });
+
+    // Something leaves Earth
+    if (!this.booster) {
+      this.booster = this.add.image(108, this.reducedMotion ? 186 : 200, 'cin_booster').setOrigin(0.5, 1).setScale(0.7).setDepth(30).setAngle(70).setAlpha(0);
+      this.tweens.add({ targets: this.booster, alpha: 1, y: 186, duration: this.ms(900), ease: 'Cubic.easeOut' });
+    }
+    SoundFX.playBoosterRocket();
+    this.warpTarget = 0.4;
+  }
+
+  private trackX(i: number): number {
+    const x0 = 56, x1 = W - 56;
+    return x0 + (i / Math.max(1, this.trackNodes.length - 1)) * (x1 - x0);
+  }
+
+  /** Draws the route; the lit line follows the animated `trackAnim.v` between nodes. */
+  private drawTrack(): void {
+    const g = this.trackGfx;
+    if (!g || !g.active) return;
+    const y = 34;
+    const v = this.trackAnim.v;
+    const fillX = this.trackX(0) + (v / Math.max(1, this.trackNodes.length - 1)) * (this.trackX(this.trackNodes.length - 1) - this.trackX(0));
+    g.clear();
+    g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(this.trackX(0), y, this.trackX(this.trackNodes.length - 1) - this.trackX(0), 1);
+    g.fillStyle(PALETTE.cyanGlowHex, 1).fillRect(this.trackX(0), y, fillX - this.trackX(0), 1);
+    const arrived = Math.abs(v - this.trackLevel) < 0.01;
+    this.trackNodes.forEach((_name, i) => {
+      const x = Math.round(this.trackX(i));
+      const lit = i <= v + 0.01;
+      const current = arrived && i === this.trackLevel;
+      g.fillStyle(lit ? PALETTE.cyanLaserHex : PALETTE.lunarRegolithDeepHex, 1).fillRect(x - 2, y - 2, 5, 5);
+      if (current) g.lineStyle(1, PALETTE.cyanLaserHex, 1).strokeRect(x - 4.5, y - 4.5, 10, 10);
+      this.trackLabels[i]?.setColor(current ? PALETTE.cyanLaser : lit ? PALETTE.lunarCrustCream : PALETTE.lunarRegolithMid);
+    });
+    // A travelling spark leads the lit line while it moves
+    if (!arrived) g.fillStyle(PALETTE.lunarHighlightHex, 1).fillRect(Math.round(fillX) - 1, y - 1, 3, 3);
+  }
+
+  private advanceTrack(horizonIndex: number): void {
+    const dest = FINALE.horizon[horizonIndex].destination;
+    this.trackLevel = Math.max(this.trackLevel, this.trackNodes.indexOf(dest));
+    this.tweens.killTweensOf(this.trackAnim);
+    this.tweens.add({
+      targets: this.trackAnim, v: this.trackLevel, duration: this.ms(1100), ease: 'Cubic.easeInOut',
+      onUpdate: () => this.drawTrack(),
+      onComplete: () => this.drawTrack(),
+    });
+    this.drawTrack();
+    this.warpTarget = 0.4 + this.trackLevel * 0.5;
+    SoundFX.playRadarPing(0.25);
+
+    // The booster heads out; the worlds fall behind
+    if (this.booster) {
+      const k = this.trackLevel / Math.max(1, this.trackNodes.length - 1);
+      this.tweens.add({
+        targets: this.booster,
+        x: 108 + k * (W + 60 - 108),
+        y: 186 - k * 70,
+        duration: this.ms(3200),
+        ease: 'Sine.easeInOut',
+      });
+    }
+    if (this.planets && !this.reducedMotion) {
+      this.tweens.add({ targets: this.planets, x: -this.trackLevel * 34, alpha: Math.max(0.25, 1 - this.trackLevel * 0.16), duration: 3200, ease: 'Sine.easeInOut' });
+    }
+  }
+
+  private updateStars(dt: number): void {
+    this.warp += (this.warpTarget - this.warp) * Math.min(1, dt * 1.5);
+    const g = this.starGfx;
+    g.clear();
+    if (this.warp < 0.02 || this.activeBackdrop !== 'space') return;
+    const speed = this.reducedMotion ? 0 : this.warp * 160;
+    for (const s of this.stars) {
+      s.x -= speed * s.z * dt;
+      if (s.x < -20) s.x += W + 40;
+      const len = Math.max(1, Math.round(speed * s.z * 0.06));
+      g.fillStyle(s.z > 0.75 ? PALETTE.cyanLaserHex : PALETTE.lunarHighlightHex, 0.25 + s.z * 0.5);
+      g.fillRect(Math.round(s.x), Math.round(s.y), len, 1);
+    }
+  }
+
+  private updateBooster(): void {
+    this.flame.clear();
+    const b = this.booster;
+    if (!b || !b.active || !b.visible || b.alpha < 0.05) return;
+    const r = Phaser.Math.DegToRad(b.angle);
+    const dx = -Math.sin(r), dy = Math.cos(r); // sprite's local "down"
+    const px = Math.cos(r), py = Math.sin(r);
+    const len = 10 + Math.random() * 6;
+    const half = 2.5;
+    this.flame.fillStyle(PALETTE.thrusterOrangeHex, 0.95 * b.alpha).fillTriangle(
+      b.x - px * half, b.y - py * half, b.x + px * half, b.y + py * half, b.x + dx * len, b.y + dy * len);
+    this.flame.fillStyle(PALETTE.beaconGoldHex, 0.9 * b.alpha).fillTriangle(
+      b.x - px * half * 0.5, b.y - py * half * 0.5, b.x + px * half * 0.5, b.y + py * half * 0.5, b.x + dx * len * 0.55, b.y + dy * len * 0.55);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ending: the robot signals home, then the end card (DOM, keyboard and screen-reader friendly)
+  // ---------------------------------------------------------------------------
+
+  private showEndCard(): void {
+    this.finished = true;
+    this.events.emit('finale-ended');
+    this.clearCaption();
+    this.hideNextButton();
+    this.setDim(0.42, 2600);
+    this.startSignalHome();
+    if (this.reducedMotion) this.mountEndCard();
+    else this.time.delayedCall(1400, () => this.mountEndCard());
+  }
+
+  /** Pulses rise from the robot's antenna toward Earth in the Mars sky, on a loop. */
+  private startSignalHome(): void {
+    const r = this.robot;
+    const sky = this.backdrops.get('mars');
+    if (this.reducedMotion || !r || !sky || this.activeBackdrop !== 'mars') return;
+    const earthGlow = sky.getByName('earthGlow') as Phaser.GameObjects.Image | null;
+    const antenna = this.add.image(r.x, r.y - 40, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.12).setDepth(21).setAlpha(0);
+    this.tweens.add({ targets: antenna, alpha: 0.9, duration: 500, yoyo: true, hold: 200, repeat: -1, repeatDelay: 500 });
+    const pulse = () => {
+      if (!r.active) return;
+      const sx = r.x, sy = r.y - 40;
+      const p = this.add.image(sx, sy, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.14).setDepth(21);
+      const path = { u: 0 };
+      this.tweens.add({
+        targets: path, u: 1, duration: 2200, ease: 'Sine.easeIn',
+        onUpdate: () => {
+          if (!p.active) return;
+          const ex = sky.x + EARTH_IN_MARS_SKY.x, ey = EARTH_IN_MARS_SKY.y;
+          const u = path.u;
+          p.setPosition(sx + (ex - sx) * u, sy + (ey - sy) * u - Math.sin(u * Math.PI) * 30);
+          p.setAlpha(1 - u * 0.7).setScale(0.14 * (1 - u * 0.6));
+        },
+        onComplete: () => {
+          p.destroy();
+          if (earthGlow?.active) {
+            this.tweens.add({ targets: earthGlow, alpha: 0.75, scale: 0.5, duration: 260, yoyo: true, ease: 'Sine.easeOut' });
+          }
+        },
+      });
+    };
+    pulse();
+    this.time.addEvent({ delay: 1500, loop: true, callback: pulse });
+  }
+
+  private mountEndCard(): void {
+    const s = getReelStats();
+    const stage = document.getElementById('game-stage') ?? document.body;
+    this.card?.remove();
+    const card = document.createElement('section');
+    card.className = this.reducedMotion ? 'finale-card finale-card--still' : 'finale-card';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-labelledby', 'finale-title');
+    card.innerHTML = `
+      <p class="finale-card__kicker">END OF TRANSMISSION</p>
+      <h2 id="finale-title" class="finale-card__title">STILL OUT THERE</h2>
+      <p class="finale-card__line">${FINALE.card_line}</p>
+      <p class="finale-card__stats">${s.machines} MACHINES · ${s.worlds} WORLDS · ${s.firstYear} – ${s.lastYear} · AND COUNTING</p>
+      <p class="finale-card__tag">Abandoned, but not forgotten.</p>
+      <div class="finale-card__actions">
+        <button id="btn-finale-replay" class="menu-btn">↺ REPLAY ENDING</button>
+        <button id="btn-finale-title" class="menu-btn menu-btn--primary">RETURN TO TITLE ➔</button>
+      </div>`;
+    stage.appendChild(card);
+    this.card = card;
+    card.querySelector('#btn-finale-replay')?.addEventListener('click', () => {
+      SoundFX.playClick();
+      card.classList.remove('is-in');
+      if (this.reducedMotion) {
+        this.scene.restart();
+        return;
+      }
+      this.cameras.main.fadeOut(600, 5, 7, 15);
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.restart());
+    });
+    card.querySelector('#btn-finale-title')?.addEventListener('click', () => {
+      SoundFX.playClick();
+      EventBus.emit(EVENTS.SHOW_TITLE);
+    });
+    // Force a style flush so the entrance transition always runs
+    void card.offsetWidth;
+    card.classList.add('is-in');
+    card.querySelector<HTMLButtonElement>('#btn-finale-title')?.focus({ preventScroll: true });
+    if (this.live) this.live.textContent = `End of transmission. Still Out There. ${FINALE.card_line}`;
+  }
+
+  // ---------------------------------------------------------------------------
+  // HUD
+  // ---------------------------------------------------------------------------
+
+  private createScreenFx(): void {
+    const edge = this.add.graphics().setDepth(90);
+    const k = PALETTE.spaceBlackHex;
+    edge.fillGradientStyle(k, k, k, k, 1, 0, 1, 0).fillRect(0, 0, 36, H);
+    edge.fillGradientStyle(k, k, k, k, 0, 1, 0, 1).fillRect(W - 36, 0, 36, H);
+    edge.fillGradientStyle(k, k, k, k, 0.6, 0.6, 0, 0).fillRect(0, 0, W, 24);
+    if (this.textures.exists('vignette_overlay')) this.add.image(W / 2, H / 2, 'vignette_overlay').setDepth(95).setAlpha(0.7);
+  }
+
+  private readonly box = { x: 24, y: H - 72, w: W - 48, h: 58 };
+  private readonly nextBox = { w: 62, h: 16 };
+
+  private drawCaptionBox(variant: FrameVariant): void {
+    const { x, y, w, h } = this.box;
+    const g = this.capBox;
+    NineSliceHUD.drawFrame(g, x, y, w, h, variant);
+    NineSliceHUD.drawStatusDot(g, x + 10, y + 9, variant === 'amber' ? PALETTE.beaconGoldHex : PALETTE.cyanGlowHex);
+    g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(x + 8, y + 18, w - 16, 1);
+  }
+
+  private createCaptionConsole(): void {
+    const { x, y, w } = this.box;
+    this.capLayer = this.add.container(0, 0).setDepth(100).setAlpha(0);
+    this.capBox = this.add.graphics();
+    this.capTag = this.add.text(x + 17, y + 6, '', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 });
+    this.capPart = this.add.text(x + w - 10, y + 6, '', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.slateMuted, letterSpacing: 2 }).setOrigin(1, 0);
+    // Text wraps short of the NEXT button in the bottom-right corner
+    this.capText = this.add.text(x + 10, y + 25, '', {
+      fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.lunarHighlight, letterSpacing: 1,
+      wordWrap: { width: w - this.nextBox.w - 32, useAdvancedWrap: true }, lineSpacing: 4,
+    });
+    this.capLayer.add([this.capBox, this.capTag, this.capPart, this.capText]);
+  }
+
+  /** NEXT ▶ in the caption console's corner; dim while UNIT-7 is still talking. */
+  private createNextButton(): void {
+    const { x, y, w, h } = this.box;
+    const { w: bw, h: bh } = this.nextBox;
+    const bx = x + w - bw - 8, by = y + h - bh - 7;
+    this.nextBg = this.add.graphics().setDepth(102);
+    this.nextTxt = this.add.text(bx + bw / 2, by + bh / 2, 'NEXT ▶', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5).setDepth(103);
+    this.nextZone = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setDepth(104).setInteractive({ cursor: 'pointer' });
+    this.nextZone.on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, ev: Phaser.Types.Input.EventData) => {
+      ev.stopPropagation();
+      this.advance();
+    });
+    this.nextZone.on('pointerover', () => { this.nextHover = true; this.nextReady = null; });
+    this.nextZone.on('pointerout', () => { this.nextHover = false; this.nextReady = null; });
+    this.refreshNextButton();
+    if (!this.reducedMotion) {
+      // A gentle nudge on the arrow while the button is ready
+      this.tweens.add({ targets: this.nextTxt, x: this.nextTxt.x + 1.5, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  }
+
+  private refreshNextButton(): void {
+    const ready = this.canAdvance();
+    if (ready === this.nextReady) return;
+    this.nextReady = ready;
+    const { x, y, w, h } = this.box;
+    const { w: bw, h: bh } = this.nextBox;
+    const bx = x + w - bw - 8, by = y + h - bh - 7;
+    this.nextBg.clear();
+    NineSliceHUD.drawFrame(this.nextBg, bx, by, bw, bh, ready ? (this.nextHover ? 'primary' : 'secondary') : 'muted');
+    this.nextTxt.setColor(ready ? (this.nextHover ? PALETTE.lunarHighlight : PALETTE.cyanLaser) : PALETTE.slateMuted);
+    this.tweens.killTweensOf(this.nextBg);
+    this.nextBg.setAlpha(ready ? 1 : 0.55);
+    this.nextTxt.setAlpha(ready ? 1 : 0.55);
+  }
+
+  private hideNextButton(): void {
+    this.nextZone.disableInteractive();
+    this.tweens.killTweensOf(this.nextTxt);
+    this.tweens.add({ targets: [this.nextBg, this.nextTxt], alpha: 0, duration: this.ms(300) });
+  }
+
+  private createSkipButton(): void {
+    const bw = 104, bh = 20, bx = W - bw - 14, by = 8;
+    const bg = this.add.graphics().setDepth(100);
+    NineSliceHUD.drawFrame(bg, bx, by, bw, bh, 'secondary');
+    const txt = this.add.text(bx + bw / 2, by + bh / 2, 'SKIP TO END ▶▶', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.lunarCrustCream, letterSpacing: 2 }).setOrigin(0.5).setDepth(101);
+    const zone = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setDepth(102).setInteractive({ cursor: 'pointer' });
+    const hide = () => {
+      zone.disableInteractive();
+      this.tweens.add({ targets: [bg, txt], alpha: 0, duration: this.ms(300) });
+    };
+    zone.on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, ev: Phaser.Types.Input.EventData) => {
+      ev.stopPropagation();
+      hide();
+      this.skipToEnd();
+    });
+    zone.on('pointerover', () => txt.setColor(PALETTE.cyanLaser));
+    zone.on('pointerout', () => txt.setColor(PALETTE.lunarCrustCream));
+    this.events.on('finale-ended', hide);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off('finale-ended', hide));
+  }
+
+  private createLiveRegion(): void {
+    this.live = document.getElementById('finale-live');
+    if (!this.live) {
+      this.live = document.createElement('div');
+      this.live.id = 'finale-live';
+      this.live.setAttribute('aria-live', 'polite');
+      this.live.setAttribute('role', 'status');
+      this.live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
+      document.body.appendChild(this.live);
+    }
+  }
+
+  private bindInput(): void {
+    this.input.keyboard?.on('keydown-SPACE', () => this.advance());
+    this.input.keyboard?.on('keydown-ENTER', () => this.advance());
+    this.input.keyboard?.on('keydown-RIGHT', () => this.advance());
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.y > 34) this.advance();
+    });
+  }
+
+  private cleanup(): void {
+    this.card?.remove();
+    this.card = null;
+    if (this.live) this.live.textContent = '';
+    this.slideMask?.destroy();
+    this.slideMask = null;
+    this.backdrops.clear();
+    this.activeBackdrop = null;
+    this.robot = null;
+    this.slide = null;
+    this.planets = null;
+    this.stats = null;
+    this.track = null;
+    this.trackGfx = null;
+    this.trackLabels = [];
+    this.booster = null;
+    this.section = null;
+    this.warp = 0;
+    this.warpTarget = 0;
+  }
+}
