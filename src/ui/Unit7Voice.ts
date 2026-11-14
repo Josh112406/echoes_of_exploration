@@ -34,7 +34,8 @@ export class Unit7Voice {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     const H = scene.scale.gameSize.height;
-    this.container = scene.add.container(12, H - 12).setScrollFactor(0).setDepth(120).setVisible(false);
+    const x = window.matchMedia('(pointer: coarse)').matches ? (scene.scale.gameSize.width - PANEL_W) / 2 : 12;
+    this.container = scene.add.container(x, H - 12).setScrollFactor(0).setDepth(120).setVisible(false);
 
     this.frame = scene.add.graphics();
     this.portrait = scene.add.image(0, 0, 'robot_idle').setOrigin(0.5, 0.5);

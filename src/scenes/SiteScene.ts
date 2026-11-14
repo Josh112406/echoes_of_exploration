@@ -19,6 +19,7 @@ import { PostProcessing } from '../systems/PostProcessing.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
 import { Unit7Voice } from '../ui/Unit7Voice.ts';
+import { MobileJoystick, bindPressAction } from '../ui/MobileJoystick.ts';
 import { StoryDirector } from '../systems/StoryDirector.ts';
 import { buildRingedPlanet } from '../systems/TitleArt.ts';
 import {
@@ -115,6 +116,7 @@ export class SiteScene extends Phaser.Scene {
   private voice!: Unit7Voice;
   private story!: StoryDirector;
   private keyQ!: Phaser.Input.Keyboard.Key;
+  private mobileJoystick: MobileJoystick | null = null;
 
   // HUD
   private hudCompassArrow!: Phaser.GameObjects.Sprite;
@@ -158,6 +160,11 @@ export class SiteScene extends Phaser.Scene {
     document.body.classList.add('in-game');
     document.body.classList.add('site-scene');
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => document.body.classList.remove('site-scene'));
+    this.mobileJoystick = MobileJoystick.fromPage();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.mobileJoystick?.destroy();
+      this.mobileJoystick = null;
+    });
     const world = GameState.getWorld();
     // Each world has its own exploration music and its own air (or lack of it)
     const music = world === 'moon' ? 'explore_moon' : world === 'mars' ? 'explore_mars' : 'transition';
@@ -317,8 +324,8 @@ export class SiteScene extends Phaser.Scene {
     };
     this.keyQ.on('down', talk);
     const mobileTalk = document.getElementById('mobile-talk');
-    mobileTalk?.addEventListener('click', talk);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileTalk?.removeEventListener('click', talk));
+    const unbindTalk = mobileTalk ? bindPressAction(mobileTalk, talk) : () => {};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindTalk);
     this.input.keyboard?.on('keydown-M', () => {
       if (this.isUiBlocked()) return;
       if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
@@ -837,8 +844,8 @@ export class SiteScene extends Phaser.Scene {
     };
     mapBtn.on('pointerdown', openMap);
     const mobileMap = document.getElementById('mobile-map');
-    mobileMap?.addEventListener('click', openMap);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileMap?.removeEventListener('click', openMap));
+    const unbindMap = mobileMap ? bindPressAction(mobileMap, openMap) : () => {};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindMap);
 
     const mapText = this.add.text(W - 88, 22, 'MAP', {
       fontSize: '7px',
@@ -861,8 +868,8 @@ export class SiteScene extends Phaser.Scene {
     };
     menuBtn.on('pointerdown', openMenu);
     const mobileMenu = document.getElementById('mobile-menu');
-    mobileMenu?.addEventListener('click', openMenu);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => mobileMenu?.removeEventListener('click', openMenu));
+    const unbindMenu = mobileMenu ? bindPressAction(mobileMenu, openMenu) : () => {};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindMenu);
 
     const menuText = this.add.text(W - 37, 22, 'MENU', {
       fontSize: '7px',
@@ -936,8 +943,11 @@ export class SiteScene extends Phaser.Scene {
     if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
     if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
 
-    // Pointer steering
-    if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
+    // Touch joystick, with canvas drag as an alternate input.
+    if (this.mobileJoystick?.active) {
+      ix = this.mobileJoystick.x;
+      iy = this.mobileJoystick.y;
+    } else if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
       const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
       const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
       const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);

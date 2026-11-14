@@ -7,6 +7,7 @@ import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
 import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
+import { MobileJoystick, bindHeldAction, bindPressAction } from '../ui/MobileJoystick.ts';
 import { buildRingedPlanet } from '../systems/TitleArt.ts';
 import { buildBandedGiant, buildSmallMoon, buildHazeMoon } from '../systems/SpaceArt.ts';
 import {
@@ -115,6 +116,7 @@ export class FlybyScene extends Phaser.Scene {
 
   private keys!: Record<'W' | 'A' | 'S' | 'D' | 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | 'SHIFT' | 'E', Phaser.Input.Keyboard.Key>;
   private touchShield = false;
+  private mobileJoystick: MobileJoystick | null = null;
 
   private starGfx!: Phaser.GameObjects.Graphics;
   private fxGfx!: Phaser.GameObjects.Graphics;
@@ -152,6 +154,20 @@ export class FlybyScene extends Phaser.Scene {
     this.debris = [];
     this.pointerAim = null;
     this.shield = this.touchShield = false;
+    this.mobileJoystick = MobileJoystick.fromPage();
+    const shieldButton = document.getElementById('mobile-flyby-shield');
+    const shutterButton = document.getElementById('mobile-flyby-shutter');
+    const unbindShield = shieldButton
+      ? bindHeldAction(shieldButton, () => { this.touchShield = true; }, () => { this.touchShield = false; })
+      : () => {};
+    const unbindShutter = shutterButton ? bindPressAction(shutterButton, () => this.shutter()) : () => {};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      document.body.classList.remove('flyby-scene');
+      unbindShield();
+      unbindShutter();
+      this.mobileJoystick?.destroy();
+      this.mobileJoystick = null;
+    });
     this.targets = this.theme.targets.map(([name, lat, lon]) => ({ name, lat: lat * D, lon: lon * D, captured: false, sx: 0, sy: 0, visible: false, lit: false }));
 
     this.cameras.main.setBackgroundColor(PALETTE.spaceBlack);
@@ -198,7 +214,7 @@ export class FlybyScene extends Phaser.Scene {
         ...(this.theme.realNote ? [`• TRUE STORY: ${this.theme.realNote}`] : []),
       ],
       cta: 'ARM THE CAMERA ➔',
-    }, () => { this.started = true; this.armedAt = this.time.now; });
+    }, () => { this.started = true; this.armedAt = this.time.now; document.body.classList.add('flyby-scene'); });
   }
 
   private pickTheme(): BodyTheme {
@@ -476,8 +492,10 @@ export class FlybyScene extends Phaser.Scene {
     this.hud = this.add.graphics().setDepth(101);
     this.banner = new Banner(this, 54, this.reduced);
     exitButton(this, 'SURFACE MAP', () => this.scene.start('SiteScene'));
-    touchButton(this, W - 230, H - 32, 100, 24, 'DUST COVER', 'ghost', () => { this.touchShield = true; }, () => { this.touchShield = false; });
-    touchButton(this, W - 122, H - 32, 108, 24, 'SHUTTER [SPACE]', 'primary', () => this.shutter());
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      touchButton(this, W - 230, H - 32, 100, 24, 'DUST COVER', 'ghost', () => { this.touchShield = true; }, () => { this.touchShield = false; });
+      touchButton(this, W - 122, H - 32, 108, 24, 'SHUTTER [SPACE]', 'primary', () => this.shutter());
+    }
   }
 
   private renderHUD(): void {
@@ -545,8 +563,9 @@ export class FlybyScene extends Phaser.Scene {
     const k = this.keys;
     const ix = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
     const iy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
-    let ax = ix * 900, ay = iy * 900;
-    if (this.pointerAim && ix === 0 && iy === 0) {
+    let ax = (this.mobileJoystick?.active ? this.mobileJoystick.x : ix) * 900;
+    let ay = (this.mobileJoystick?.active ? this.mobileJoystick.y : iy) * 900;
+    if (this.pointerAim && ix === 0 && iy === 0 && !this.mobileJoystick?.active) {
       ax += (this.pointerAim.x - this.fx) * 26;
       ay += (this.pointerAim.y - this.fy) * 26;
     }

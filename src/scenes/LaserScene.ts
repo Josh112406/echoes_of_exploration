@@ -7,6 +7,7 @@ import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
+import { MobileJoystick, bindHeldAction } from '../ui/MobileJoystick.ts';
 import {
   MG_W as W, MG_H as H, Particles, Banner, drawSegBar, hudText, fitText, touchButton, exitButton,
   showBriefing, missionName, completeMinigame, failMinigame, smoothNoise,
@@ -79,6 +80,7 @@ export class LaserScene extends Phaser.Scene {
   // Input
   private keys!: Record<'W' | 'A' | 'S' | 'D' | 'UP' | 'DOWN' | 'LEFT' | 'RIGHT', Phaser.Input.Keyboard.Key>;
   private touchFire = false;
+  private mobileJoystick: MobileJoystick | null = null;
 
   // View
   private surface!: Phaser.GameObjects.TileSprite;
@@ -146,6 +148,17 @@ export class LaserScene extends Phaser.Scene {
     this.photons = [];
     this.pointerAim = null;
     this.touchFire = false;
+    this.mobileJoystick = MobileJoystick.fromPage();
+    const fireButton = document.getElementById('mobile-laser-fire');
+    const unbindFire = fireButton
+      ? bindHeldAction(fireButton, () => { this.touchFire = true; this.fire(); }, () => { this.touchFire = false; })
+      : () => {};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      document.body.classList.remove('laser-scene');
+      unbindFire();
+      this.mobileJoystick?.destroy();
+      this.mobileJoystick = null;
+    });
 
     this.cameras.main.setBackgroundColor(PALETTE.spaceBlack);
     this.buildViewport();
@@ -173,7 +186,7 @@ export class LaserScene extends Phaser.Scene {
         `• CONSECUTIVE HITS BUILD A HARMONIC COMBO. LOCK ALL 3 TARGETS IN ${this.timeMax}S`,
       ],
       cta: 'OPEN THE SHUTTER ➔',
-    }, () => { this.started = true; });
+    }, () => { this.started = true; document.body.classList.add('laser-scene'); });
   }
 
   // ---------------------------------------------------------------------------
@@ -228,7 +241,9 @@ export class LaserScene extends Phaser.Scene {
     this.hud = this.add.graphics().setDepth(101);
     this.banner = new Banner(this, 54, this.reduced);
     exitButton(this, 'SURFACE MAP', () => this.scene.start('SiteScene'));
-    touchButton(this, VX - 60, H - 30, 120, 24, 'PULSE [SPACE]', 'primary', () => { this.touchFire = true; this.fire(); }, () => { this.touchFire = false; });
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      touchButton(this, VX - 60, H - 30, 120, 24, 'PULSE [SPACE]', 'primary', () => { this.touchFire = true; this.fire(); }, () => { this.touchFire = false; });
+    }
   }
 
   private renderHUD(): void {
@@ -295,9 +310,9 @@ export class LaserScene extends Phaser.Scene {
     const k = this.keys;
     const ix = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
     const iy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
-    ax += ix * 420;
-    ay += iy * 420;
-    if (this.pointerAim && ix === 0 && iy === 0) {
+    ax += (this.mobileJoystick?.active ? this.mobileJoystick.x : ix) * 420;
+    ay += (this.mobileJoystick?.active ? this.mobileJoystick.y : iy) * 420;
+    if (this.pointerAim && ix === 0 && iy === 0 && !this.mobileJoystick?.active) {
       ax += (this.pointerAim.x - this.rx) * 22;
       ay += (this.pointerAim.y - this.ry) * 22;
     }
