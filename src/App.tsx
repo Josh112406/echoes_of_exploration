@@ -1,34 +1,24 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import missionsJson from './data/missions.json';
-
-interface MissionRecord {
-  id: string;
-  name: string;
-  chapter: string;
-  featured: boolean;
-  agencies: string[];
-  hardware_types: string[];
-  destination: string;
-  launch_date: string;
-  status: string;
-  location_summary: string;
-  objective: string;
-  science_summary: string;
-  story_hook: string;
-  source_ids: string[];
-  media_page_url: string;
-}
+import { StarfieldCanvas } from './components/StarfieldCanvas';
+import { SignalInspectorModal, type MissionRecord } from './components/SignalInspectorModal';
+import { SurveyorEncounterPreview } from './game/SurveyorEncounterPreview';
+import { telemetryAudio } from './audio/telemetryAudio';
 
 export function App() {
   const [crtActive, setCrtActive] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'observatory' | 'archive' | 'game' | 'about'>('observatory');
   const [filterChapter, setFilterChapter] = useState<'all' | 'moon' | 'mars' | 'featured'>('all');
   const [search, setSearch] = useState<string>('');
   const [utcTime, setUtcTime] = useState<string>('');
+  const [selectedMission, setSelectedMission] = useState<MissionRecord | null>(null);
+  const [awardedBadges, setAwardedBadges] = useState<string[]>([]);
 
   const missions: MissionRecord[] = (missionsJson as any).records || [];
 
+  // Live UTC Clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -38,6 +28,28 @@ export function App() {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleTabChange = (tab: 'observatory' | 'archive' | 'game' | 'about') => {
+    telemetryAudio.playChirp(880, 0.04);
+    setActiveTab(tab);
+  };
+
+  const handleToggleMute = () => {
+    const muted = telemetryAudio.toggleMute();
+    setIsMuted(muted);
+  };
+
+  const handleOpenInspector = (mission: MissionRecord) => {
+    telemetryAudio.playSignalLock();
+    setSelectedMission(mission);
+  };
+
+  const handleEncounterComplete = (badgeId: string) => {
+    telemetryAudio.playSignalLock();
+    if (!awardedBadges.includes(badgeId)) {
+      setAwardedBadges((b) => [...b, badgeId]);
+    }
+  };
 
   const filteredMissions = missions.filter((m) => {
     const matchesChapter =
@@ -55,47 +67,60 @@ export function App() {
 
   return (
     <div className={`app-root ${crtActive ? 'crt-overlay' : ''}`}>
+      {/* 16-bit Parallax Starfield Canvas */}
+      <StarfieldCanvas />
+
       {/* Top Telemetry Ticker */}
-      <header className="telemetry-bar">
+      <header className="telemetry-bar" style={{ position: 'relative', zIndex: 10 }}>
         <div className="telemetry-signal">
           <span className="signal-dot"></span>
-          <span>DSN-GOLDSTONE // FREQ: 8.4 GHz // STATUS: ONLINE</span>
+          <span>DSN-GOLDSTONE // 8.4 GHz // STATUS: ONLINE</span>
         </div>
-        <div>TIME: {utcTime || 'SYNCHRONIZING...'}</div>
+        <div style={{ fontFamily: 'var(--f-mono)' }}>TIME: {utcTime || 'SYNCHRONIZING...'}</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
+            className="crt-toggle-btn"
+            onClick={handleToggleMute}
+            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+          >
+            {isMuted ? '🔇 AUDIO: OFF' : '🔊 AUDIO: ON'}
+          </button>
+          <button
             className={`crt-toggle-btn ${crtActive ? 'active' : ''}`}
-            onClick={() => setCrtActive(!crtActive)}
+            onClick={() => {
+              telemetryAudio.playChirp(950, 0.03);
+              setCrtActive(!crtActive);
+            }}
           >
             CRT: {crtActive ? 'ON' : 'OFF'}
           </button>
         </div>
       </header>
 
-      <div className="app-container">
+      <div className="app-container" style={{ position: 'relative', zIndex: 10 }}>
         {/* Navigation Bar */}
-        <nav style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
+        <nav style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '16px' }}>
           <button
             className={activeTab === 'observatory' ? 'btn-observatory' : 'btn-secondary'}
-            onClick={() => setActiveTab('observatory')}
+            onClick={() => handleTabChange('observatory')}
           >
             [ 01 // OBSERVATORY ]
           </button>
           <button
             className={activeTab === 'archive' ? 'btn-observatory' : 'btn-secondary'}
-            onClick={() => setActiveTab('archive')}
+            onClick={() => handleTabChange('archive')}
           >
             [ 02 // ARCHIVE ({missions.length}) ]
           </button>
           <button
             className={activeTab === 'game' ? 'btn-observatory' : 'btn-secondary'}
-            onClick={() => setActiveTab('game')}
+            onClick={() => handleTabChange('game')}
           >
             [ 03 // MINIGAME ENCOUNTER ]
           </button>
           <button
             className={activeTab === 'about' ? 'btn-observatory' : 'btn-secondary'}
-            onClick={() => setActiveTab('about')}
+            onClick={() => handleTabChange('about')}
           >
             [ 04 // ABOUT & SOURCES ]
           </button>
@@ -113,10 +138,10 @@ export function App() {
                   Connecting human curiosity, historical telemetry, and the robotic scouts we left behind.
                 </p>
                 <div className="hero-actions">
-                  <button className="btn-observatory" onClick={() => setActiveTab('game')}>
+                  <button className="btn-observatory" onClick={() => handleTabChange('game')}>
                     ▶ TUNE TO ENCOUNTERS
                   </button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('archive')}>
+                  <button className="btn-secondary" onClick={() => handleTabChange('archive')}>
                     EXPLORE 31 MISSIONS
                   </button>
                 </div>
@@ -126,10 +151,6 @@ export function App() {
                   src="/assets/sprites/earth.png"
                   alt="Pixel Earth"
                   className="pixelated"
-                  onError={(e) => {
-                    // Fallback to stylized SVG if sprite not yet loaded
-                    (e.currentTarget as HTMLElement).style.display = 'none';
-                  }}
                 />
               </div>
             </section>
@@ -163,14 +184,19 @@ export function App() {
                   <div className="eyebrow">Curated Telemetry</div>
                   <h2>Key Exploration Beacons</h2>
                 </div>
-                <button className="btn-secondary" onClick={() => setActiveTab('archive')}>
+                <button className="btn-secondary" onClick={() => handleTabChange('archive')}>
                   View all {missions.length} records →
                 </button>
               </div>
 
               <div className="missions-grid">
                 {missions.slice(0, 3).map((mission) => (
-                  <div key={mission.id} className="mission-card">
+                  <div
+                    key={mission.id}
+                    className="mission-card"
+                    onClick={() => handleOpenInspector(mission)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="mission-card-head">
                       <h3 className="mission-name">{mission.name}</h3>
                       <span className={`status-badge ${mission.status === 'operational' ? 'active' : mission.status.includes('impact') ? 'impacted' : 'dormant'}`}>
@@ -181,7 +207,7 @@ export function App() {
                     <p className="mission-desc">{mission.objective}</p>
                     <div className="mission-meta">
                       <span>DEST: {mission.destination.toUpperCase()}</span>
-                      <span>LAUNCH: {mission.launch_date.slice(0, 4)}</span>
+                      <span className="mission-link">Inspect Telemetry 🔍</span>
                     </div>
                   </div>
                 ))}
@@ -198,32 +224,44 @@ export function App() {
                 <div className="eyebrow">Verified Hardware Archive</div>
                 <h2>31 Silent Explorers</h2>
                 <p className="muted">
-                  Official catalog of NASA surface hardware, impact probes, and orbiters across the solar system.
+                  Official catalog of NASA surface hardware, impact probes, and orbiters across the solar system. Click any record to inspect telemetry.
                 </p>
               </div>
 
               <div className="filter-chips">
                 <button
                   className={`filter-chip ${filterChapter === 'all' ? 'active' : ''}`}
-                  onClick={() => setFilterChapter('all')}
+                  onClick={() => {
+                    telemetryAudio.playChirp(750, 0.03);
+                    setFilterChapter('all');
+                  }}
                 >
                   ALL ({missions.length})
                 </button>
                 <button
                   className={`filter-chip ${filterChapter === 'moon' ? 'active' : ''}`}
-                  onClick={() => setFilterChapter('moon')}
+                  onClick={() => {
+                    telemetryAudio.playChirp(850, 0.03);
+                    setFilterChapter('moon');
+                  }}
                 >
                   MOON
                 </button>
                 <button
                   className={`filter-chip ${filterChapter === 'mars' ? 'active' : ''}`}
-                  onClick={() => setFilterChapter('mars')}
+                  onClick={() => {
+                    telemetryAudio.playChirp(850, 0.03);
+                    setFilterChapter('mars');
+                  }}
                 >
                   MARS
                 </button>
                 <button
                   className={`filter-chip ${filterChapter === 'featured' ? 'active' : ''}`}
-                  onClick={() => setFilterChapter('featured')}
+                  onClick={() => {
+                    telemetryAudio.playChirp(950, 0.03);
+                    setFilterChapter('featured');
+                  }}
                 >
                   FEATURED
                 </button>
@@ -251,7 +289,12 @@ export function App() {
 
             <div className="missions-grid">
               {filteredMissions.map((mission) => (
-                <div key={mission.id} className="mission-card">
+                <div
+                  key={mission.id}
+                  className="mission-card"
+                  onClick={() => handleOpenInspector(mission)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="mission-card-head">
                     <h3 className="mission-name">{mission.name}</h3>
                     <span className={`status-badge ${mission.status === 'operational' ? 'active' : mission.status.includes('impact') ? 'impacted' : 'dormant'}`}>
@@ -262,15 +305,8 @@ export function App() {
                   <p className="mission-desc">{mission.science_summary || mission.objective}</p>
                   <div className="mission-meta">
                     <span>{mission.destination.toUpperCase()}</span>
-                    <span>{mission.hardware_types.join(', ')}</span>
-                    <a
-                      href={mission.media_page_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mission-link"
-                    >
-                      NASA Link ↗
-                    </a>
+                    <span>{mission.launch_date.slice(0, 4)}</span>
+                    <span className="mission-link">Inspect 🔍</span>
                   </div>
                 </div>
               ))}
@@ -280,51 +316,11 @@ export function App() {
 
         {/* VIEW 3: MINIGAME ENCOUNTER */}
         {activeTab === 'game' && (
-          <section className="archive-section">
-            <div className="section-head">
-              <div>
-                <div className="eyebrow">Interactive Signal Reconstruction</div>
-                <h2>Mission Encounter View</h2>
-                <p className="muted">
-                  Coder 2 game engine integration zone (`src/game/`).
-                </p>
-              </div>
-              <button className="btn-secondary" onClick={() => setActiveTab('observatory')}>
-                ← Return to Observatory
-              </button>
-            </div>
-
-            <div
-              style={{
-                background: 'var(--panel)',
-                border: '1px solid var(--cyan)',
-                padding: '60px 24px',
-                textAlign: 'center',
-                display: 'grid',
-                gap: '16px',
-                justifyItems: 'center',
-              }}
-            >
-              <img
-                src="/assets/sprites/surveyor.png"
-                alt="Surveyor Lander"
-                className="pixelated"
-                style={{ width: '80px', height: 'auto' }}
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = 'none';
-                }}
-              />
-              <h3 style={{ color: 'var(--cyan)' }}>ENCOUNTER INTERFACE MOUNT</h3>
-              <p className="muted" style={{ maxWidth: '55ch' }}>
-                Coder 2's game component exports <code>&lt;EncounterView onComplete=&#123;...&#125; onExit=&#123;...&#125; /&gt;</code> here.
-                Features 640×360 pixel art canvas, Web Audio telemetry, and soft-landing reconstruction.
-              </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <span className="status-badge active">GAME READY CONTRACT</span>
-                <span className="status-badge dormant">STAGE: MOON // SURVEYOR 1</span>
-              </div>
-            </div>
-          </section>
+          <SurveyorEncounterPreview
+            missionId="surveyor-1"
+            onComplete={handleEncounterComplete}
+            onExit={() => handleTabChange('observatory')}
+          />
         )}
 
         {/* VIEW 4: ABOUT & METHODOLOGY */}
@@ -348,6 +344,12 @@ export function App() {
             </div>
           </section>
         )}
+
+        {/* Signal Inspector Modal */}
+        <SignalInspectorModal
+          mission={selectedMission}
+          onClose={() => setSelectedMission(null)}
+        />
 
         {/* Footer */}
         <footer className="observatory-footer">
