@@ -1,9 +1,9 @@
-# Quick Task Design: Among Us-style mini-tasks
+# Quick Task Design: tactile single-gesture micro-tasks
 
 **For:** Member 2 (build) and Member 3 (art/audio). **Author:** Member 4.  
 Source of truth: `quick_task` in `narrative.json`.
 
-> Style reference only: copy the *feel* (short, tactile, one gesture), never another game's art, names, or sounds.
+> Style: short, tactile, one gesture per step. All art, names, and sounds must be original.
 
 ## Rules every task follows
 
@@ -37,7 +37,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 1. Soft Landing (A Gentle Touch)
 
-*Like a steering task: hold, keep the needle steady, let go.*
+*Hold-and-release micro-task: hold, keep the needle steady, let go.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -49,7 +49,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 2. Ping the Moon (The Echo That Never Sleeps)
 
-*Like an aiming task, then a tap-the-right-signal task.*
+*Aim-and-spot micro-task: drag to aim, then tap the right signal.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -63,7 +63,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 3. Plan the Drive (Farther Than Footsteps)
 
-*Like a chart-the-course task: tap stops, see the route.*
+*Route-planning micro-task: tap stops, see the route.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -76,7 +76,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 4. Read the Results (A Question in the Soil)
 
-*Like an inspect-the-samples task: flip each one, then confirm.*
+*Inspect-and-decide micro-task: flip each card, then confirm.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -91,7 +91,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 5. Dig and Match (Clues Beneath the Wheel)
 
-*Like a clean-up task (swipe), then a match-the-wires task.*
+*Swipe-and-match micro-task: swipe to reveal, then connect the clue.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -105,7 +105,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 6. Pre-flight Check (Air Thin as a Whisper)
 
-*Like an align-the-output task: slide each setting into the green zone.*
+*Slider-calibration micro-task: slide each setting into the green zone.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -119,7 +119,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 7. Slow Descent (Landing Where No Landing Was Planned)
 
-*Like a tap-on-the-beat task with a pick-a-spot first.*
+*Pick-and-time micro-task: choose a spot, then tap on the beat.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -131,7 +131,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 8. Divert Power (Power for the Unknown)
 
-*Like a power-switch task: flip switches to match the meter.*
+*Switch-balancing micro-task: flip switches to match the meter.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|
@@ -144,7 +144,7 @@ Source of truth: `quick_task` in `narrative.json`.
 
 ## 9. Plan the Flyby (One Chance at Pluto)
 
-*Like a slot-the-items task: drag cards into a schedule.*
+*Drag-to-schedule micro-task: drag cards into slots.*
 
 | Step | Do | Prompt shown | Wins when | Success line | Retry line |
 |---|---|---|---|---|---|

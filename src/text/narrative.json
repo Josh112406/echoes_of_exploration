@@ -7,7 +7,7 @@
     "sources": "sources.json reviewed_on 2026-11-09"
   },
   "voice_rules": {
-    "memory_echo": "Imagined first-person voice of the hardware. Poetic but never states a fact that is not also in Behind the Memory. Present tense, short sentences, no claims of real feelings.",
+    "memory_echo": "Dramatized first-person narration built from mission records and shown as an archive replay. It never claims feelings or awareness, never says dormant hardware is active today, and never states a fact that is not also in Behind the Memory. Use 'my software' or 'my sensors' instead of 'I decide'. Past or replay tense for anything that has ended.",
     "behind_the_memory": "Factual, third person, past tense for history, qualified language for debated results. Every number carries a source_id.",
     "reading_level": "About grade 8-9",
     "max_chars": {
@@ -50,7 +50,9 @@
       "evidence": "The evidence chain",
       "sources": "Sources"
     },
-    "needs_review_badge": "Status may have changed since release"
+    "needs_review_badge": "Status may have changed since release",
+    "echo_frame": "Archive replay: a dramatized voice built from mission records.",
+    "frame_rule": "Show echo_frame and the encounter's status_badge together at the start of every encounter."
   },
   "glossary": [
     {
@@ -234,7 +236,7 @@
       "mechanic_family": "navigate-manage",
       "quick_task": {
         "task_name": "Soft Landing",
-        "among_us_style": "Like a steering task: hold, keep the needle steady, let go.",
+        "interaction_style": "Hold-and-release micro-task: hold, keep the needle steady, let go.",
         "control": "One big HOLD button",
         "seconds": "15-20",
         "steps": [
@@ -268,6 +270,10 @@
           "easy": "Wide green zone, long CUT window",
           "normal": "Narrower zone"
         }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended January 7, 1967.",
+        "dataset_status": "silent-location-known"
       }
     },
     {
@@ -372,7 +378,7 @@
         "what_happened": [
           "After Apollo 11's landing in Mare Tranquillitatis, the crew set up the retroreflector panel on the surface.",
           "Within weeks, observatories at Lick and McDonald detected laser light reflected from it.",
-          "Because the panel is passive, it needs no power. Observatories send laser pulses and time the faint return."
+          "Because the panel is passive, it needs no power. Observatories have ranged to it since 1969 and still do, though its returns are weaker than when it was new."
         ],
         "why_it_matters": "Precise timing of returning light measures the Earth-Moon distance very accurately and helps scientists study the Moon's orbit and test theories of gravity.",
         "key_numbers": [
@@ -423,9 +429,9 @@
         ]
       },
       "verify": [
-        "Dataset flags this mission status_review_required_before_release=true: confirm on the ILRS page that the reflector is described as still in use before shipping 'still answers' copy.",
-        "Confirm 'millimeter level' precision wording against ILRS or a NASA page.",
-        "Range 356,400-406,700 km (perigee to apogee) is standard, but cite a NASA page if shown in the UI.",
+        "Optional: also confirm 'still used' on the ILRS Apollo 11 page (ilrs-apollo11) so the primary source in sources.json states it directly.",
+        "Confirm 'millimeter level' precision wording against ILRS or a NASA page before showing it in the UI.",
+        "Range 356,400-406,700 km (perigee to apogee) is standard; cite a NASA page if shown in the UI.",
         "Do not use NSSDCA id 1969-099C for Apollo 11 (see handoff note: it is the Apollo 12 record)."
       ],
       "learning_intent": "Explain how passive retroreflectors support precise lunar ranging without onboard power.",
@@ -433,7 +439,7 @@
       "mechanic_family": "observe-infer",
       "quick_task": {
         "task_name": "Ping the Moon",
-        "among_us_style": "Like an aiming task, then a tap-the-right-signal task.",
+        "interaction_style": "Aim-and-spot micro-task: drag to aim, then tap the right signal.",
         "control": "Drag, then tap",
         "seconds": "20-25",
         "steps": [
@@ -468,7 +474,16 @@
           "normal": "4 noise flashes"
         },
         "data_note": "Use game_support.formula for the reveal; round_trip_s should land inside plausible_round_trip_range_s."
-      }
+      },
+      "status_badge": {
+        "label": "Passive reflector with no power. Observatories still use it.",
+        "dataset_status": "passive-science"
+      },
+      "verified_notes": [
+        "2026-11-14: NASA Goddard briefing (Merkowitz, AGU, Dec 2024) says stations have ranged to the Apollo 11, 14 and 15 reflectors since 1969.",
+        "2026-11-14: JILA article by the reflector's co-designer says the Apollo 11 reflector is still in use but works less well than when new.",
+        "2026-11-14: round trip of about 2.5 s, 100 corner cubes, and 1969 detections at Lick and McDonald confirmed in NASA/NIST and 1970 science papers."
+      ]
     },
     {
       "id": "farther-than-footsteps",
@@ -620,7 +635,7 @@
       "mechanic_family": "navigate-manage",
       "quick_task": {
         "task_name": "Plan the Drive",
-        "among_us_style": "Like a chart-the-course task: tap stops, see the route.",
+        "interaction_style": "Route-planning micro-task: tap stops, see the route.",
         "control": "Tap stops, then DRIVE",
         "seconds": "20-30",
         "steps": [
@@ -647,6 +662,10 @@
           "normal": "Ring only, no color hint"
         },
         "data_note": "Use game_support.suggested_stops plus one decoy stop that repeats a science_tag (e.g. a second boulder field). Use generic labels if station names are not verified."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended September 30, 1977.",
+        "dataset_status": "completed-surface"
       }
     },
     {
@@ -857,7 +876,7 @@
       "mechanic_family": "observe-infer",
       "quick_task": {
         "task_name": "Read the Results",
-        "among_us_style": "Like an inspect-the-samples task: flip each one, then confirm.",
+        "interaction_style": "Inspect-and-decide micro-task: flip each card, then confirm.",
         "control": "Tap cards, then tap an answer",
         "seconds": "25-35",
         "steps": [
@@ -901,6 +920,10 @@
           "normal": "No color"
         },
         "data_note": "Cherry-pick option from game_support is dropped here to keep three choices; its feedback line may be reused if the player taps a card summary instead."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended November 11, 1982.",
+        "dataset_status": "completed-surface"
       }
     },
     {
@@ -1052,7 +1075,7 @@
       "mechanic_family": "navigate-manage-observe",
       "quick_task": {
         "task_name": "Dig and Match",
-        "among_us_style": "Like a clean-up task (swipe), then a match-the-wires task.",
+        "interaction_style": "Swipe-and-match micro-task: swipe to reveal, then connect the clue.",
         "control": "Swipe, tap, drag a line",
         "seconds": "25-30",
         "steps": [
@@ -1103,6 +1126,10 @@
           "easy": "Correct option glows after 2 misses",
           "normal": "No glow"
         }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended May 25, 2011.",
+        "dataset_status": "silent-location-known"
       }
     },
     {
@@ -1157,7 +1184,7 @@
             "id": "ig-auto",
             "trigger": "on_launch",
             "speaker": "echo",
-            "text": "Earth cannot steer me live. Signals take minutes. Once I lift off, I decide."
+            "text": "Earth cannot steer me live. Signals take minutes. Once I lift off, my onboard software flies the plan."
           },
           {
             "id": "ig-ok",
@@ -1246,7 +1273,7 @@
       "mechanic_family": "navigate-manage",
       "quick_task": {
         "task_name": "Pre-flight Check",
-        "among_us_style": "Like an align-the-output task: slide each setting into the green zone.",
+        "interaction_style": "Slider-calibration micro-task: slide each setting into the green zone.",
         "control": "Two sliders and a tap",
         "seconds": "15-25",
         "steps": [
@@ -1281,6 +1308,10 @@
           "normal": "Narrow zones"
         },
         "data_note": "Press LAUNCH only after all three steps pass; the flight itself is a short animation with the on_launch beat."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended January 25, 2024.",
+        "dataset_status": "completed-surface"
       }
     },
     {
@@ -1331,7 +1362,7 @@
             "id": "nr-ok",
             "trigger": "on_success",
             "speaker": "echo",
-            "text": "Touchdown. I am still listening, and still measuring, from the surface."
+            "text": "Touchdown. The records show I kept sending measurements from the surface."
           }
         ],
         "outcomes": {
@@ -1412,7 +1443,7 @@
       "mechanic_family": "observe-infer-navigate",
       "quick_task": {
         "task_name": "Slow Descent",
-        "among_us_style": "Like a tap-on-the-beat task with a pick-a-spot first.",
+        "interaction_style": "Pick-and-time micro-task: choose a spot, then tap on the beat.",
         "control": "Tap three times, then drag",
         "seconds": "20-30",
         "steps": [
@@ -1446,6 +1477,10 @@
           "easy": "Large tick windows",
           "normal": "Smaller windows"
         }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended February 28, 2001.",
+        "dataset_status": "silent-location-known"
       }
     },
     {
@@ -1459,7 +1494,7 @@
       "memory_echo": {
         "intro": [
           "I left Earth in 1977. My power source fades a little every year.",
-          "Decide which instruments stay on. Every watt you save buys more time."
+          "Choose which instruments stay on. Every watt you save buys more time."
         ],
         "beats": [
           {
@@ -1496,7 +1531,7 @@
             "id": "vg-ok",
             "trigger": "on_success",
             "speaker": "echo",
-            "text": "Signal sent. Huge antennas on Earth are listening for me."
+            "text": "Signal sent. Huge antennas on Earth listen for my faint signal."
           }
         ],
         "outcomes": {
@@ -1508,20 +1543,21 @@
       "game_support": {
         "mechanic_rules": {
           "power": "Total available power declines each round.",
-          "priority": "Instruments that study the interstellar environment (fields and particles) have the highest science value.",
+          "priority": "Instruments that measure the interstellar environment have the highest science value.",
           "downlink": "Only a small amount of data fits in each transmission."
         },
         "no_live_status_rule": "Do not show the current on/off state of real instruments. Use generic labels (Instrument A, B, C) or verified names from nasa-voyager1 only."
       },
       "behind_the_memory": {
         "headline": "A planetary explorer became an interstellar weather station",
-        "summary": "Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first spacecraft to enter interstellar space. It still returns fields-and-particles data, while declining power forces engineers to make hard choices.",
+        "summary": "Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first spacecraft to enter interstellar space. Its remaining science instruments still study interstellar space, while declining power forces engineers to make hard choices.",
         "what_happened": [
           "Voyager 1 launched on September 5, 1977, and flew past Jupiter in March 1979.",
           "It later crossed the heliopause, the edge of the Sun's influence, into interstellar space.",
-          "NASA's Deep Space Network receives its faint signal, and engineers manage power as its energy source weakens."
+          "Its power source weakens by about 4 watts a year, so engineers have turned off some instruments and devices. In September 2026, a power-saving swap of three devices extended the life of its remaining instruments.",
+          "Contact briefly dropped on October 18 and 19, 2026, and returned on October 20 before engineers sent commands. NASA's Deep Space Network, large antennas around the world, receives its faint signal."
         ],
-        "why_it_matters": "Voyager 1 is a direct measurement of the space between stars. It also shows how distance, power, and bandwidth shape what a mission can do.",
+        "why_it_matters": "Voyager 1 is a direct measurement of the space between stars. It also shows how distance, power, and bandwidth shape what a mission can do. On November 18, 2026 it reaches one light-day from Earth, so a radio message takes about 24 hours each way.",
         "key_numbers": [
           {
             "label": "Launch",
@@ -1534,10 +1570,16 @@
             "source_id": "nasa-voyager1"
           },
           {
-            "label": "One light-day from Earth",
-            "value": "expected November 18, 2026 (NASA/JPL timing)",
+            "label": "Power lost each year",
+            "value": "about 4 watts",
             "source_id": "nasa-voyager1",
-            "recheck": true
+            "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
+          },
+          {
+            "label": "One light-day from Earth",
+            "value": "November 18, 2026 (about 25.89 billion km); radio takes 24 hours each way",
+            "source_id": "nasa-voyager1",
+            "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
           }
         ],
         "how_the_game_simplifies": "Instrument availability and power decisions change over time, so the game uses a simplified, abstract budget. Real operations are decided by the mission team. The game also turns this into a quick tap-and-drag task.",
@@ -1548,7 +1590,7 @@
           },
           {
             "step": "fields-and-particles measurement",
-            "caption": "Instruments sample magnetic fields and charged particles."
+            "caption": "Remaining instruments sample the interstellar environment."
           },
           {
             "step": "encoded signal",
@@ -1565,17 +1607,17 @@
         ]
       },
       "verify": [
-        "Dataset flags status_review_required_before_release=true. Voyager status changes: recheck nasa-voyager1 and NASA JPL news on the day of release, including any recent communications issues. Avoid sentences like 'is operating normally'.",
-        "One-light-day milestone: NASA/JPL gave 10:16:07 UTC on November 18, 2026 (about 25.9 billion km; round-trip communication about 48 hours). Earlier press estimates said Nov 13-15, so cite only NASA/JPL wording. This is time-sensitive and not in sources.json: add a JPL source before using it.",
-        "'First spacecraft to enter interstellar space' is in the dataset science_summary; keep consistent with it.",
-        "Confirm that the 'still returns fields-and-particles data' line is still true at release."
+        "Release-day recheck: look for newer JPL news on Voyager 1 status before showing 'still study interstellar space'.",
+        "Before naming any instrument, read NASA's 'Where Are Voyager 1 and 2 Now?' page. Secondary reports say only the magnetometer and plasma-wave subsystem remain on, so the dataset's 'fields-and-particles' phrase may be out of date.",
+        "Ask Member 6 to add the JPL release (URL in citation_url) to sources.json, then switch the two citation_url key numbers to that source id.",
+        "Keep the one-light-day line evergreen: it is dated November 18, 2026, which is after the November 15 submission deadline."
       ],
       "learning_intent": "Explain how power, distance, bandwidth, and ground antennas shape an extended mission.",
       "player_task": "Allocate declining power among instruments and prioritize a small interstellar data stream.",
       "mechanic_family": "communicate-preserve",
       "quick_task": {
         "task_name": "Divert Power",
-        "among_us_style": "Like a power-switch task: flip switches to match the meter.",
+        "interaction_style": "Switch-balancing micro-task: flip switches to match the meter.",
         "control": "Switches, then one drag",
         "seconds": "20-30",
         "steps": [
@@ -1602,7 +1644,15 @@
           "normal": "No star"
         },
         "data_note": "Use generic names (Instrument A-D) with a 'measures space between stars' tag. Do not show real on/off status (see no_live_status_rule)."
-      }
+      },
+      "status_badge": {
+        "label": "Mission continues. Status can change.",
+        "dataset_status": "active-extended"
+      },
+      "verified_notes": [
+        "2026-11-14: NASA JPL release 2026-078 (Oct 29, 2026) confirms: about 4 W/yr power loss, September 2026 three-device swap, contact loss Oct 18-19 resolved Oct 20, and one light-day (25.89 billion km) on Nov 18, 2026.",
+        "The JPL release does not name which instruments remain on, so this copy names none."
+      ]
     },
     {
       "id": "one-chance-at-pluto",
@@ -1723,7 +1773,7 @@
       "mechanic_family": "communicate-preserve",
       "quick_task": {
         "task_name": "Plan the Flyby",
-        "among_us_style": "Like a slot-the-items task: drag cards into a schedule.",
+        "interaction_style": "Drag-to-schedule micro-task: drag cards into slots.",
         "control": "Drag cards into 3 slots, then RUN",
         "seconds": "20-30",
         "steps": [
@@ -1772,11 +1822,15 @@
           "normal": "No grey"
         },
         "data_note": "Show an 'antenna not pointed at Earth' icon on filled slots. Card names are generic: verify against nasa-new-horizons before naming specific instruments."
+      },
+      "status_badge": {
+        "label": "Mission continues. Status can change.",
+        "dataset_status": "active-extended"
       }
     }
   ],
   "task_standard": {
-    "inspiration": "Interaction style only (quick, tactile, one-gesture tasks like crew-task games). Use original art, names, and sounds: never copy another game's assets.",
+    "inspiration": "Interaction style only: quick, tactile, one-gesture micro-tasks. Use original art, names, and sounds, and never copy another game's assets or names.",
     "rules": [
       "One verb per step: tap, drag, hold, swipe, slide, or toggle.",
       "1 to 3 steps, 15-35 seconds total, no reading beyond one short prompt.",
@@ -1792,5 +1846,43 @@
       "fail": "Not used as an ending: use outcomes.fail text as the retry message"
     },
     "progress": "Each completed encounter fills a task bar on the observatory screen."
-  }
+  },
+  "references_consulted": [
+    {
+      "title": "NASA's Voyager 1 Conserves Power, Resolves Brief Communications Pause (release 2026-078)",
+      "org": "NASA JPL",
+      "url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/",
+      "used_for": "power-for-the-unknown"
+    },
+    {
+      "title": "To the Moon and Back ... in 2.5 Seconds",
+      "org": "NIST",
+      "url": "https://www.nist.gov/history/moon-and-back-25-seconds",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Apollo 11 Laser Ranging Retro-Reflector: Initial Measurements from the McDonald Observatory (Science, 1970)",
+      "org": "Alley et al.",
+      "url": "https://ieeemilestones.ethw.org/w/images/4/47/Ref3-Science-Magazine-1970.pdf",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Lunar Laser Ranging in the Artemis Era (AGU 2024 briefing)",
+      "org": "NASA Goddard (Merkowitz)",
+      "url": "https://ntrs.nasa.gov/api/citations/20240015373/downloads/Lunar%20Laser%20Ranging%20Artemis%20Era%20presentation.pdf",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Apollo 11's last working experiment on the Moon",
+      "org": "JILA, University of Colorado",
+      "url": "https://jila-pfc.colorado.edu/news-events/news/apollo-11s-last-working-experiment-moon",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "NSSDCA Master Catalog (Apollo 12 spacecraft ID check)",
+      "org": "NASA Goddard / NSSDCA",
+      "url": "https://nssdc.gsfc.nasa.gov/",
+      "used_for": "handoff note"
+    }
+  ]
 }

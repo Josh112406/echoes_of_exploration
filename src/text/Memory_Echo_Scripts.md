@@ -19,6 +19,9 @@
 *Chapter: moon | Mission: `surveyor-1` | Voice: Surveyor 1 lander | Mechanic: navigate-manage*  
 **Player task:** Interpret simplified altitude and descent-rate cues to select safe automated descent corrections.
 
+**Status badge:** Silent today. Mission ended January 7, 1967.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I am a lander with no pilot. Everything I know comes from my sensors.
@@ -89,6 +92,9 @@ Surveyor 1 showed that a robotic spacecraft could slow itself and touch down gen
 *Chapter: moon | Mission: `apollo-11-surface` | Voice: Apollo 11 laser retroreflector | Mechanic: observe-infer*  
 **Player task:** Align laser pulses, separate return signal from noise, and infer distance from round-trip time.
 
+**Status badge:** Passive reflector with no power. Observatories still use it.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I have no battery, no radio, no computer. I only know how to send light back where it came from.
@@ -125,7 +131,7 @@ Apollo 11 astronauts placed a panel of 100 corner-cube reflectors on the Moon in
 
 - After Apollo 11's landing in Mare Tranquillitatis, the crew set up the retroreflector panel on the surface.
 - Within weeks, observatories at Lick and McDonald detected laser light reflected from it.
-- Because the panel is passive, it needs no power. Observatories send laser pulses and time the faint return.
+- Because the panel is passive, it needs no power. Observatories have ranged to it since 1969 and still do, though its returns are weaker than when it was new.
 
 **Why it matters:** Precise timing of returning light measures the Earth-Moon distance very accurately and helps scientists study the Moon's orbit and test theories of gravity.
 
@@ -144,11 +150,17 @@ Apollo 11 astronauts placed a panel of 100 corner-cube reflectors on the Moon in
 
 **Sources:** `ilrs-apollo11`, `nssdca-apollo11-lm`, `nasa-moon-missions`
 
+**Already verified:**
+
+- 2026-11-14: NASA Goddard briefing (Merkowitz, AGU, Dec 2024) says stations have ranged to the Apollo 11, 14 and 15 reflectors since 1969.
+- 2026-11-14: JILA article by the reflector's co-designer says the Apollo 11 reflector is still in use but works less well than when new.
+- 2026-11-14: round trip of about 2.5 s, 100 corner cubes, and 1969 detections at Lick and McDonald confirmed in NASA/NIST and 1970 science papers.
+
 **Verify before release (Member 6):**
 
-- [ ] Dataset flags this mission status_review_required_before_release=true: confirm on the ILRS page that the reflector is described as still in use before shipping 'still answers' copy.
-- [ ] Confirm 'millimeter level' precision wording against ILRS or a NASA page.
-- [ ] Range 356,400-406,700 km (perigee to apogee) is standard, but cite a NASA page if shown in the UI.
+- [ ] Optional: also confirm 'still used' on the ILRS Apollo 11 page (ilrs-apollo11) so the primary source in sources.json states it directly.
+- [ ] Confirm 'millimeter level' precision wording against ILRS or a NASA page before showing it in the UI.
+- [ ] Range 356,400-406,700 km (perigee to apogee) is standard; cite a NASA page if shown in the UI.
 - [ ] Do not use NSSDCA id 1969-099C for Apollo 11 (see handoff note: it is the Apollo 12 record).
 
 ---
@@ -157,6 +169,9 @@ Apollo 11 astronauts placed a panel of 100 corner-cube reflectors on the Moon in
 
 *Chapter: moon | Mission: `apollo-17-surface` | Voice: Apollo 17 Lunar Roving Vehicle | Mechanic: navigate-manage*  
 **Player task:** Plan a geology traverse within time, range, sample value, and safe-return constraints.
+
+**Status badge:** Mission complete. Ended September 30, 1977.  
+*Archive replay: a dramatized voice built from mission records.*
 
 ### Memory Echo
 
@@ -219,6 +234,9 @@ On Apollo 17, the Lunar Roving Vehicle let the crew explore the Taurus-Littrow v
 
 *Chapter: mars | Mission: `viking-1` | Voice: Viking 1 lander | Mechanic: observe-infer*  
 **Player task:** Compare soil-experiment results and choose only the conclusion supported by the combined evidence.
+
+**Status badge:** Mission complete. Ended November 11, 1982.  
+*Archive replay: a dramatized voice built from mission records.*
 
 ### Memory Echo
 
@@ -303,6 +321,9 @@ Viking 1 carried a laboratory that tested Martian soil in several ways. Some res
 *Chapter: mars | Mission: `spirit` | Voice: Spirit rover | Mechanic: navigate-manage-observe*  
 **Player task:** Choose a route, inspect exposed material, and match instrument evidence to a past-water interpretation.
 
+**Status badge:** Silent today. Mission ended May 25, 2011.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I am a rover in Gusev Crater. One wheel stopped working, so I drag it. The dragging digs things up.
@@ -371,6 +392,9 @@ Spirit's disabled wheel churned up bright, silica-rich soil. Instrument readings
 *Chapter: mars | Mission: `ingenuity` | Voice: Ingenuity helicopter | Mechanic: navigate-manage*  
 **Player task:** Choose rotor, energy, altitude, and terrain parameters for a short autonomous flight.
 
+**Status badge:** Mission complete. Ended January 25, 2024.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I am a helicopter on a planet with almost no air. Lift is hard to find here.
@@ -384,7 +408,7 @@ Spirit's disabled wheel churned up bright, silica-rich soil. Instrument readings
 | `on_incorrect` (parameter: rotor_high) | Faster than needed wastes energy I cannot spare. |
 | `on_incorrect` (parameter: energy) | My battery is small. A longer or higher flight needs more energy than I have. |
 | `on_incorrect` (parameter: terrain) | I steer by looking at the ground. Flat terrain with visible features is safest. |
-| `on_launch` | Earth cannot steer me live. Signals take minutes. Once I lift off, I decide. |
+| `on_launch` | Earth cannot steer me live. Signals take minutes. Once I lift off, my onboard software flies the plan. |
 | `on_success` | Flight complete. Another plan survived the thin air. |
 
 **Outcomes**
@@ -434,6 +458,9 @@ Ingenuity was designed as a technology demonstration and proved powered, control
 *Chapter: elsewhere | Mission: `near-shoemaker` | Voice: NEAR Shoemaker spacecraft | Mechanic: observe-infer-navigate*  
 **Player task:** Use mapping observations to refine a controlled descent and preserve final measurements.
 
+**Status badge:** Silent today. Mission ended February 28, 2001.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I was built to orbit. Nobody built me to land.
@@ -447,7 +474,7 @@ Ingenuity was designed as a technology demonstration and proved powered, control
 | `on_incorrect` | That target sits near rough ground. Check the shape map for a safer approach. |
 | `on_incorrect` | Mind the final minutes. If measurements are not prioritized, they may never be sent. |
 | `on_launch` | Beginning descent. Pictures and ranging are guiding every step. |
-| `on_success` | Touchdown. I am still listening, and still measuring, from the surface. |
+| `on_success` | Touchdown. The records show I kept sending measurements from the surface. |
 
 **Outcomes**
 
@@ -495,11 +522,14 @@ NEAR Shoemaker was the first spacecraft to orbit and land on an asteroid. After 
 *Chapter: elsewhere | Mission: `voyager-1` | Voice: Voyager 1 spacecraft | Mechanic: communicate-preserve*  
 **Player task:** Allocate declining power among instruments and prioritize a small interstellar data stream.
 
+**Status badge:** Mission continues. Status can change.  
+*Archive replay: a dramatized voice built from mission records.*
+
 ### Memory Echo
 
 > I left Earth in 1977. My power source fades a little every year.
 
-> Decide which instruments stay on. Every watt you save buys more time.
+> Choose which instruments stay on. Every watt you save buys more time.
 
 | Trigger | Line |
 |---|---|
@@ -508,7 +538,7 @@ NEAR Shoemaker was the first spacecraft to orbit and land on an asteroid. After 
 | `on_incorrect` | Too much power requested. I would have to shut something off on my own. |
 | `on_incorrect` | My signal is very faint and slow. Send only your highest-value measurements. |
 | `on_hint` | A message to me and my reply both take a very long time. Plan ahead. |
-| `on_success` | Signal sent. Huge antennas on Earth are listening for me. |
+| `on_success` | Signal sent. Huge antennas on Earth listen for my faint signal. |
 
 **Outcomes**
 
@@ -520,15 +550,16 @@ NEAR Shoemaker was the first spacecraft to orbit and land on an asteroid. After 
 
 **A planetary explorer became an interstellar weather station**
 
-Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first spacecraft to enter interstellar space. It still returns fields-and-particles data, while declining power forces engineers to make hard choices.
+Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first spacecraft to enter interstellar space. Its remaining science instruments still study interstellar space, while declining power forces engineers to make hard choices.
 
 **What happened**
 
 - Voyager 1 launched on September 5, 1977, and flew past Jupiter in March 1979.
 - It later crossed the heliopause, the edge of the Sun's influence, into interstellar space.
-- NASA's Deep Space Network receives its faint signal, and engineers manage power as its energy source weakens.
+- Its power source weakens by about 4 watts a year, so engineers have turned off some instruments and devices. In September 2026, a power-saving swap of three devices extended the life of its remaining instruments.
+- Contact briefly dropped on October 18 and 19, 2026, and returned on October 20 before engineers sent commands. NASA's Deep Space Network, large antennas around the world, receives its faint signal.
 
-**Why it matters:** Voyager 1 is a direct measurement of the space between stars. It also shows how distance, power, and bandwidth shape what a mission can do.
+**Why it matters:** Voyager 1 is a direct measurement of the space between stars. It also shows how distance, power, and bandwidth shape what a mission can do. On November 18, 2026 it reaches one light-day from Earth, so a radio message takes about 24 hours each way.
 
 **Key numbers**
 
@@ -536,7 +567,8 @@ Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first space
 |---|---|---|
 | Launch | September 5, 1977 | `nasa-voyager1` |
 | Jupiter encounter | March 1979 | `nasa-voyager1` |
-| One light-day from Earth | expected November 18, 2026 (NASA/JPL timing) (recheck before release) | `nasa-voyager1` |
+| Power lost each year | about 4 watts | `nasa-voyager1` |
+| One light-day from Earth | November 18, 2026 (about 25.89 billion km); radio takes 24 hours each way | `nasa-voyager1` |
 
 **How the game simplifies this:** Instrument availability and power decisions change over time, so the game uses a simplified, abstract budget. Real operations are decided by the mission team. The game also turns this into a quick tap-and-drag task.
 
@@ -544,12 +576,17 @@ Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first space
 
 **Sources:** `nasa-voyager1`, `nasa-nssdca`
 
+**Already verified:**
+
+- 2026-11-14: NASA JPL release 2026-078 (Oct 29, 2026) confirms: about 4 W/yr power loss, September 2026 three-device swap, contact loss Oct 18-19 resolved Oct 20, and one light-day (25.89 billion km) on Nov 18, 2026.
+- The JPL release does not name which instruments remain on, so this copy names none.
+
 **Verify before release (Member 6):**
 
-- [ ] Dataset flags status_review_required_before_release=true. Voyager status changes: recheck nasa-voyager1 and NASA JPL news on the day of release, including any recent communications issues. Avoid sentences like 'is operating normally'.
-- [ ] One-light-day milestone: NASA/JPL gave 10:16:07 UTC on November 18, 2026 (about 25.9 billion km; round-trip communication about 48 hours). Earlier press estimates said Nov 13-15, so cite only NASA/JPL wording. This is time-sensitive and not in sources.json: add a JPL source before using it.
-- [ ] 'First spacecraft to enter interstellar space' is in the dataset science_summary; keep consistent with it.
-- [ ] Confirm that the 'still returns fields-and-particles data' line is still true at release.
+- [ ] Release-day recheck: look for newer JPL news on Voyager 1 status before showing 'still study interstellar space'.
+- [ ] Before naming any instrument, read NASA's 'Where Are Voyager 1 and 2 Now?' page. Secondary reports say only the magnetometer and plasma-wave subsystem remain on, so the dataset's 'fields-and-particles' phrase may be out of date.
+- [ ] Ask Member 6 to add the JPL release (URL in citation_url) to sources.json, then switch the two citation_url key numbers to that source id.
+- [ ] Keep the one-light-day line evergreen: it is dated November 18, 2026, which is after the November 15 submission deadline.
 
 ---
 
@@ -557,6 +594,9 @@ Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first space
 
 *Chapter: elsewhere | Mission: `new-horizons` | Voice: New Horizons spacecraft | Mechanic: communicate-preserve*  
 **Player task:** Schedule observations during a fast flyby with limited pointing time, storage, and downlink.
+
+**Status badge:** Mission continues. Status can change.  
+*Archive replay: a dramatized voice built from mission records.*
 
 ### Memory Echo
 
