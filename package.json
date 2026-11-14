@@ -11,20 +11,17 @@
     "typecheck": "tsc --noEmit",
     "validate:entries": "node tools/validate-entries.mjs",
     "references": "tsx tools/build-references.ts",
-    "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test": "node tools/validate-entries.mjs"
   },
   "dependencies": {
     "phaser": "3.90.0",
     "zod": "3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "1.50.1",
     "@types/node": "22.13.1",
     "tsx": "4.19.2",
     "typescript": "5.7.3",
-    "vite": "6.1.0",
-    "vitest": "3.0.5"
+    "vite": "6.1.0"
   }
 }
 

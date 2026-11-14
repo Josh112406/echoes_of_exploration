@@ -12,11 +12,10 @@ To prevent merge conflicts between teammates and agents, respect these hard dire
 
 | Directory | Owner | Rules for Agents |
 |---|---|---|
-| `src/game/` | **Coder 2 (Game Lead)** | Only Coder 2's agent may edit this. Never touch `App.tsx` or `src/pages/`. Export a clean `<EncounterView onComplete={...} onExit={...} />`. |
-| `src/pages/`<br>`src/components/`<br>`src/context/` | **Coder 1 (Web Platform Lead)** | Only Coder 1's agent may edit this. Mounts Coder 2's game at route `/game`. |
-| `src/data/` | **Member 6 (Data Lead)** | Contains `missions.json`, `sources.json`, `encounters.json`. Do not hardcode mission facts inside React components; always read from here. |
-| `src/text/` | **Member 4 (Science Writer)** | Contains in-game dialogue scripts and evidence explanations. |
-| `public/assets/`<br>`public/images/` | **Member 3 & Member 6** | Audio files, badge graphics, and public domain NASA imagery. |
+| `src/scenes/`<br>`src/systems/` | **Member 2 & Member 4 (Game & Engine Leads)** | Phaser 3 exploration scenes, 60 Hz physics minigames (`LandingScene`, `RoverScene`, `LaserScene`, `RotorScene`, `FlybyScene`), and procedural sprite/backdrop generators. |
+| `src/ui/`<br>`src/core/` | **Member 1 (Platform & UI Lead)** | Accessible DOM overlays (`TitleScreen`, `HubMap`, `ArchiveModal`, `EntryReaderModal`, `FieldTaskModal`, `SettingsModal`, `AboutModal`) and EventBus/GameState wiring. |
+| `src/data/` | **Member 6 & Member 4 (Data & Science Leads)** | Contains `artifacts.json`, `missions.json`, `sources.json`, `encounters.json`, `story.ts`, `fieldTasks.ts`, and `finale.ts`. Do not hardcode mission facts inside UI components; always read from here. |
+| `src/audio/`<br>`public/assets/` | **Member 3 & Member 6** | Web Audio API procedural soundscape/SFX, fonts, maps, and public-domain NASA imagery. |
 
 ---
 
@@ -24,26 +23,14 @@ To prevent merge conflicts between teammates and agents, respect these hard dire
 
 1. **Zero Runtime APIs / Zero Backend:**
    * Do NOT make `fetch()` calls to external APIs (including `api.nasa.gov`) during runtime.
-   * All data must be imported directly from `@/data/missions.json`, `@/data/sources.json`, or `@/data/encounters.json`.
+   * All data must be imported directly from `src/data/` (`artifacts.json`, `missions.json`, `sources.json`, `encounters.json`).
    * State persistence must use browser `localStorage` only (no cookies, no backend databases, no auth).
 
-2. **Clean Game-Platform Contract:**
-   * The game on `/game` must communicate with the platform solely via props:
-   ```typescript
-   export interface EncounterProps {
-     missionId: string;
-     onComplete: (badgeId: string) => void;
-     onExit: () => void;
-   }
-   ```
-   * The game must be completely self-contained within `src/game/`.
+2. **Clean Scene & Overlay Architecture:**
+   * Cross-module communication between Phaser scenes (`src/scenes/`) and DOM overlays (`src/ui/`) must flow through `EventBus` (`src/core/EventBus.ts`) and centralized `GameState` (`src/core/GameState.ts`).
 
-3. **Routing & Deployment Safety:**
-   * Single Page Application routes:
-     * `/` $\rightarrow$ Observatory Home Page (with "Start Game" and "Mission Archive" buttons).
-     * `/game` $\rightarrow$ Playable Minigame screen (with "Exit to Observatory" button).
-     * `/archive` $\rightarrow$ 31-Mission Museum Catalog with filters.
-     * `/about` $\rightarrow$ Citations, methodology, and legal compliance.
+3. **Navigation & Deployment Safety:**
+   * All views (`TitleScreen`, `SiteScene`, `HubMap`, `ArchiveModal`, `EntryReaderModal`, `FieldTaskModal`, `SettingsModal`, `AboutModal`, and all 5 minigames) run in a single unified canvas + overlay stage (`index.html`).
    * Static host 404 safety: `vercel.json` rewrites and `public/.htaccess` are required.
 
 4. **Code Quality:**

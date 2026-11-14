@@ -30,17 +30,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fieldtask-overlay')?.classList.add('hidden');
   };
 
-  const setTopBarVisible = (visible: boolean) => {
-    const nav = document.querySelector('header.nav');
-    if (nav) {
-      if (visible) {
-        nav.classList.remove('hidden');
-      } else {
-        nav.classList.add('hidden');
-      }
-    }
-  };
-
   const stopActivePlayScenes = () => {
     SoundFX.setThruster(false);
     SoundFX.setRover(0);
@@ -67,7 +56,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // 1. Intro Scene Trigger
   EventBus.on(EVENTS.START_INTRO, () => {
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start('IntroScene');
   });
@@ -75,7 +63,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // 2. Title Screen Trigger
   EventBus.on(EVENTS.SHOW_TITLE, () => {
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start('TitleScene');
     document.getElementById('title-overlay')?.classList.remove('hidden');
@@ -84,7 +71,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // 3. Start Open World Exploration
   EventBus.on(EVENTS.START_EXPLORATION, () => {
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start('SiteScene');
   });
@@ -94,7 +80,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!GameState.isSiteActive(siteId)) return; // chronological order
     Practice.end(); // a real run is never a practice run
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     const sceneKey = getMinigameKeyForSite(siteId);
     game.scene.start(sceneKey, { siteId, assisted });
@@ -106,7 +91,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!run) return;
     Practice.begin(run);
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start(run.scene, { siteId: run.siteId, assisted: false });
   });
@@ -115,7 +99,6 @@ window.addEventListener('DOMContentLoaded', () => {
   EventBus.on(EVENTS.START_TRANSITION, (targetWorld?: 'mars' | 'elsewhere') => {
     if (!GameState.isWorldUnlocked(targetWorld ?? 'mars')) return;
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start('TransitionScene', { targetWorld: targetWorld ?? 'mars' });
   });
@@ -124,14 +107,12 @@ window.addEventListener('DOMContentLoaded', () => {
   EventBus.on(EVENTS.SHOW_FINALE, () => {
     if (!GameState.isCampaignComplete()) return;
     hideAllOverlays();
-    setTopBarVisible(false);
     stopActivePlayScenes();
     game.scene.start('EndingScene');
   });
 
   // 7. Hub Map View
   EventBus.on(EVENTS.NAVIGATE_TO_HUB, () => {
-    setTopBarVisible(true);
     document.getElementById('hub-overlay')?.classList.remove('hidden');
   });
 
@@ -151,6 +132,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ['failure-overlay', '#btn-back-to-site'],
     ['entry-overlay', '#btn-close-entry'],
     ['archive-overlay', '#btn-close-archive'],
+    ['hub-overlay', '#btn-close-hub'],
   ];
   const CINEMATIC_SCENES = ['IntroScene', 'TransitionScene', 'EndingScene'];
   window.addEventListener('keydown', (e: KeyboardEvent) => {
