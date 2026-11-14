@@ -1,16 +1,55 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-type="software" data-theme="evening" data-radius="sharp" data-buttons="pill">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Echoes of Exploration: The NASA Signal Archive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="page-type" content="software" />
+    <meta name="site-kind" content="gaming" />
+    <title>Echoes of Exploration — The NASA Signal Archive</title>
+    <meta name="description" content="Echoes of Exploration — The NASA Signal Archive. Recover 23 real NASA machines across the Moon, Mars and deep space." />
+    <meta property="og:title" content="Echoes of Exploration — The NASA Signal Archive" />
+    <meta property="og:description" content="An educational browser game: follow UNIT-7 across the Moon, Mars and deep space to recover the stories of 23 real NASA missions." />
+    <meta name="application-name" content="Echoes of Exploration" />
+    <link rel="stylesheet" href="./src/ui/system.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="app">
+      <!-- Fixed Nav Header -->
+      <header class="nav">
+        <div class="nav-brand">
+          <span class="brand-title">ECHOES OF EXPLORATION</span>
+          <span class="brand-separator">//</span>
+          <span class="brand-telemetry">THE NASA SIGNAL ARCHIVE</span>
+        </div>
+        <nav class="nav-actions" aria-label="Main Navigation">
+          <button id="nav-hub" class="btn btn--nav active">
+            <span class="btn-dot"></span>HUB
+          </button>
+          <button id="nav-archive" class="btn btn--nav">ARCHIVE</button>
+          <button id="nav-audio" class="btn btn--nav" aria-label="Toggle Audio">AUDIO: MUTED</button>
+          <button id="nav-settings" class="btn btn--nav">SETTINGS</button>
+          <button id="nav-about" class="btn btn--nav">ABOUT</button>
+        </nav>
+      </header>
+
+      <!-- Main Stage -->
+      <main id="game-stage">
+        <!-- Persistent Phaser Canvas Mount -->
+        <div id="game-container"></div>
+
+        <!-- Accessible DOM Overlays -->
+        <div id="title-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: transparent;"></div>
+        <div id="hub-overlay" class="overlay-pane hidden"></div>
+        <div id="archive-overlay" class="overlay-pane hidden"></div>
+        <div id="entry-overlay" class="overlay-pane hidden"></div>
+        <div id="failure-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.85);"></div>
+        <div id="settings-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.85);"></div>
+        <div id="about-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.85);"></div>
+        <div id="fieldtask-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.9);"></div>
+      </main>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
+

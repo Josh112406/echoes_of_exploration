@@ -1,0 +1,153 @@
+{
+  "id": "transition-elsewhere",
+  "world": "mars",
+  "totalDuration": 22.0,
+  "events": [
+    {
+      "time": 0.5,
+      "camera": { "x": 320, "y": 180, "zoom": 1.0, "duration": 0 },
+      "sprites": [
+        {
+          "id": "booster",
+          "texture": "cin_booster",
+          "x": 336,
+          "y": 285,
+          "ground": true,
+          "scale": 2,
+          "depth": 25,
+          "rotation": 0,
+          "visible": true
+        },
+        {
+          "id": "robot",
+          "texture": "robot_idle",
+          "x": 236,
+          "y": 285,
+          "ground": true,
+          "scale": 2,
+          "depth": 26,
+          "visible": true
+        }
+      ],
+      "sound": { "cue": "click", "state": true },
+      "caption": {
+        "tag": "MARS_SURVEY_COMPLETE",
+        "text": "All nine Martian echoes catalogued. The Red Planet falls quiet behind us."
+      }
+    },
+    {
+      "time": 3.0,
+      "sprites": [
+        {
+          "id": "robot",
+          "texture": "robot_idle",
+          "x": 236,
+          "y": 285,
+          "ground": true,
+          "targetX": 330,
+          "targetGround": true,
+          "targetAlpha": 0,
+          "duration": 1.4
+        }
+      ]
+    },
+    {
+      "time": 4.5,
+      "camera": {
+        "x": 340,
+        "y": 150,
+        "zoom": 1.15,
+        "duration": 4.0,
+        "shake": { "duration": 400, "intensity": 0.006 }
+      },
+      "sprites": [
+        {
+          "id": "booster",
+          "texture": "cin_booster",
+          "x": 336,
+          "y": 285,
+          "ground": true,
+          "targetY": -160,
+          "duration": 5.0,
+          "thruster": true,
+          "visible": true
+        }
+      ],
+      "sound": { "cue": "thruster", "state": true },
+      "caption": {
+        "tag": "ESCAPE_TRAJECTORY_BURN",
+        "text": "Ion stage at full thrust. Climbing out of the Martian gravity well toward the asteroid belt."
+      }
+    },
+    {
+      "time": 9.5,
+      "backdrop": { "kind": "space", "fade": 1.5 },
+      "camera": { "x": 320, "y": 180, "zoom": 1.0, "duration": 1.5 },
+      "sprites": [
+        {
+          "id": "booster",
+          "texture": "cin_booster",
+          "x": 40,
+          "y": 220,
+          "rotation": 90,
+          "targetX": 430,
+          "targetY": 176,
+          "targetRotation": 80,
+          "duration": 6.0,
+          "thruster": false,
+          "visible": true
+        }
+      ],
+      "sound": { "cue": "thruster", "state": false },
+      "caption": {
+        "tag": "BEYOND_THE_FROST_LINE",
+        "text": "Sunlight thins to starlight. Out here, six deep-space messengers are still coasting through the dark."
+      }
+    },
+    {
+      "time": 16.0,
+      "camera": { "x": 360, "y": 180, "zoom": 1.15, "duration": 3.0 },
+      "sprites": [
+        {
+          "id": "booster",
+          "texture": "cin_booster",
+          "x": 430,
+          "y": 176,
+          "rotation": 80,
+          "targetX": 560,
+          "targetY": 150,
+          "targetAlpha": 0.35,
+          "duration": 6.0,
+          "thruster": false
+        },
+        {
+          "id": "robot_fly",
+          "texture": "robot_fly_idle",
+          "x": 420,
+          "y": 184,
+          "scale": 2,
+          "depth": 26,
+          "alpha": 0,
+          "targetX": 330,
+          "targetY": 196,
+          "targetAlpha": 1,
+          "duration": 2.2,
+          "visible": true
+        }
+      ],
+      "sound": { "cue": "rcs", "state": true },
+      "caption": {
+        "tag": "DEEP_SPACE_OPTICS_ONLINE",
+        "text": "Treads retracted. Ion pack online. Let us find what humanity sent into the outer dark."
+      }
+    },
+    {
+      "time": 18.6,
+      "sound": { "cue": "ping", "state": true }
+    },
+    {
+      "time": 19.4,
+      "sound": { "cue": "rcs", "state": true }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+export const CONSTANTS = {
+  CANVAS: {
+    WIDTH: 640,
+    HEIGHT: 360,
+    WORLD_WIDTH: 2400,
+    WORLD_HEIGHT: 1600,
+    PIXELS_PER_METER: 16,
+  },
+  PHYSICS: {
+    TIMESTEP: 1 / 60,
+    MAX_ACCUMULATOR: 0.1,
+    MOON_GRAVITY: 1.62,
+    MARS_GRAVITY: 3.71,
+    MARS_SPEED_SCALE: Math.sqrt(3.71 / 1.62), // ~1.5133
+    ELSEWHERE_GRAVITY: 0.45,
+    ELSEWHERE_SPEED_SCALE: Math.sqrt(0.45 / 1.62), // ~0.527
+  },
+  ROBOT: {
+    TOP_DOWN: {
+      ACCEL: 600,
+      MAX_SPEED: 90,
+      DECEL: 800,
+    },
+    LANDING: {
+      WIDTH_METERS: 1.5,
+      HEIGHT_METERS: 2.0,
+    },
+  },
+  COLORS: {
+    BACKGROUND_DARK: 0x05070f,
+    MOON_DUST: 0xb2b8d4,
+    REGOLITH_DARK: 0x27293d,
+    MARS_DUST: 0xcf724a,
+    MARS_OCHRE: 0x7d331c,
+    MARS_DARK: 0x2b140e,
+    CYAN_ACCENT: 0x0ec3dc,
+    AMBER_VERIFIED: 0xf59e0b,
+    THRUSTER_ORANGE: 0xe65100,
+    SLATE_TEXT: 0x8389a8,
+    WHITE_TEXT: 0xe2e6fa,
+    BORDER_HAIRLINE: 0x131a2e,
+    HULL_GREEN: 0x0ec3dc,
+  },
+} as const;
+

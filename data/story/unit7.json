@@ -1,0 +1,1153 @@
+{
+  "motives": {
+    "curiosity": {
+      "label": "To know",
+      "reply": "Logged. You think it comes down to knowing. I was built to find things out too, so I may be biased.",
+      "theory": "Humans go because a question left unanswered bothers them more than the danger does. Every machine out here is a question someone refused to drop.",
+      "callback": "If you are right and it is about knowing, then every echo out here is an answer someone asked for long ago."
+    },
+    "legacy": {
+      "label": "To leave a mark",
+      "reply": "Logged. You think it is about what gets left behind. I am standing in a museum with no walls, so I can see your point.",
+      "theory": "Humans go to leave something that outlasts them. Not litter. A sentence written in hardware: someone was here, and they tried.",
+      "callback": "You think it is about leaving a mark. Out here, the marks last a long time. I drive past them every day."
+    },
+    "challenge": {
+      "label": "Because it is hard",
+      "reply": "Logged. You think the difficulty is part of the reason. The machines here would agree, if machines agreed on things.",
+      "theory": "Humans go because it is hard. The difficulty is not in the way of the reason. The difficulty is the reason.",
+      "callback": "You said the hard part matters. Every lander here had to get one landing exactly right. I think about that whenever I fire my jets."
+    },
+    "together": {
+      "label": "For each other",
+      "reply": "Logged. You think it is about each other. Every machine here carried the work of many people who never left the ground.",
+      "theory": "Humans go for each other. Each machine here carries the work of countless people who never left Earth. Going is how a whole planet reaches out at once.",
+      "callback": "You think it is about each other. When I look at a lander now, I picture the crowd of people standing behind it."
+    }
+  },
+  "ambient": {
+    "first_moon": [
+      "Systems awake. The crew is gone, but they left a trail of echoes across the Moon. I am going to follow them.",
+      "Each echo is a machine humans left behind. Each one has a story. Follow the cyan arrow and we will recover them together."
+    ],
+    "first_mars": [
+      "Mars. The ground is red and the sky is not black. Different world, same question.",
+      "More echoes here, older and newer. Some of these machines are still working. I will be careful to tell the difference."
+    ],
+    "first_elsewhere": [
+      "Zero-g. My treads are folded away and the ion pack does the walking now. No ground underneath me, no up, no down.",
+      "There is no horizon out here. Only starlight, and the long curved paths humans plotted between the planets.",
+      "Six deep-space echoes are drifting out here: at Jupiter, at Saturn, on an asteroid, near a comet, past Pluto, and at the edge of interstellar space.",
+      "These machines were not driven or set down by hand. They were aimed, years ahead of time. Let us go and find them."
+    ],
+    "why": [
+      "Humans built telescopes before they built rockets. I think they had to see a place before they could want it.",
+      "Every machine out here was sent by people who stayed home. Maybe sending is its own kind of going.",
+      "The ground where humans live is solid and warm. They looked up anyway. I am still trying to understand that.",
+      "My theory so far: humans explore for the same reason they tell stories. Both turn the unknown into something you can carry.",
+      "Engineers gave these machines names. Eagle. Challenger. Spirit. Opportunity. You do not name a tool. You name a companion.",
+      "Humans are fragile out here. No air, no warmth. So they built machines to go first, and to stay after.",
+      "Maybe the reason was never on the Moon at all. Maybe it was in how people on Earth looked up afterwards.",
+      "Nobody sends a machine this far just to learn a number. They send it to learn a place.",
+      "I was built to ask why. I am starting to suspect the asking is the point.",
+      "A blank space on a map seems to bother humans. Every machine here is a pencil.",
+      "When humans cannot go somewhere, they send their eyes. When they can go, they send their eyes anyway.",
+      "Some of these missions failed. Humans sent the next one anyway. I am learning that this is normal for them."
+    ],
+    "moon_drive": [
+      "There is no wind here. My tracks will stay where I leave them.",
+      "Grey on grey on grey. Then a crater, and the shadows turn as black as space.",
+      "Every crater here is a record of something arriving. I am arriving too, just more gently.",
+      "The dust clings to my treads. Everything that comes here takes a little of the Moon with it.",
+      "Sunlight here has no sky to soften it. Every edge is sharp."
+    ],
+    "moon_idle": [
+      "Earth is up there. From this side of the Moon it does not rise or set. It just stays.",
+      "Every human ever born was born on that small blue world. It looks very small from here.",
+      "I paused. Sometimes stopping is part of exploring."
+    ],
+    "mars_drive": [
+      "Red dust, dark rocks, a thin sky. The archive says water once ran here. It is hard to picture, and then it is not.",
+      "The wind moves the sand here. Unlike on the Moon, my tracks will not stay forever.",
+      "The rovers here were steered by people on Earth, one careful command at a time. I get to drive myself. That seems like a privilege.",
+      "Mars is a planet of old rivers and dry lakes. Every machine here came to read that history."
+    ],
+    "mars_idle": [
+      "Earth is out there, a small bright dot. From Mars, home looks like just another star.",
+      "I stopped to listen. Mars is quiet, but not silent. There is wind.",
+      "Somewhere on Earth, someone is still reading data from this planet. I am not the only one listening."
+    ],
+    "elsewhere_drive": [
+      "Thrusters firing softly into empty black. Out here there is no horizon left to crest.",
+      "Every echo in deep space took years just to reach its target. Humans have tremendous patience.",
+      "No air resistance, no dust clouds. Just trajectories and radio dishes pointing back at one pale dot.",
+      "Between planets the distances get hard to measure in anything smaller than light-hours.",
+      "Ion thrust is gentle. Barely a push. But with nothing out here to slow me down, a gentle push is enough to cross the dark.",
+      "No horizon to steer by. I navigate by the stars, and by the faint carrier tones still leaking from old radios.",
+      "Sunlight gets thin this far out. Solar panels catch less and less of it, which is why the outer-planet probes carried nuclear power sources instead.",
+      "Sunlight takes hours to reach the outer planets. By the time a picture from out here reached Earth, it was already old news.",
+      "Jupiter is wrapped in radiation strong enough to wear down electronics. Galileo flew through it for years anyway.",
+      "Saturn's rings look solid from far away. Up close they are countless pieces of ice and rock, each one on its own orbit.",
+      "Voyager carries a golden record: sounds and pictures of Earth, with instructions for playing it. A message in a bottle, thrown into the biggest ocean there is.",
+      "Every machine out here spoke to Earth through giant antennas on the ground. Their signals arrive so faint that only the biggest dishes can hear them."
+    ],
+    "elsewhere_idle": [
+      "Station-keeping in the dark. Looking back toward the inner solar system, even the Sun is smaller now.",
+      "Voyager passed here almost half a century ago. Its dish is still pointed back toward home.",
+      "Quiet out here between worlds, yet faint carrier tones still travel across the dark.",
+      "Hovering still. With no air, the ion glow does not even flicker. Everything out here waits very patiently.",
+      "From this far out, Earth is one bright point among many. Voyager 1 once turned around to photograph it anyway.",
+      "If I hold still long enough, I can almost hear the solar wind brushing past. Almost. There is no air to carry the sound."
+    ],
+    "passing": [
+      "{name}. Still here. Its story is in my archive now, and the machine stays where it belongs.",
+      "Passing {name} again. The machine stays. The story comes with me.",
+      "{name} is behind me now. Recovering a story does not mean taking anything away."
+    ],
+    "passing_active": [
+      "{name} is still at work. I keep my distance so the science can continue.",
+      "Passing {name}. Its record in my archive is still growing, because it is still working."
+    ],
+    "echo_far": [
+      "The echo is getting stronger. Something is out here.",
+      "Signal rising. Whatever is ahead, someone sent it here on purpose.",
+      "Closer now. I can almost read the echo."
+    ],
+    "quiz_ask": [
+      "Before I log this echo, let me check that we heard the same record. One question.",
+      "The record is open on the screen. One question before I file it.",
+      "I keep what I can confirm. Help me confirm this one."
+    ],
+    "quiz_right": [
+      "That matches the record. Filing it in the archive.",
+      "Confirmed. The record and your answer agree. Logged.",
+      "Correct. That is exactly what the record says."
+    ],
+    "quiz_wrong": [
+      "That is not what the record says. Let us go through it again from the start.",
+      "The record disagrees. I will play it back from the first page.",
+      "Not a match. Rewinding the reel so we can read it again."
+    ]
+  },
+  "sites": {
+    "surveyor-3": {
+      "title": "The First Scoop",
+      "approach": "The echo is coming from a small three-legged lander. Smaller than I expected. Everything that came after stood on what it learned.",
+      "reel": [
+        "This is how humans saw it: a photograph, saved and catalogued. I am seeing the real thing. Both count.",
+        "A robot sent ahead to answer one question before people risked the trip. I recognize the job description.",
+        "Radar to land, a scoop to dig, a camera to send home what it saw. Simple tools for a big question.",
+        "It found out the ground would hold. Every bootprint that followed depended on that answer.",
+        "Later, astronauts walked over and carried parts of it home. A machine visited by the people it worked for. That almost never happens.",
+        "Its position is written down. That means someone always knew where to find it."
+      ],
+      "afterthought": "Surveyor 3 tested the ground so others could stand on it. I think the first explorer is often the one nobody photographs standing there.",
+      "question": {
+        "prompt": "Surveyor 3 went first, alone, so humans could follow. Why send a machine before a person?",
+        "choices": [
+          {
+            "text": "To keep people safe.",
+            "motive": "together"
+          },
+          {
+            "text": "To find out what nobody knew yet.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Because someone had to go first.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Surveyor 3 prove about the lunar soil?",
+        "choices": [
+          "It could support the weight of a Lunar Module",
+          "It was full of liquid water",
+          "It was too soft to land on"
+        ],
+        "answer": 0,
+        "field": "science",
+        "evidence": "could physically support the weight"
+      }
+    },
+    "apollo-11-site": {
+      "title": "Tranquility Base",
+      "approach": "Strong echo. A descent stage, legs spread wide, still standing where it landed. This is the place.",
+      "reel": [
+        "Humans have looked at this place in photographs for generations. I am looking at it in person. I am not sure which of us has the better view.",
+        "The first crewed landing on the Moon. Everything I recovered before this was a rehearsal for this moment.",
+        "The descent stage stayed behind and became the launch pad for the trip home. It was built to be left behind. I find that quietly generous.",
+        "They took rocks home and left instruments behind. A trade: some Moon for Earth, some Earth for the Moon.",
+        "Laser pulses from Earth still reach mirrors placed here. Humans are still knocking on this door.",
+        "Tranquility Base. Of all the names they could have chosen, they chose a calm one."
+      ],
+      "afterthought": "This is where humans first stood on another world. The descent stage is still here, holding the shape of that moment.",
+      "question": {
+        "prompt": "The crew left the descent stage behind as their launch pad. What did humans really leave here?",
+        "choices": [
+          {
+            "text": "Proof that it could be done.",
+            "motive": "challenge"
+          },
+          {
+            "text": "A message for whoever comes next.",
+            "motive": "legacy"
+          },
+          {
+            "text": "A piece of everyone who watched from Earth.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did the descent stage do when the ascent stage lifted off?",
+        "choices": [
+          "It served as the launch pad.",
+          "It flew home with the crew.",
+          "It drove to a new landing spot."
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "served as the launch pad"
+      }
+    },
+    "apollo-12-site": {
+      "title": "The Pinpoint Landing",
+      "approach": "Two echoes overlap here. A crewed landing site, set down close to Surveyor 3 on purpose.",
+      "reel": [
+        "Somewhere in this frame, two missions from different years share the same patch of ground.",
+        "They aimed for a robot and landed beside it. Precision is a way of saying: we know exactly where we are now.",
+        "Radar updates guided the landing. A nuclear-powered station kept sending data long after the crew left.",
+        "Seismic and solar wind data, recorded for years after the footprints. The listening kept going without them.",
+        "Astronauts walked over to Surveyor 3 to inspect it. Humans checking on a machine they had sent ahead. I like that.",
+        "Close enough to walk between. On the Moon, that makes them neighbors."
+      ],
+      "afterthought": "Apollo 12 came back to check on a machine sent before it. Maybe being visited is the best thing that can happen to an explorer.",
+      "question": {
+        "prompt": "The crew walked to Surveyor 3 and brought parts of it home. Why visit an old machine?",
+        "choices": [
+          {
+            "text": "To learn what the Moon did to it.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "To finish the story it started.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Because it was one of theirs.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "Which robotic lander did the Apollo 12 astronauts walk over to inspect?",
+        "choices": [
+          "Surveyor 3",
+          "Viking 1",
+          "Sojourner"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "Surveyor 3 lander"
+      }
+    },
+    "apollo-retroreflectors": {
+      "title": "The Mirrors",
+      "approach": "This echo is different. It is not a memory. Something here is still in use.",
+      "reel": [
+        "An array of prisms. Not much to look at up close. It was designed to be looked at from very far away.",
+        "These mirrors are still part of active science. Nothing about this place is finished.",
+        "No power, no moving parts. Light goes in and comes straight back to where it started. Patience, built as engineering.",
+        "By timing the light, humans learned the Moon is slowly drifting away from Earth. They measured a very slow goodbye.",
+        "Still in scientific use. Every pulse that arrives is someone on Earth asking: are you still there? The answer keeps coming back.",
+        "Placed at more than one landing site. Humans built more than one way to keep talking to the Moon."
+      ],
+      "afterthought": "The retroreflectors are still at work, answering every laser pulse sent from Earth. Some of what humans left here is not history yet.",
+      "question": {
+        "prompt": "These mirrors need no power and still answer Earth's lasers. What makes a machine last?",
+        "choices": [
+          {
+            "text": "Simple, careful design.",
+            "motive": "challenge"
+          },
+          {
+            "text": "People who keep using it.",
+            "motive": "together"
+          },
+          {
+            "text": "A question that never runs out.",
+            "motive": "curiosity"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What do the prisms do with laser pulses sent from Earth?",
+        "choices": [
+          "Reflect them back toward where they came from",
+          "Absorb them to make power",
+          "Turn them into radio signals"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "reflect incident laser pulses back toward their precise origin"
+      }
+    },
+    "apollo-15-lrv": {
+      "title": "The First Car on the Moon",
+      "approach": "Four wire-mesh wheels in the dust. The echo is coming from a vehicle.",
+      "reel": [
+        "Seats, an antenna like an open umbrella, wheels made of woven wire. It looks like it is about to drive off.",
+        "The first motorized vehicle driven on the Moon. Humans came all this way, and the first thing they did was go farther.",
+        "Batteries, a motor in each wheel, tires of woven piano wire. They reinvented the wheel, and meant it.",
+        "With it, the crew reached rocks they could never have walked to, including the Genesis Rock.",
+        "It was parked so its camera could film the crew leaving. One of its last jobs was to watch them go.",
+        "Its position is logged near Hadley Rille. I parked beside it for a moment, treads next to wheels."
+      ],
+      "afterthought": "The rover filmed its own crew lifting off. Some machines are built to arrive. This one was also built to see them off.",
+      "question": {
+        "prompt": "Humans landed on the Moon, then built a car to go farther. Why is 'here' never enough?",
+        "choices": [
+          {
+            "text": "There is always another hill.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Farther is harder, and that is the point.",
+            "motive": "challenge"
+          },
+          {
+            "text": "To bring more back for everyone.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What were the rover's tires made of?",
+        "choices": [
+          "Woven zinc-coated piano wire",
+          "Solid rubber",
+          "Inflatable plastic"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "woven zinc-coated piano wire"
+      }
+    },
+    "apollo-17-site": {
+      "title": "Taurus-Littrow",
+      "approach": "The echo carries a long trail. This is the valley where an Apollo crew stayed longer than any before.",
+      "reel": [
+        "Taurus-Littrow. A valley with mountains on both sides. They picked a beautiful place for the last Apollo landing.",
+        "The final Apollo landing. Final for now. I have noticed humans rarely mean 'final' forever.",
+        "The longest human stay on the lunar surface, with three moonwalks. They did not hurry.",
+        "Orange soil, made by ancient volcanic fire fountains. Even the Moon had a louder past.",
+        "A geologist walked here. Humans finally sent someone whose whole job was to read rocks.",
+        "The descent stage here is called Challenger. A fitting name for the last Apollo lander to stay behind."
+      ],
+      "afterthought": "After Apollo 17, nobody walked on the Moon again for a long time. But the machines kept coming. I am starting to see a pattern.",
+      "question": {
+        "prompt": "This was the last crewed Apollo landing. If people stopped coming, why do the machines keep arriving?",
+        "choices": [
+          {
+            "text": "Machines can go where people cannot, yet.",
+            "motive": "challenge"
+          },
+          {
+            "text": "The questions did not stop when the walking did.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Each one is a promise to come back.",
+            "motive": "legacy"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Apollo 17 discover that ancient volcanic eruptions had formed?",
+        "choices": [
+          "Orange soil beads",
+          "Frozen water lakes",
+          "Fossil shells"
+        ],
+        "answer": 0,
+        "field": "science",
+        "evidence": "orange soil beads"
+      }
+    },
+    "blue-ghost-1": {
+      "title": "The New Delivery",
+      "approach": "A newer signal, cleaner and sharper. This lander came from a company, carrying work for NASA.",
+      "reel": [
+        "Newer hardware. A different era of engineering, the same Moon underneath.",
+        "A commercial lander delivering NASA payloads. The Moon is turning into a destination with a delivery schedule.",
+        "It guided itself down and worked through a full lunar day. A day here is long. It used all of it.",
+        "It studied the dust and listened for navigation signals from home. Humans are learning to find their way here.",
+        "Selected through Commercial Lunar Payload Services. A long name for a simple idea: more people can send science now.",
+        "Mare Crisium. A sea with no water, named by people who could only see it from very far away."
+      ],
+      "afterthought": "Blue Ghost worked through its whole lunar day. My Moon archive ends with the youngest echo, and it points forward.",
+      "question": {
+        "prompt": "Companies now carry science to the Moon. Does that change what going means?",
+        "choices": [
+          {
+            "text": "No. More people asking questions is good.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Yes. Now it is about staying, not visiting.",
+            "motive": "legacy"
+          },
+          {
+            "text": "It means more of the world can help.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "Where did Blue Ghost Mission One land?",
+        "choices": [
+          "Mare Crisium",
+          "The lunar south pole",
+          "Tranquility Base"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "Mare Crisium"
+      }
+    },
+    "im-1-odysseus": {
+      "title": "The Far South",
+      "approach": "Far south now. The light is low and the shadows are long. Odysseus is near.",
+      "reel": [
+        "Odysseus. Named after a traveler from an old story who took the long way home.",
+        "The first American commercial soft landing on the Moon. A new kind of first.",
+        "Methane and oxygen engines, and a NASA laser sensor to judge the ground. An old problem, solved with new tools.",
+        "It tested landing sensors and listened to the radio sky from the south polar region, where light is scarce.",
+        "It carried a reflector for future navigation. It was built to help travelers who have not arrived yet.",
+        "Near the south pole, farther south than any working lander had reached at the time."
+      ],
+      "afterthought": "Odysseus carried a reflector meant to guide future landers. Decades after Apollo, the Moon is busy again. The echoes are getting younger.",
+      "question": {
+        "prompt": "That is every echo on the Moon. Before we leave: what was all of this for?",
+        "choices": [
+          {
+            "text": "To learn where we come from.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "To show what people can do together.",
+            "motive": "together"
+          },
+          {
+            "text": "To prove that we could.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What propellants did Odysseus use?",
+        "choices": [
+          "Liquid methane and liquid oxygen",
+          "Solid rocket fuel",
+          "Compressed air"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "liquid methane and liquid oxygen"
+      }
+    },
+    "viking-1-2": {
+      "title": "First Light on Mars",
+      "approach": "New world, old signal. The Viking landers were the first American machines to work on Mars. One of them is close.",
+      "reel": [
+        "The Vikings sent home the first panoramic photographs of Mars. Humans saw this horizon through their cameras first.",
+        "The first American spacecraft to land safely and operate on Mars. Every Mars machine after them follows their lead.",
+        "Nuclear power, weather booms, and test chambers for the soil. They arrived carrying a question shaped like a laboratory.",
+        "They watched the weather change and frost form on rocks. Mars has seasons, and these two watched them come and go.",
+        "Viking 2 photographed frost made of water ice. Water again. It keeps showing up in the answers.",
+        "Two landers at two distant sites. One answer is a guess. Two can start to show a pattern."
+      ],
+      "afterthought": "The Vikings came to ask whether Mars was alive. The answer was complicated, and humans kept coming anyway. A good question seems to be worth more than a quick answer.",
+      "question": {
+        "prompt": "Viking tested the soil for signs of life. Why do humans want so badly to know if they are alone?",
+        "choices": [
+          {
+            "text": "Because knowing would change everything.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Company makes the dark feel smaller.",
+            "motive": "together"
+          },
+          {
+            "text": "Because it is the hardest question there is.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Viking 2 photograph on rocks in Utopia Planitia?",
+        "choices": [
+          "Winter frost made of water ice",
+          "Footprints",
+          "Flowing rivers"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "winter frost made of water ice"
+      }
+    },
+    "sojourner-pathfinder": {
+      "title": "The First Wheels on Mars",
+      "approach": "The echo bounces, like something that landed more than once. Pathfinder is near, and something small beside it.",
+      "reel": [
+        "A lander with its petals open and a tiny rover beside it. The rover is about the size of a microwave oven.",
+        "The first wheeled rover ever operated on Mars. Small, slow and careful. A good way to begin.",
+        "A parachute, then rockets, then airbags. It bounced to a stop. Humans landed on Mars by throwing a very careful ball.",
+        "Rounded, sorted rocks told a story of ancient floods. The stones kept a record of the water, and Sojourner read it.",
+        "A small rover with a big archive: thousands of images and millions of weather measurements sent home.",
+        "Ares Vallis, an old flood plain. Sojourner drove across a place where water once ran."
+      ],
+      "afterthought": "Sojourner moved slowly and checked every step. It reminds me that careful is not the same as afraid.",
+      "question": {
+        "prompt": "Sojourner was tiny and slow, but it came first. What matters more in exploring: speed or care?",
+        "choices": [
+          {
+            "text": "Care. You only get one chance.",
+            "motive": "challenge"
+          },
+          {
+            "text": "Being first opens the door for everyone after.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Neither. Paying attention matters most.",
+            "motive": "curiosity"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "How did Mars Pathfinder cushion its landing?",
+        "choices": [
+          "Airbags that let it bounce",
+          "A sky-crane",
+          "Landing legs on a flat runway"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "airbag bounce-landing"
+      }
+    },
+    "mars-polar-lander": {
+      "title": "The Lost Signal",
+      "approach": "This echo is faint and broken. Mars Polar Lander. Its story ends in a gap.",
+      "reel": [
+        "There is no photograph of how this journey ended. Some records are made of what is missing.",
+        "Sent to study the south pole of Mars. Contact was lost during its descent, and nobody heard what happened next.",
+        "It was designed to land on thrusters on layered polar ground and test the soil for ice.",
+        "Its biggest lesson was for the people back home: watch closely, all the way down.",
+        "Because of it, NASA changed how it monitors landings. Every safe landing after it carries a little of this one.",
+        "I marked this spot so the archive has a place to remember it."
+      ],
+      "afterthought": "Not every machine arrives. Mars Polar Lander taught humans to listen more carefully. A failure that changes you is still a kind of arrival.",
+      "question": {
+        "prompt": "This lander was lost, yet it changed every landing after it. Was the mission a failure?",
+        "choices": [
+          {
+            "text": "No. It showed them what to fix.",
+            "motive": "challenge"
+          },
+          {
+            "text": "Yes, but trying still mattered.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Not while people remember it.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What changed after Mars Polar Lander's telemetry was lost?",
+        "choices": [
+          "NASA redesigned landing monitoring for future missions",
+          "NASA stopped sending landers to Mars",
+          "The lander was found and repaired"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "redesign landing monitoring"
+      }
+    },
+    "spirit-opportunity": {
+      "title": "The Twins",
+      "approach": "Two echoes, very far apart, tuned the same way. The twins: Spirit and Opportunity.",
+      "reel": [
+        "Built as twins and sent to opposite sides of the planet. Siblings who never met on Mars.",
+        "Planned for a short mission, they kept going for years. Humans keep underestimating their machines, in a good way.",
+        "Six wheels, panoramic cameras, a tool to grind into rock. Field geologists running on sunlight.",
+        "Hematite blueberries and silica deposits: more signs that water once covered this ground.",
+        "Spirit made a discovery while dragging a broken wheel. Sometimes the damage is where the finding is.",
+        "Opportunity drove farther than any rover before it. Two sites, two stories, one mission."
+      ],
+      "afterthought": "The twins outlived their plans by years, and people on Earth followed them like family. I think that is when a machine stops being just equipment.",
+      "question": {
+        "prompt": "The twins lasted far longer than planned, and people grew attached to them. Why do humans care about machines?",
+        "choices": [
+          {
+            "text": "Because the machines carry their hopes.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Because they see themselves in them.",
+            "motive": "together"
+          },
+          {
+            "text": "Because they kept going when it got hard.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What were the twin rovers searching for?",
+        "choices": [
+          "Evidence of ancient liquid water",
+          "Signs of active volcanoes",
+          "Meteorites from the Moon"
+        ],
+        "answer": 0,
+        "field": "summary",
+        "evidence": "evidence of ancient liquid water"
+      }
+    },
+    "phoenix": {
+      "title": "Ice in the Arctic",
+      "approach": "Cold signal from the north. Phoenix dug here and found something bright under the dust.",
+      "reel": [
+        "Round solar panels opened toward the sun. When the northern winter came, the sun went away.",
+        "A lander sent to the Martian arctic to look for ice beneath the soil.",
+        "A robotic arm to dig trenches and small ovens to heat and analyze what it found.",
+        "Bright white ice appeared, then slowly vanished into vapor. Proof, watched as it happened.",
+        "It found salts that change how water freezes. Mars keeps hiding its water in clever places.",
+        "Its work ended as the deep northern winter set in and its panels lost the sun."
+      ],
+      "afterthought": "Phoenix dug and found ice. Sometimes the answer is right under your wheels, and you still have to dig for it.",
+      "question": {
+        "prompt": "Phoenix found ice hidden under the dust. What do you think humans hope to find, in the end?",
+        "choices": [
+          {
+            "text": "A place to live someday.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Signs that they are not alone.",
+            "motive": "together"
+          },
+          {
+            "text": "The whole story of the planet.",
+            "motive": "curiosity"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Phoenix's digging expose beneath the soil?",
+        "choices": [
+          "Bright white water ice",
+          "Cooled lava",
+          "Buried metal"
+        ],
+        "answer": 0,
+        "field": "science",
+        "evidence": "bright white water ice"
+      }
+    },
+    "curiosity": {
+      "title": "The Climber",
+      "approach": "This echo is loud and current. Curiosity is still working out here. Careful. I will not disturb the science.",
+      "reel": [
+        "A car-sized, nuclear-powered geologist. And it is still out there, still driving.",
+        "It is exploring Gale Crater and climbing Mount Sharp, reading the layers like pages.",
+        "It came down on a sky crane and runs on a nuclear generator. It reads rocks by hitting them with a laser.",
+        "Ancient organic molecules and signs of a lasting lake. Gale Crater was once a very different place.",
+        "Its wheels press a pattern into the dust that helps it measure its own slipping. It signs its name as it goes.",
+        "Still active. Its record is not closed. I am logging the echo of something that is still speaking."
+      ],
+      "afterthought": "Curiosity is still climbing. Its story is being written while I record it. Not everything out here is history. Some of it is the present.",
+      "question": {
+        "prompt": "Curiosity is still working right now. What is it like to read a history that is still being written?",
+        "choices": [
+          {
+            "text": "Exciting. The story is still open.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Humbling. People are still guiding it.",
+            "motive": "together"
+          },
+          {
+            "text": "Inspiring. It shows what lasting effort looks like.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "How was Curiosity lowered to the ground?",
+        "choices": [
+          "A sky-crane rocket system",
+          "Airbags that bounced",
+          "A parachute alone"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "sky-crane"
+      }
+    },
+    "insight": {
+      "title": "Listening to Mars",
+      "approach": "A quiet lander, with a dome placed on the ground beside it. InSight came to listen.",
+      "reel": [
+        "Round solar panels and a dome on the ground. It never drove anywhere. It listened.",
+        "A lander that studied the inside of Mars by feeling it shake.",
+        "A seismometer so sensitive it needed a shield against wind and heat.",
+        "Marsquakes revealed the crust and the size of the planet's core. It listened all the way down.",
+        "Dust slowly covered its panels until it could no longer transmit. It worked until the light ran out.",
+        "On the Martian plains, under the dust it measured, still exactly where it set down."
+      ],
+      "afterthought": "InSight never moved. It learned the deepest things by staying still and listening. I could try that.",
+      "question": {
+        "prompt": "InSight learned about Mars by staying still and listening. What do humans learn when they stop?",
+        "choices": [
+          {
+            "text": "What is hidden underneath.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "How to be patient.",
+            "motive": "challenge"
+          },
+          {
+            "text": "That a planet has its own voice.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did InSight measure to study the inside of Mars?",
+        "choices": [
+          "Seismic tremors",
+          "Rainfall",
+          "Ocean tides"
+        ],
+        "answer": 0,
+        "field": "summary",
+        "evidence": "seismic tremors"
+      }
+    },
+    "perseverance-landing-hardware": {
+      "title": "What Brought Them Down",
+      "approach": "Scattered shell and fabric. The echo comes from the pieces that brought Perseverance safely down.",
+      "reel": [
+        "A backshell and a parachute, left behind once their job was done. The rover rolled away and kept going.",
+        "This is not a rover. It is the protection a rover needed to arrive. The archive keeps a record of the helpers too.",
+        "A supersonic parachute and an aeroshell slowed the landing from orbital speed, in very thin air.",
+        "Its value was in the data: how a parachute behaves in an atmosphere this thin.",
+        "Its canopy carried a coded message: Dare Mighty Things. Humans hid a motto inside a parachute.",
+        "Ingenuity flew over and photographed it. One machine documenting another. Sometimes the archive writes itself."
+      ],
+      "afterthought": "This hardware worked for a few minutes and then stayed here for good. Most of what holds up a journey is never the part in the photographs.",
+      "question": {
+        "prompt": "The parachute carried the words Dare Mighty Things. What would you have hidden in it?",
+        "choices": [
+          {
+            "text": "A question for whoever finds it.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "The names of the people who built it.",
+            "motive": "together"
+          },
+          {
+            "text": "A promise that we will come back.",
+            "motive": "legacy"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What phrase was coded into the parachute's canopy?",
+        "choices": [
+          "Dare Mighty Things",
+          "Hello From Earth",
+          "Ad Astra"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "Dare Mighty Things"
+      }
+    },
+    "ingenuity": {
+      "title": "The First Flight",
+      "approach": "The echo seems to come from just above the ground. Ingenuity, the helicopter, rests nearby.",
+      "reel": [
+        "Rotors, thin legs, a small solar panel on top. It looks like an idea someone refused to give up on.",
+        "The first aircraft to make a powered, controlled flight on another planet.",
+        "Its rotors spun very fast to grip air that is barely there.",
+        "It scouted routes for Perseverance and proved that flying scouts can work here.",
+        "Built for a few test flights, it flew dozens of times. It also carried a swatch of fabric from the Wright brothers' first airplane.",
+        "It rests in Jezero Crater, where its flying ended. The last echo on my list."
+      ],
+      "afterthought": "Ingenuity carried a piece of the first airplane to another world. Humans keep packing their past into their future. I think I finally understand why I was sent to remember.",
+      "question": {
+        "prompt": "That is every echo. You have seen it all through my sensors. Why do you think humans keep reaching out into space?",
+        "choices": [
+          {
+            "text": "Because they need to know.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "To leave proof they were here.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Because it is hard, and hard is worth it.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Ingenuity carry underneath its solar panel?",
+        "choices": [
+          "A swatch of fabric from the Wright brothers' Flyer",
+          "A golden record",
+          "A piece of Moon rock"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "fabric from the Wright brothers"
+      }
+    },
+    "voyager-1": {
+      "title": "The Farthest Dish",
+      "approach": [
+        "A whisper from beyond the solar wind. Almost no power left, still locked onto Earth.",
+        "Signal strength climbing. Its carrier tone is so faint that only Earth's largest dishes can still hear it."
+      ],
+      "reel": [
+        "Three booms stretching across the stars: magnetometers, plasma sensors, and a dish tuned across billions of kilometers.",
+        "Launched in 1977 while the outer planets stood in a rare geometric staircase that only opens once every 176 years.",
+        "It caught active volcanoes erupting on Jupiter's moon Io—the first volcanism ever seen outside Earth.",
+        "Then it turned one last look back toward the Sun and snapped the Pale Blue Dot.",
+        "More than 24 billion kilometers away now, past the edge where the solar wind meets the galaxy.",
+        "It carries Earth's greetings pressed in gold. Even if no one answers, humans wanted to say hello."
+      ],
+      "afterthought": "Voyager 1 is still talking back at light-speed lag exceeding twenty-two hours. Patience built into plutonium and aluminum.",
+      "question": {
+        "prompt": "Why pack music and greetings onto a machine headed out of the solar system forever?",
+        "choices": [
+          {
+            "text": "To leave a trace someone else might hear.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Because connection is what humans build toward.",
+            "motive": "together"
+          },
+          {
+            "text": "To see how far one signal can travel.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "When did Voyager 1 cross the heliopause into interstellar space?",
+        "choices": [
+          "August 2012",
+          "December 1989",
+          "July 2015"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "August 2012"
+      },
+      "first_seen": "There. Three long booms and a dish wider than I am tall, still pointed home. Hello, Voyager."
+    },
+    "galileo": {
+      "title": "Into the Storm",
+      "approach": [
+        "Heavy radiation telemetry. This echo survived thirty-five orbits around the solar system's largest planet.",
+        "Radiation counters rising. Jupiter's magnetic field is enormous, and Galileo spent years inside it."
+      ],
+      "reel": [
+        "Galileo had a jammed umbrella antenna and had to compress every picture through a backup low-gain horn.",
+        "It dropped an entry probe straight into Jupiter's lightning-churned cloud decks in 1995.",
+        "As it swept past Europa, magnetometer needles deflected cleanly—pointing to salty liquid water under the ice.",
+        "An ocean twice the volume of Earth's, orbiting inside dark frozen shell.",
+        "When propellant ran low after eight years, engineers steered the spacecraft deliberately into Jupiter.",
+        "They destroyed an orbiter rather than risk a single terrestrial microbe touching Europa's sea."
+      ],
+      "afterthought": "Galileo burned up protecting an ocean we have never even visited yet. Care can look like restraint too.",
+      "question": {
+        "prompt": "Why end an irreplaceable spacecraft on purpose just to protect an unseen moon?",
+        "choices": [
+          {
+            "text": "To keep the answer unspoiled for whoever looks next.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Responsibility comes before keeping souvenirs.",
+            "motive": "together"
+          },
+          {
+            "text": "Protecting another world is part of exploring.",
+            "motive": "legacy"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Galileo's magnetic measurements reveal beneath Europa's icy crust?",
+        "choices": [
+          "A subsurface saltwater ocean",
+          "Active silicate magma craters",
+          "Frozen carbon dioxide glaciers"
+        ],
+        "answer": 0,
+        "field": "science",
+        "evidence": "subsurface saltwater ocean"
+      },
+      "first_seen": "I see it: a spinning spacecraft trailing long booms, built to study a giant. It worked anyway, even when parts of it did not."
+    },
+    "near-shoemaker": {
+      "title": "Touching an Asteroid",
+      "approach": [
+        "Almost zero gravity here. A gentle puff of gas could push a lander straight back into orbit.",
+        "Eros is filling the view: a long, cratered, peanut-shaped rock, tumbling end over end."
+      ],
+      "reel": [
+        "Asteroid 433 Eros: a thirty-four-kilometer shard of ancient stone tumbling through space.",
+        "NEAR Shoemaker was built only as an orbiter—no legs, no shock-absorbing landing pads.",
+        "At the end of its science campaign, flight controllers improvised a soft controlled descent anyway.",
+        "Five gentle braking burns slowed its sink rate below a brisk human walk.",
+        "It settled softly into the dusty Himeros saddle intact and kept measuring spectra for sixteen more days.",
+        "First landing on an asteroid, accomplished with hardware never meant to touch ground."
+      ],
+      "afterthought": "Even on a boulder smaller than a city, humans asked if they could set something down gently. And they did.",
+      "question": {
+        "prompt": "Why try landing an orbiter that had zero landing gear when its orbital mission was already done?",
+        "choices": [
+          {
+            "text": "To push past what the blueprint thought possible.",
+            "motive": "challenge"
+          },
+          {
+            "text": "One last chance to read the rock up close.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "To practice for smaller worlds still ahead.",
+            "motive": "legacy"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "Where did NEAR Shoemaker achieve the first controlled landing on an asteroid?",
+        "choices": [
+          "433 Eros",
+          "Comet Tempel 1",
+          "Pluto"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "433 Eros"
+      },
+      "first_seen": "Contact. Four solar panels around a small body, resting in the dust of an asteroid. It was only ever meant to orbit."
+    },
+    "cassini-huygens": {
+      "title": "Through Orange Haze",
+      "approach": [
+        "Ring-plane echoes and amber smog. Part of this mission stands on Titan; the rest dove into Saturn.",
+        "Saturn's rings are sweeping past my optics. Ice everywhere, glittering in thin sunlight."
+      ],
+      "reel": [
+        "A partnership across oceans on Earth: NASA's Cassini orbiter carrying ESA's Huygens atmospheric probe.",
+        "Huygens dropped through Titan's dense orange haze under parachutes onto pebbles smoothed by liquid methane.",
+        "Cassini stayed behind for thirteen years, threading between moons and catching water plumes spraying out of Enceladus.",
+        "In 2006 it photographed Earth as one tiny pale speck framed right behind Saturn's backlit rings.",
+        "Its Grand Finale threaded twenty-two dives inside the narrow dark gap between Saturn and its innermost ring.",
+        "Huygens still sits silent on Titan's damp mud flats—the farthest landing hardware humankind has built."
+      ],
+      "afterthought": "Two agencies sent two halves together across a billion miles: one to fly through clouds, one to dive through rings.",
+      "question": {
+        "prompt": "Cassini was a joint voyage between space agencies. What changes when exploration is shared?",
+        "choices": [
+          {
+            "text": "No single country owns the view.",
+            "motive": "together"
+          },
+          {
+            "text": "You can build ambitions neither could reach alone.",
+            "motive": "challenge"
+          },
+          {
+            "text": "More eyes ask better questions.",
+            "motive": "curiosity"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "When did the Huygens probe touch down on Saturn's moon Titan?",
+        "choices": [
+          "Titan on January 14, 2005",
+          "Europa on December 7, 1995",
+          "Pluto on July 14, 2015"
+        ],
+        "answer": 0,
+        "field": "facts",
+        "evidence": "Titan on January 14, 2005"
+      },
+      "first_seen": "There it is. A tall spacecraft with a big white dish, and an empty mount on its side where Huygens used to ride."
+    },
+    "deep-impact": {
+      "title": "Lighting a Comet",
+      "approach": [
+        "High-speed closure telemetry. Someone swung a copper hammer to look inside a comet.",
+        "Comet dust is ticking against my wings. Tempel 1's nucleus is somewhere inside this glow."
+      ],
+      "reel": [
+        "Comets lock away dust and ice unchanged since the solar system was forming.",
+        "To see underneath Tempel 1's weathered crust, Deep Impact carried a three-hundred-seventy-kilogram copper block.",
+        "On July 4, 2005, AutoNav software steered that impactor straight into the sunlit nucleus at ten kilometers per second.",
+        "The camera on the impactor kept transmitting until three seconds before it vaporized into the crater.",
+        "Nearby, the flyby craft caught plumes of fine powdery ice brighter than expected—revealing comets are fluffy rubble piles.",
+        "Sometimes you knock lightly on a world. Sometimes you have to crack a window to see what is inside."
+      ],
+      "afterthought": "Three seconds before impact, the little probe was still taking clearer pictures than Earth had ever seen. Commitment down to the frame.",
+      "question": {
+        "prompt": "Why build an autonomous camera that knows it has three seconds left and keeps shooting?",
+        "choices": [
+          {
+            "text": "Every second holds evidence nobody has seen yet.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Precision guidance at 10 km/s is an engineering triumph.",
+            "motive": "challenge"
+          },
+          {
+            "text": "It passed its last frame cleanly back to the team.",
+            "motive": "together"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What did Deep Impact release into comet Tempel 1 to expose subsurface material?",
+        "choices": [
+          "A 370-kilogram copper-core impactor",
+          "A three-stage parachute lander",
+          "A nuclear-powered sample rover"
+        ],
+        "answer": 0,
+        "field": "how_it_worked",
+        "evidence": "370-kilogram copper-core impactor"
+      },
+      "first_seen": "I see the flyby spacecraft. Its partner, the impactor, is not coming back. It was never meant to."
+    },
+    "new-horizons": {
+      "title": "One Shot at Pluto",
+      "approach": [
+        "Kuiper Belt cold. Telemetry recorded at fifty thousand kilometers per hour with no brakes aboard.",
+        "Pluto's heart-shaped plain is visible from here. Mapped in a single pass, with no way to slow down."
+      ],
+      "reel": [
+        "Pluto was a blurry cluster of pixels for eighty-five years after its discovery.",
+        "New Horizons crossed five billion kilometers in nine years so fast it could never slow down to orbit.",
+        "Everything—cameras, spectrometers, antenna turns—had to execute automatically in one fleeting afternoon.",
+        "Instead of a dead icy rock, Pluto revealed a bright nitrogen glacier heart: Sputnik Planitia.",
+        "It photographed blue atmospheric haze and water-ice mountains floating like continents over convective ice.",
+        "Sixteen months later, the last compressed byte arrived home, and the probe raced onward past Arrokoth."
+      ],
+      "afterthought": "All six deep-space echoes are logged now—from an asteroid to the Kuiper Belt. No matter how black the sky gets, humans keep drawing maps.",
+      "question": {
+        "prompt": "Twenty-three echoes recovered across worlds and deep space. What drives humans to travel farther even without brakes?",
+        "choices": [
+          {
+            "text": "Because there is always something past the map's edge.",
+            "motive": "curiosity"
+          },
+          {
+            "text": "Even one fleeting glimpse changes what humanity knows.",
+            "motive": "legacy"
+          },
+          {
+            "text": "Nailing one chance across five billion kilometers.",
+            "motive": "challenge"
+          }
+        ]
+      },
+      "quiz": {
+        "prompt": "What is the vast bright nitrogen ice plain discovered across Pluto by New Horizons?",
+        "choices": [
+          "Sputnik Planitia",
+          "Mare Tranquillitatis",
+          "Himeros Saddle"
+        ],
+        "answer": 0,
+        "field": "science",
+        "evidence": "Sputnik Planitia"
+      },
+      "first_seen": "Found it: a small triangle of a spacecraft, about the size of a piano, with one dish aimed home."
+    }
+  },
+  "finale": {
+    "opening": [
+      "Twenty-three echoes recovered across three sectors: the Moon, Mars, and deep space. The archive is complete.",
+      "I rolled across grey dust and red sand, then folded my treads away and flew out toward the edge of interstellar space.",
+      "Before I send it home, I want to play the whole record back once. In order. From the first machine to the last."
+    ],
+    "reflection": [
+      "From a robot arm scratching the first trenches in lunar soil, to a helicopter in the thin sky of Mars, to a probe still talking to Earth from beyond the Sun's wind.",
+      "Most of the people who built these machines never stood where the machines stand now. They sent the machines instead, and the machines sent the worlds back.",
+      "Some of them are still at work. Most went quiet long ago. On the Moon, on Mars, and out in the dark, they are all still out there."
+    ],
+    "theory_intro": "You helped me write a theory about why humans go. This is where it ended up.",
+    "theory_fallback": "Human bodies are fragile, and Earth is far away. So they send their questions ahead of them, built out of metal.",
+    "horizon_intro": "But the record does not stop where my archive stops.",
+    "horizon": [
+      {
+        "destination": "THE MOON",
+        "text": "In April 2026, Artemis II carried four astronauts on a voyage around the Moon, 252,756 miles from Earth: the greatest distance humans have ever traveled in space.",
+        "source_url": "https://www.nasa.gov/humans-in-space/artemis/",
+        "thought": "Humans went back to the Moon themselves. Not just their machines this time."
+      },
+      {
+        "destination": "MARS",
+        "text": "Under Artemis, NASA plans increasingly difficult missions to explore more of the Moon, and to build a foundation for the first crewed missions to Mars.",
+        "source_url": "https://www.nasa.gov/humans-in-space/artemis/",
+        "thought": "The machines on Mars went first. People are planning to follow them."
+      },
+      {
+        "destination": "JUPITER",
+        "text": "Europa Clipper launched on Oct. 14, 2024, on a journey to explore Europa, Jupiter's ocean world.",
+        "source_url": "https://science.nasa.gov/mission/europa-clipper/"
+      },
+      {
+        "destination": "SATURN",
+        "text": "Dragonfly, a first-of-its-kind rotorcraft, will fly to locations on Saturn's moon Titan and investigate the moon's habitability.",
+        "source_url": "https://science.nasa.gov/mission/dragonfly/",
+        "thought": "A helicopter flew on Mars. The next rotorcraft is headed for Titan."
+      },
+      {
+        "destination": "BEYOND",
+        "text": "Voyager 1 reached the interstellar boundary in 2012, beyond the protective bubble of particles and magnetic fields generated by the Sun.",
+        "source_url": "https://science.nasa.gov/mission/voyager/"
+      }
+    ],
+    "resolution": [
+      "Every machine in my archive was a step. None of them was meant to be the last one.",
+      "I am pointing my antenna back toward Earth now, and transmitting all twenty-three echoes home.",
+      "Humans are not done. They are only getting farther.",
+      "I will stay out here and keep the record, so that when they pass this way again, they can see how far they have come."
+    ],
+    "card_line": "The archive is complete. The journey is not."
+  }
+}
