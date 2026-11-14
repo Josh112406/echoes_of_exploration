@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// SI-assisted game presentation; mission text comes from the reviewed local datasets.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { telemetryAudio } from '../audio/telemetryAudio';
 import { getStatusBadgeInfo, type MissionRecord, type NarrativeEncounter } from '../data/types';
 
@@ -125,6 +126,27 @@ export function SurfaceExplorerCanvas({
     () => sectorEncounters[0]?.id ?? activeEncounterId
   );
   const [coordsReadout, setCoordsReadout] = useState<{ x: number; y: number }>({ x: 64, y: 268 });
+  const [paused, setPaused] = useState(false);
+  const isCompleted = useCallback(
+    (id: string) =>
+      completedIds.includes(id) ||
+      (id === 'gentle-touch' && completedIds.includes('surveyor-1-touchdown')),
+    [completedIds]
+  );
+  const nearestEncounter = sectorEncounters.find((enc) => enc.id === nearestEncounterId);
+  const nearestWaypoint = WAYPOINT_COORDS[nearestEncounterId];
+  const nearestDistance = nearestWaypoint
+    ? Math.round(Math.hypot(nearestWaypoint.x - coordsReadout.x, nearestWaypoint.y - coordsReadout.y))
+    : 0;
+  const nextEncounter = sectorEncounters.filter((enc) => !isCompleted(enc.id)).reduce<NarrativeEncounter | undefined>((nearest, enc) => {
+    const distance = (id: string) => {
+      const waypoint = WAYPOINT_COORDS[id];
+      return waypoint ? Math.hypot(waypoint.x - coordsReadout.x, waypoint.y - coordsReadout.y) : Infinity;
+    };
+    return !nearest || distance(enc.id) < distance(nearest.id) ? enc : nearest;
+  }, undefined);
+  const storyHook = missions.find((mission) => mission.id === nearestEncounter?.mission_id)?.story_hook
+    || nearestEncounter?.memory_echo.intro[0];
 
   const stateRef = useRef({
     roverX: 64,
@@ -134,6 +156,7 @@ export function SurfaceExplorerCanvas({
     pendingLaunchId: null as string | null,
     facing: 1,
     tracks: [] as Array<{ x: number; y: number }>,
+    dust: [] as Array<{ x: number; y: number; age: number }>,
     lastTrackX: 64,
     lastTrackY: 268,
     keys: new Set<string>(),
@@ -143,7 +166,7 @@ export function SurfaceExplorerCanvas({
 
   // Load 16-bit sprites from /assets/sprites/ once
   useEffect(() => {
-    const names = ['robot', 'surveyor', 'lm', 'curiosity', 'rocket', 'earth'];
+    const names = ['robot', 'surveyor', 'lm', 'curiosity', 'rocket'];
     for (const name of names) {
       if (stateRef.current.sprites[name]) continue;
       const img = new Image();
@@ -152,33 +175,18 @@ export function SurfaceExplorerCanvas({
     }
   }, []);
 
-  // Reset rover ref coordinates cleanly when sector switches (RAF loop syncs HUD state)
-  useEffect(() => {
-    const s = stateRef.current;
-    s.roverX = 64;
-    s.roverY = 268;
-    s.targetX = null;
-    s.targetY = null;
-    s.pendingLaunchId = null;
-    s.tracks = [];
-    s.lastTrackX = 64;
-    s.lastTrackY = 268;
-  }, [sector, sectorEncounters]);
-
-  // Keyboard listener for WASD / Arrows + E/Enter interact
+  // Only the focused canvas owns drive keys; native controls keep their keyboard behavior.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-        return;
-      }
+      if (paused || e.target !== canvasRef.current) return;
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) {
+        e.preventDefault();
         stateRef.current.keys.add(k);
         stateRef.current.targetX = null;
         stateRef.current.targetY = null;
         stateRef.current.pendingLaunchId = null;
-      } else if ((k === 'e' || k === ' ') && nearestEncounterId) {
+      } else if ((k === 'e' || k === 'enter' || k === ' ') && nearestEncounterId && !e.repeat) {
         const st = stateRef.current;
         const wp = WAYPOINT_COORDS[nearestEncounterId];
         if (wp && Math.hypot(wp.x - st.roverX, wp.y - st.roverY) < 62) {
@@ -191,13 +199,23 @@ export function SurfaceExplorerCanvas({
     const onKeyUp = (e: KeyboardEvent) => {
       stateRef.current.keys.delete(e.key.toLowerCase());
     };
+    const stopDriving = () => {
+      stateRef.current.keys.clear();
+      stateRef.current.targetX = null;
+      stateRef.current.targetY = null;
+      stateRef.current.pendingLaunchId = null;
+    };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', stopDriving);
+    document.addEventListener('visibilitychange', stopDriving);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', stopDriving);
+      document.removeEventListener('visibilitychange', stopDriving);
     };
-  }, [nearestEncounterId, onLaunchEncounter]);
+  }, [nearestEncounterId, onLaunchEncounter, paused]);
 
   // 640x360 pixel-art render loop
   useEffect(() => {
@@ -206,14 +224,24 @@ export function SurfaceExplorerCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let rafId = 0;
     let frame = 0;
 
-    const tick = () => {
+    let lastTime = 0;
+    const tick = (time: number) => {
+      const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
+      lastTime = time;
+      const reducedMotion = motionQuery.matches;
       frame += 1;
       const s = stateRef.current;
-      s.pulse = reducedMotion ? 0 : (s.pulse + 0.045) % (Math.PI * 2);
+      if (document.hidden || !document.hasFocus()) {
+        if (!paused) rafId = window.requestAnimationFrame(tick);
+        return;
+      }
+      s.pulse = reducedMotion || paused ? 0 : (s.pulse + dt * 2.7) % (Math.PI * 2);
+      const oldX = s.roverX;
+      const oldY = s.roverY;
 
       // Update rover kinematics (keyboard or pointer autopilot)
       let dx = 0;
@@ -223,7 +251,7 @@ export function SurfaceExplorerCanvas({
       if (s.keys.has('arrowup') || s.keys.has('w')) dy -= 1;
       if (s.keys.has('arrowdown') || s.keys.has('s')) dy += 1;
 
-      const speed = reducedMotion ? 3.2 : 2.3;
+      const speed = paused ? 0 : 138 * dt;
       if (dx !== 0 || dy !== 0) {
         const len = Math.hypot(dx, dy);
         s.roverX = Math.max(24, Math.min(616, s.roverX + (dx / len) * speed));
@@ -248,6 +276,8 @@ export function SurfaceExplorerCanvas({
           if (Math.abs(tx) > 0.2) s.facing = tx > 0 ? 1 : -1;
         }
       }
+      const moving = Math.hypot(s.roverX - oldX, s.roverY - oldY) > 0.01;
+      const bounce = moving && !reducedMotion ? Math.round(Math.sin(s.pulse * 6)) : 0;
 
       // Drop regolith tire tracks
       if (Math.hypot(s.roverX - s.lastTrackX, s.roverY - s.lastTrackY) >= 8) {
@@ -255,20 +285,30 @@ export function SurfaceExplorerCanvas({
         if (s.tracks.length > 72) s.tracks.shift();
         s.lastTrackX = s.roverX;
         s.lastTrackY = s.roverY;
+        if (!reducedMotion) s.dust.push({ x: s.roverX - s.facing * 8, y: s.roverY, age: 0 });
       }
+      s.dust = reducedMotion ? [] : s.dust.filter((puff) => (puff.age += dt) < 0.65);
 
       // Determine nearest encounter
       let closestId = sectorEncounters[0]?.id ?? activeEncounterId;
       let closestDist = Infinity;
+      let nextId = '';
+      let nextDist = Infinity;
       for (const enc of sectorEncounters) {
         const wp = WAYPOINT_COORDS[enc.id];
         if (!wp) continue;
         const d = Math.hypot(wp.x - s.roverX, wp.y - s.roverY);
+        const done = isCompleted(enc.id);
+        if (!done && d < nextDist) {
+          nextId = enc.id;
+          nextDist = d;
+        }
         if (d < closestDist) {
           closestDist = d;
           closestId = enc.id;
         }
       }
+      // Nearby sites remain replayable; the compass independently points to unfinished work.
       if (frame % 8 === 0) {
         setNearestEncounterId(closestId);
         setCoordsReadout({ x: Math.round(s.roverX), y: Math.round(s.roverY) });
@@ -305,21 +345,28 @@ export function SurfaceExplorerCanvas({
 
       // Hero Light: Earth on Moon, pale cyan dot on Mars / Elsewhere
       if (sector === 'moon') {
-        const earthImg = s.sprites.earth;
-        if (earthImg && earthImg.complete && earthImg.naturalWidth > 0) {
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.drawImage(earthImg, 514, 18, 86, 86);
-          ctx.restore();
-        } else {
-          ctx.fillStyle = PALETTE.cyanDeep;
+        // Pixel-lit disk and suggested continents, kept inside the palette.
+        for (let y = -30; y <= 30; y += 1) {
+          for (let x = -30; x <= 30; x += 1) {
+            if (x * x + y * y > 900) continue;
+            const night = x > 9 + Math.sin(y / 22) * 8;
+            const land = Math.sin(x * 0.17 + y * 0.12) + Math.cos(y * 0.3 - x * 0.08) > 0.8;
+            ctx.fillStyle = night ? PALETTE.navy : land ? PALETTE.cyanShadow : PALETTE.cyanDeep;
+            if (!night && y < -19 && (x + y) % 7 < 2) ctx.fillStyle = PALETTE.crustCream;
+            ctx.fillRect(556 + x, 58 + y, 1, 1);
+          }
+        }
+        ctx.lineWidth = 1;
+        for (let radius = 31; radius <= 34; radius += 1) {
+          ctx.strokeStyle = radius === 31 ? PALETTE.laserCore : radius === 32 ? PALETTE.cyan : PALETTE.cyanShadow;
           ctx.beginPath();
-          ctx.arc(556, 58, 30, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = PALETTE.laserCore;
-          ctx.lineWidth = 1;
+          ctx.arc(556, 58, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
+        ctx.strokeStyle = PALETTE.cyanShadow;
+        ctx.beginPath();
+        ctx.ellipse(565, 58, 9, 29, -0.2, Math.PI / 2, Math.PI * 1.5);
+        ctx.stroke();
       } else {
         // Earth as pale cyan dot
         ctx.fillStyle = PALETTE.cyan;
@@ -405,12 +452,30 @@ export function SurfaceExplorerCanvas({
         ctx.fillRect(t.x - 3, t.y + 1, 2, 2);
         ctx.fillRect(t.x + 2, t.y + 2, 2, 2);
       }
+      if (sector === 'elsewhere') {
+        for (let i = 0; i < 28; i += 1) {
+          const x = (i * 113 + 39) % 630;
+          const y = 164 + (i * 53) % 176;
+          ctx.fillStyle = PALETTE.indigo;
+          ctx.fillRect(x, y + 3, 9, 3);
+          ctx.fillStyle = PALETTE.regolithMid;
+          ctx.fillRect(x, y, 6, 4);
+          ctx.fillStyle = PALETTE.crustCream;
+          ctx.fillRect(x, y, 4, 1);
+        }
+      }
+      for (const puff of s.dust) {
+        ctx.fillStyle = puff.age < 0.3 ? ridgeColors.lit : ridgeColors.top;
+        const drift = Math.round(puff.age * 12);
+        ctx.fillRect(Math.round(puff.x) - drift, Math.round(puff.y) - drift / 2, 2, 2);
+        ctx.fillRect(Math.round(puff.x) + drift, Math.round(puff.y) - drift, 2, 1);
+      }
 
       // Sector Encounter Waypoints
       for (const enc of sectorEncounters) {
         const wp = WAYPOINT_COORDS[enc.id];
         if (!wp) continue;
-        const done = completedIds.includes(enc.id) || (enc.id === 'gentle-touch' && completedIds.includes('surveyor-1-touchdown'));
+        const done = isCompleted(enc.id);
         const isNear = Math.hypot(wp.x - s.roverX, wp.y - s.roverY) < 62;
         const ringColor = done ? PALETTE.amber : isNear ? PALETTE.laserCore : PALETTE.cyan;
 
@@ -477,15 +542,15 @@ export function SurfaceExplorerCanvas({
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         if (s.facing < 0) {
-          ctx.translate(Math.round(s.roverX + 12), Math.round(s.roverY - 22));
+          ctx.translate(Math.round(s.roverX + 12), Math.round(s.roverY - 22 + bounce));
           ctx.scale(-1, 1);
           ctx.drawImage(robotImg, 0, 0, 24, 24);
         } else {
-          ctx.drawImage(robotImg, Math.round(s.roverX - 12), Math.round(s.roverY - 22), 24, 24);
+          ctx.drawImage(robotImg, Math.round(s.roverX - 12), Math.round(s.roverY - 22 + bounce), 24, 24);
         }
         ctx.restore();
       } else {
-        drawScoutFallback(ctx, s.roverX, s.roverY, s.facing);
+        drawScoutFallback(ctx, s.roverX, s.roverY + bounce, s.facing);
       }
 
       // Top-left Canvas HUD Overlay
@@ -505,17 +570,41 @@ export function SurfaceExplorerCanvas({
         18,
         37
       );
+      const nextWaypoint = WAYPOINT_COORDS[nextId];
+      ctx.fillStyle = PALETTE.indigo;
+      ctx.fillRect(10, 48, 300, 22);
+      ctx.fillStyle = PALETTE.cyan;
+      ctx.fillText(nextWaypoint ? `NEXT SIGNAL // ${Math.round(nextDist)} px` : 'SECTOR ARCHIVED // REPLAY ANY SIGNAL', 38, 63);
+      if (nextWaypoint) {
+        ctx.save();
+        ctx.translate(24, 59);
+        ctx.rotate(Math.atan2(nextWaypoint.y - s.roverY, nextWaypoint.x - s.roverX));
+        ctx.strokeStyle = PALETTE.cyan;
+        ctx.beginPath();
+        ctx.moveTo(-4, -5);
+        ctx.lineTo(4, 0);
+        ctx.lineTo(-4, 5);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.font = '10px "IBM Plex Mono", monospace';
+      ctx.fillStyle = PALETTE.indigo;
+      ctx.fillRect(464, 344, 176, 16);
+      ctx.fillStyle = PALETTE.dustLight;
+      ctx.fillText('SI-Generated Illustration', 470, 355);
 
-      rafId = window.requestAnimationFrame(tick);
+      if (!paused) rafId = window.requestAnimationFrame(tick);
     };
 
     rafId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(rafId);
-  }, [sector, sectorEncounters, activeEncounterId, completedIds, onLaunchEncounter]);
+  }, [sector, sectorEncounters, activeEncounterId, isCompleted, onLaunchEncounter, paused]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (paused) return;
+    canvas.focus();
     const rect = canvas.getBoundingClientRect();
     const scaleX = 640 / rect.width;
     const scaleY = 360 / rect.height;
@@ -551,7 +640,7 @@ export function SurfaceExplorerCanvas({
     <div className="surface-stage-wrap" role="region" aria-label="Surface Signal Explorer">
       <div className="surface-hud-bar">
         <span>
-          <strong style={{ color: 'var(--cyan)' }}>SCOUT TELEMETRY (640×360):</strong> Drive with{' '}
+          <strong style={{ color: 'var(--cyan)' }}>SCOUT TELEMETRY (640×360):</strong> Focus the map, then drive with{' '}
           <code>WASD</code> / <code>Arrows</code> or click terrain; press <code>E</code> near a signal ring to tune.
         </span>
         <span className="mono" style={{ color: 'var(--muted)' }}>
@@ -564,18 +653,38 @@ export function SurfaceExplorerCanvas({
         width={640}
         height={360}
         onClick={handleCanvasClick}
+        tabIndex={0}
+        onBlur={() => {
+          stateRef.current.keys.clear();
+          stateRef.current.targetX = null;
+          stateRef.current.targetY = null;
+          stateRef.current.pendingLaunchId = null;
+        }}
         className="surface-canvas pixelated"
         aria-label={`Interactive ${sector} sector surface explorer map showing ${sectorEncounters.length} signal encounters`}
       />
+      <p className="mono" aria-live="polite">{nextEncounter ? `NEXT SIGNAL // ${nextEncounter.title}` : 'SECTOR ARCHIVED // Replay any signal'}</p>
+      <button type="button" className="btn-secondary btn-sm" aria-pressed={paused}
+        onClick={() => { stateRef.current.keys.clear(); setPaused(!paused); }}>
+        {paused ? 'RESUME SCOUT' : 'PAUSE SCOUT'}
+      </button>
+      {nearestEncounter && (
+        <div className="voice-card voice-story scout-log">
+          <span className="tag-story">[ MEMORY ECHO ]</span>
+          <p aria-live="polite">SCOUT LOG // {nearestEncounter.title}: “{storyHook}”</p>
+          <span className="mono">{nearestDistance} px · {nearestDistance < 62 ? 'IN SIGNAL RANGE' : 'DRIVE TO SIGNAL'} · {isCompleted(nearestEncounter.id) ? 'ARCHIVED' : 'UNRECOVERED'}</span>
+          <button type="button" className="btn-observatory btn-sm" onClick={() => onLaunchEncounter(nearestEncounter.id)}>
+            {isCompleted(nearestEncounter.id) ? 'REPLAY' : 'TUNE'} {nearestEncounter.title}
+          </button>
+        </div>
+      )}
 
       {/* Keyboard / Screen-reader Equal Accessible Sector Cards (never canvas-only!) */}
       <div className="evidence-grid" aria-label="Sector signal destinations">
         {sectorEncounters.map((enc) => {
           const wp = WAYPOINT_COORDS[enc.id];
           const mission = missions.find((m) => m.id === enc.mission_id);
-          const done =
-            completedIds.includes(enc.id) ||
-            (enc.id === 'gentle-touch' && completedIds.includes('surveyor-1-touchdown'));
+          const done = isCompleted(enc.id);
           const isNearest = enc.id === nearestEncounterId;
           const badge = getStatusBadgeInfo(enc.status_badge.dataset_status);
 
@@ -583,6 +692,7 @@ export function SurfaceExplorerCanvas({
             <div
               key={enc.id}
               className="evidence-card"
+              aria-current={isNearest ? 'location' : undefined}
               style={{
                 borderColor: isNearest ? 'var(--cyan)' : done ? 'var(--amber)' : 'var(--line)',
               }}
@@ -603,6 +713,7 @@ export function SurfaceExplorerCanvas({
                 <button
                   type="button"
                   className="btn-observatory btn-sm"
+                  aria-label={`${done ? 'Replay' : 'Tune signal'}: ${enc.title}`}
                   onClick={() => {
                     telemetryAudio.playSignalLock();
                     onLaunchEncounter(enc.id);

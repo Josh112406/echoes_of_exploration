@@ -1,3 +1,4 @@
+/* SI-assisted game presentation, following docs/ART_STYLE_GUIDE.md. */
 /* App Layout & ART_STYLE_GUIDE.md Component Styles */
 .app-root {
   position: relative;
@@ -177,8 +178,7 @@
 }
 
 .dropdown-item.active {
-  border-color: var(--cyan);
-  border-left: 3px solid var(--cyan);
+  border: 1px solid var(--cyan);
   background: var(--navy);
 }
 
@@ -231,10 +231,6 @@
   background: var(--cyan);
 }
 
-.gauge.warn i.on {
-  background: var(--thruster);
-}
-
 .gauge.amber i.on {
   background: var(--amber);
 }
@@ -250,8 +246,7 @@
   background:
     radial-gradient(circle at 82% 28%, rgba(14, 195, 220, 0.14) 0%, transparent 45%),
     linear-gradient(180deg, rgba(19, 26, 46, 0.72) 0%, rgba(11, 15, 29, 0.94) 68%, rgba(39, 41, 61, 0.45) 100%);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--cyan);
+  border: 1px solid var(--cyan);
 }
 
 .hero-text {
@@ -281,8 +276,7 @@
 .honesty-banner {
   padding: 10px 14px;
   background: var(--indigo);
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--amber);
+  border: 1px solid var(--amber);
   font-size: 13px;
   color: var(--crust);
   max-width: 62ch;
@@ -340,13 +334,6 @@
   width: 132px;
   height: 132px;
   object-fit: contain;
-}
-
-.caption-micro {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
 }
 
 .hero-actions {
@@ -715,7 +702,7 @@
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 32 / 9;
   border: 1px solid var(--cyan-deep);
   background: var(--void);
 }
@@ -775,8 +762,7 @@
   gap: 10px;
   padding: 10px 14px;
   background: var(--navy);
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--cyan);
+  border: 1px solid var(--cyan);
   font-size: 13px;
   color: var(--crust);
 }
@@ -929,4 +915,23 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+.scout-log {
+  gap: 8px;
+  padding: 14px;
+}
+
+.surface-stage-wrap > button {
+  justify-self: start;
+}
+
+.scout-log > button,
+.scout-log > .tag-story {
+  align-self: flex-start;
+}
+
+.surface-canvas:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 3px;
 }

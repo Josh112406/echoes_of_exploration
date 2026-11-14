@@ -621,8 +621,7 @@
         ],
         "source_ids": [
           "nasa-apollo17",
-          "nasa-moon-missions",
-          "nssdca-lrv"
+          "nasa-moon-missions"
         ]
       },
       "verify": [
@@ -1572,13 +1571,13 @@
           {
             "label": "Power lost each year",
             "value": "about 4 watts",
-            "source_id": "nasa-voyager1",
+            "source_id": "jpl-voyager1-2026-078",
             "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
           },
           {
             "label": "One light-day from Earth",
             "value": "November 18, 2026 (about 25.89 billion km); radio takes 24 hours each way",
-            "source_id": "nasa-voyager1",
+            "source_id": "jpl-voyager1-2026-078",
             "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
           }
         ],

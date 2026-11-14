@@ -1,3 +1,4 @@
+// SI-assisted route integration; game components mount only on /game.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 import { telemetryAudio } from './audio/telemetryAudio';
@@ -77,7 +78,6 @@ const CHAPTER_CARDS: Array<{
   bridgeNote: string;
   sprite: string | null;
   spriteAlt: string;
-  firstEncounter: string;
 }> = [
   {
     id: 'moon',
@@ -90,7 +90,6 @@ const CHAPTER_CARDS: Array<{
       'Surveyor 1 proved controlled soft landings; Apollo 11 left passive reflectors still measured today; Apollo 17 drove 35.9 km across Taurus-Littrow.',
     sprite: '/assets/sprites/lm.png',
     spriteAlt: 'Lunar module team illustration',
-    firstEncounter: 'gentle-touch',
   },
   {
     id: 'mars',
@@ -103,7 +102,6 @@ const CHAPTER_CARDS: Array<{
       'Viking tested Martian chemistry carefully; Spirit scraped bright silica with a stalled wheel; Ingenuity proved aerodynamic lift in 1% Earth-density air.',
     sprite: '/assets/sprites/curiosity.png',
     spriteAlt: 'Mars rover team illustration',
-    firstEncounter: 'question-in-the-soil',
   },
   {
     id: 'elsewhere',
@@ -116,15 +114,11 @@ const CHAPTER_CARDS: Array<{
       'NEAR landed without landing legs; Voyager 1 trades instrument watts across 160+ AU; New Horizons stored years of work into a hours-long Pluto encounter.',
     sprite: null,
     spriteAlt: 'Deep-space target marker',
-    firstEncounter: 'landing-not-planned',
   },
 ];
 
 function normalizeRoutePath(pathname: string): '/' | '/game' {
-  if (pathname === '/game' || pathname.startsWith('/game/')) {
-    return '/game';
-  }
-  return '/';
+  return pathname === '/game' ? '/game' : '/';
 }
 
 function getQueryEncounterId(): string | null {
@@ -194,6 +188,7 @@ export function App() {
   });
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownTriggerRef = useRef<HTMLButtonElement | null>(null);
   const archiveSectionRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -259,7 +254,10 @@ export function App() {
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDropdownOpen(false);
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+        dropdownTriggerRef.current?.focus();
+      }
     };
     document.addEventListener('mousedown', onClickOutside);
     window.addEventListener('keydown', onKey);
@@ -332,7 +330,8 @@ export function App() {
       navigateTo('/');
     }
     window.setTimeout(() => {
-      archiveSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      archiveSectionRef.current?.scrollIntoView({ behavior, block: 'start' });
     }, 40);
   };
 
@@ -497,6 +496,7 @@ export function App() {
 
   return (
     <div className={`app-root ${crtActive ? 'crt-overlay' : ''}`}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <StarfieldCanvas />
 
       {/* Top Sticky Telemetry Bar */}
@@ -534,7 +534,11 @@ export function App() {
       <div className="app-container">
         {/* MAIN PAGE ROUTE: / */}
         {routePath === '/' && (
-          <>
+          <main
+            id="main-content"
+            aria-label="Observatory Main Page"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
+          >
             {/* Top Navigation Bar with Start Game + Sources & Archives Dropdown */}
             <nav className="top-nav" aria-label="Main page navigation">
               <div className="nav-links">
@@ -546,12 +550,13 @@ export function App() {
                     navigateTo('/');
                   }}
                 >
-                  [ 01 // OBSERVATORY HOME ]
+                  [ OBSERVATORY HOME ]
                 </a>
 
                 {/* Required Main Page Dropdown for Sources & Archives */}
                 <div className="archive-dropdown" ref={dropdownRef}>
                   <button
+                    ref={dropdownTriggerRef}
                     type="button"
                     className="btn-secondary btn-sm dropdown-trigger"
                     aria-haspopup="menu"
@@ -591,18 +596,6 @@ export function App() {
                     </div>
                   )}
                 </div>
-
-                {/* Required Start Game link/button redirecting to /game */}
-                <a
-                  href="/game"
-                  className="btn-observatory btn-sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('/game', { mode: 'map' });
-                  }}
-                >
-                  ▶ START GAME (/GAME)
-                </a>
               </div>
 
               <div className="nav-progress" title="Reconstructed mission encounters">
@@ -623,7 +616,6 @@ export function App() {
             {/* HERO OBSERVATORY */}
             <section className="hero-observatory">
               <div className="hero-text">
-                <div className="eyebrow">NASA Space Apps 2026 · Deep Space Signal Archive</div>
                 <h1 className="hero-wordmark">Echoes of Exploration</h1>
                 <p className="hero-subtitle">
                   Step into the signal observatory as a trainee Archivist. Explore Moon, Mars, and
@@ -690,7 +682,6 @@ export function App() {
                     className="pixelated"
                   />
                 </div>
-                <span className="caption-micro">Team illustration, not a mission photograph</span>
               </div>
             </section>
 
@@ -730,19 +721,8 @@ export function App() {
             <section className="archive-section" aria-label="Observatory Chapters">
               <div className="section-head">
                 <div>
-                  <div className="eyebrow">Observatory Chapters</div>
                   <h2>Three Realms of Robotic Scouts</h2>
                 </div>
-                <a
-                  href="/game"
-                  className="btn-observatory btn-sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('/game', { mode: 'map' });
-                  }}
-                >
-                  ENTER EXPEDITION (/GAME) →
-                </a>
               </div>
 
               <div className="chapters-grid">
@@ -768,9 +748,6 @@ export function App() {
                       </div>
 
                       <div className="chapter-body">
-                        <div className="label" style={{ color: ch.accent }}>
-                          CHAPTER {ch.index} · {ch.title.toUpperCase()}
-                        </div>
                         <h3>{ch.title}</h3>
                         <p style={{ fontSize: '14px', color: 'var(--crust)' }}>{ch.subtitle}</p>
                         <div
@@ -781,7 +758,10 @@ export function App() {
                             color: bridgeUnlocked ? 'var(--amber)' : 'var(--muted)',
                           }}
                         >
-                          {ch.bridgeTitle}: {ch.bridgeNote}
+                          {ch.bridgeTitle}:{' '}
+                          {bridgeUnlocked
+                            ? ch.bridgeNote
+                            : `Complete all 3 ${ch.title} encounters to unlock this Discovery Bridge.`}
                         </div>
                         <div
                           style={{
@@ -792,15 +772,6 @@ export function App() {
                             paddingTop: '8px',
                           }}
                         >
-                          <button
-                            type="button"
-                            className="btn-observatory btn-sm"
-                            onClick={() =>
-                              navigateTo('/game', { encounterId: ch.firstEncounter, mode: 'console' })
-                            }
-                          >
-                            ▶ PLAY CHAPTER
-                          </button>
                           <button
                             type="button"
                             className="btn-secondary btn-sm"
@@ -828,7 +799,6 @@ export function App() {
             >
               <div className="section-head">
                 <div>
-                  <div className="eyebrow">Sources &amp; Archives Dropdown View</div>
                   <h2>{activeArchiveOption.label}</h2>
                   <p className="muted" style={{ fontSize: '14px', marginTop: '4px' }}>
                     {activeArchiveOption.desc}
@@ -1108,16 +1078,6 @@ export function App() {
                             paddingTop: '8px',
                           }}
                         >
-                          <a
-                            href={`/game?encounter=${enc.id}`}
-                            className="btn-observatory btn-sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              navigateTo('/game', { encounterId: enc.id, mode: 'console' });
-                            }}
-                          >
-                            ▶ PLAY IN /GAME
-                          </a>
                           {primarySrc && (
                             <a
                               href={primarySrc.url}
@@ -1195,9 +1155,9 @@ export function App() {
 
                   {/* Glossary */}
                   <div>
-                    <div className="eyebrow" style={{ marginBottom: '10px' }}>
+                    <h3 style={{ marginBottom: '10px', color: 'var(--amber)' }}>
                       Field Glossary
-                    </div>
+                    </h3>
                     <div className="evidence-grid">
                       {narrative.glossary.map((item) => (
                         <div key={item.term} className="evidence-card">
@@ -1210,12 +1170,12 @@ export function App() {
                 </div>
               )}
             </section>
-          </>
+          </main>
         )}
 
         {/* GAME ROUTE: /game */}
         {routePath === '/game' && (
-          <main className="encounter-layout" aria-label="Echoes of Exploration Game Stage">
+          <main id="main-content" className="encounter-layout" aria-label="Echoes of Exploration Game Stage">
             <div className="game-topbar">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <a
@@ -1229,7 +1189,6 @@ export function App() {
                   ← MAIN PAGE (/)
                 </a>
                 <div>
-                  <div className="eyebrow">Observatory Game Route // /game</div>
                   <h1 style={{ fontSize: 'clamp(16px, 2.2vw, 22px)' }}>
                     Signal Expedition &amp; Encounters
                   </h1>
@@ -1263,7 +1222,7 @@ export function App() {
                     setGameMode('map');
                   }}
                 >
-                  [ 01 // SURFACE EXPLORER MAP ]
+                  [ SURFACE EXPLORER MAP ]
                 </button>
                 <button
                   type="button"
@@ -1275,7 +1234,7 @@ export function App() {
                     setGameMode('console');
                   }}
                 >
-                  [ 02 // ACTIVE ENCOUNTER (#{String(selectedEncounter.order).padStart(2, '0')}) ]
+                  [ ACTIVE ENCOUNTER (#{String(selectedEncounter.order).padStart(2, '0')}) ]
                 </button>
               </div>
 
@@ -1303,6 +1262,7 @@ export function App() {
             {/* Mode A: 640x360 Interactive Surface Explorer (Still Out There inspired) */}
             {gameMode === 'map' && (
               <SurfaceExplorerCanvas
+                key={activeSector}
                 sector={activeSector}
                 encounters={narrative.encounters}
                 missions={missions}
@@ -1396,6 +1356,7 @@ export function App() {
                   </div>
                 ) : (
                   <NarrativeEncounterConsole
+                    key={selectedEncounter.id}
                     encounter={selectedEncounter}
                     datasetEncounter={selectedDatasetEncounter}
                     sourcesMap={sourcesMap}
@@ -1467,9 +1428,9 @@ export function App() {
             NASA, JPL, NSSDCA, ILRS, and PDS public documentation. Not endorsed or sponsored by NASA.
           </div>
           <div>
-            Visuals &amp; narrative writing accelerated with Super Intelligence (SI) assistance;
-            24-color palette &amp; Silkscreen/IBM Plex standard per{' '}
-            <code>docs/ART_STYLE_GUIDE.md</code>.
+            Team-drawn &amp; SI-assisted pixel illustrations (not NASA photographs); narrative writing
+            accelerated with Super Intelligence (SI) assistance; 24-color palette &amp; Silkscreen/IBM Plex
+            standard per <code>docs/ART_STYLE_GUIDE.md</code>.
           </div>
         </footer>
       </div>
@@ -1484,10 +1445,10 @@ export function App() {
         needsReviewText={narrative.ui_copy.needs_review_badge}
         sectionLabels={narrative.ui_copy.section_labels}
         onClose={() => setSelectedMission(null)}
-        onTuneEncounter={(encId) => {
+        onTuneEncounter={routePath === '/game' ? (encId) => {
           setSelectedMission(null);
           navigateTo('/game', { encounterId: encId, mode: 'console' });
-        }}
+        } : undefined}
       />
     </div>
   );

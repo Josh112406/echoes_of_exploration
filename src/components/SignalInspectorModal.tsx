@@ -1,5 +1,7 @@
+// SI-assisted presentation; mission facts are supplied by local datasets.
 import { useEffect, useRef } from 'react';
 import { telemetryAudio } from '../audio/telemetryAudio';
+import { BehindTheMemoryPanel } from './BehindTheMemoryPanel';
 import {
   getChapterAccentColor,
   getChapterSceneClass,
@@ -34,6 +36,7 @@ export function SignalInspectorModal({
   onTuneEncounter,
 }: SignalInspectorModalProps) {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!mission) return;
@@ -44,6 +47,24 @@ export function SignalInspectorModal({
       if (e.key === 'Escape') {
         telemetryAudio.playChirp(700, 0.03);
         onClose();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+          )
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -82,7 +103,7 @@ export function SignalInspectorModal({
         onClose();
       }}
     >
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         {/* Top Archive Bar (§7.7) */}
         <div
           style={{
@@ -129,12 +150,12 @@ export function SignalInspectorModal({
                   <span className="status-badge review-flag">{needsReviewText}</span>
                 )}
               </div>
-              <div className="label" style={{ color: accentColor }}>
-                {mission.chapter.toUpperCase()} CHAPTER · AGENCIES: {mission.agencies.join(' / ')}
-              </div>
               <h2 id="record-reader-title" style={{ marginTop: '4px', color: 'var(--ink)' }}>
                 {mission.name}
               </h2>
+              <div className="label" style={{ color: accentColor }}>
+                {mission.chapter.toUpperCase()} CHAPTER · AGENCIES: {mission.agencies.join(' / ')}
+              </div>
             </div>
           </div>
 
@@ -217,54 +238,12 @@ export function SignalInspectorModal({
 
           {/* Linked Encounter Behind-the-Memory Facts */}
           {encounter && (
-            <div style={{ borderTop: '1px solid var(--line)', paddingTop: '14px', display: 'grid', gap: '12px' }}>
-              <div className="eyebrow">Behind the Memory · {encounter.behind_the_memory.headline}</div>
-              <p style={{ fontSize: '14px', color: 'var(--ink)' }}>{encounter.behind_the_memory.summary}</p>
-
-              {encounter.behind_the_memory.key_numbers.length > 0 && (
-                <div className="readout-grid">
-                  {encounter.behind_the_memory.key_numbers.map((kn) => (
-                    <div key={kn.label} className="readout-cell">
-                      <span className="k">{kn.label}</span>
-                      <span className="v">{kn.value}</span>
-                      <span className="mono muted" style={{ fontSize: '10px' }}>
-                        {kn.source_id}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div>
-                <div className="label" style={{ color: 'var(--amber)', marginBottom: '6px' }}>
-                  {sectionLabels.what_happened || 'What happened'}
-                </div>
-                <ul style={{ paddingLeft: '18px', display: 'grid', gap: '4px', fontSize: '14px', color: 'var(--crust)' }}>
-                  {encounter.behind_the_memory.what_happened.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="evidence-grid">
-                <div className="evidence-card">
-                  <div className="label" style={{ color: 'var(--amber)' }}>
-                    {sectionLabels.why_it_matters || 'Why it matters'}
-                  </div>
-                  <p style={{ fontSize: '13px', color: 'var(--crust)' }}>
-                    {encounter.behind_the_memory.why_it_matters}
-                  </p>
-                </div>
-                <div className="evidence-card">
-                  <div className="label" style={{ color: 'var(--amber)' }}>
-                    {sectionLabels.simplifies || 'How the game simplifies this'}
-                  </div>
-                  <p style={{ fontSize: '13px', color: 'var(--crust)' }}>
-                    {encounter.behind_the_memory.how_the_game_simplifies}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <BehindTheMemoryPanel
+              encounter={encounter}
+              sourcesMap={sourcesMap}
+              sectionLabels={sectionLabels}
+              embedded
+            />
           )}
 
           {/* Primary NASA Sources */}

@@ -1,3 +1,4 @@
+// SI-assisted encounter visualization; reviewed science and narrative remain in local datasets.
 import { useEffect, useRef, useState } from 'react';
 import { telemetryAudio } from '../audio/telemetryAudio';
 import type {
@@ -44,20 +45,40 @@ const VOYAGER_INSTRUMENTS = [
   { id: 'inst-d', name: 'Instrument D', tag: 'Engineering monitor', power: 3, highValue: false },
 ];
 
+interface VisualTelemetry {
+  aimTarget: string | null;
+  echoHits: number;
+  selectedStops: string[];
+  flippedCards: string[];
+  scrapeCount: number;
+  rotorSlider: number;
+  altSlider: number;
+  nearZone: string | null;
+  nearTicks: number;
+  voyagerRound: number;
+  voyagerPower: number;
+  plutoSlots: string[];
+}
+
 function EncounterVisualStage({
   encounterId,
   chapter,
   stepIdx,
   stepsTotal,
   outcome,
+  telemetry,
+  encounter,
 }: {
   encounterId: string;
   chapter: string;
   stepIdx: number;
   stepsTotal: number;
   outcome: 'active' | 'success' | 'partial';
+  telemetry: VisualTelemetry;
+  encounter: NarrativeEncounter;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,137 +86,288 @@ function EncounterVisualStage({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const progress = outcome === 'active' ? (stepIdx + 0.5) / Math.max(1, stepsTotal) : 1;
-    ctx.imageSmoothingEnabled = false;
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let rafId = 0;
+    const draw = (time: number) => {
+      const phase = motionQuery.matches || paused || outcome !== 'active' ? 0 : time / 1000;
+      ctx.imageSmoothingEnabled = false;
 
-    // Strict 24-color sky + horizon layers
-    const isMars = chapter === 'mars';
-    const isMoon = chapter === 'moon';
-    const sky = ctx.createLinearGradient(0, 0, 0, 128);
-    sky.addColorStop(0, '#05070f');
-    sky.addColorStop(0.75, '#0b0f1d');
-    sky.addColorStop(1, isMars ? '#522116' : '#131a2e');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, 640, 128);
+      // Strict 24-color sky + horizon layers
+      const isMars = chapter === 'mars';
+      const isMoon = chapter === 'moon';
+      const sky = ctx.createLinearGradient(0, 0, 0, 128);
+      sky.addColorStop(0, '#05070f');
+      sky.addColorStop(0.75, '#0b0f1d');
+      sky.addColorStop(1, isMars ? '#522116' : '#131a2e');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, 640, 128);
 
-    // Stars
-    for (let i = 0; i < 42; i += 1) {
-      const sx = (i * 151 + 17) % 640;
-      const sy = (i * 59 + 9) % 102;
-      ctx.fillStyle = i % 7 === 0 ? '#7ef1ff' : i % 3 === 0 ? '#b2b8d4' : '#8389a8';
-      ctx.fillRect(sx, sy, 1, 1);
-    }
-
-    // Hero light
-    if (isMoon) {
-      ctx.fillStyle = '#087d99';
-      ctx.beginPath();
-      ctx.arc(560, 44, 22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#7ef1ff';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = '#7ef1ff';
-      ctx.fillRect(560, 34, 3, 3);
-    }
-
-    // Horizon terrain
-    ctx.fillStyle = isMars ? '#7d331c' : isMoon ? '#3b3e59' : '#27293d';
-    ctx.fillRect(0, 128, 640, 52);
-    ctx.fillStyle = isMars ? '#cf724a' : isMoon ? '#b2b8d4' : '#8389a8';
-    ctx.fillRect(0, 128, 640, 1);
-
-    // Encounter-specific pixel visualization
-    if (encounterId === 'echo-never-sleeps') {
-      // Earth -> Moon retroreflector laser beam
-      ctx.fillStyle = '#e2e6fa';
-      ctx.fillRect(390, 118, 28, 10);
-      ctx.strokeStyle = '#7ef1ff';
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath();
-      ctx.moveTo(548, 56);
-      ctx.lineTo(404, 118);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else if (encounterId === 'air-thin-as-a-whisper') {
-      const hoverY = Math.round(112 - progress * 46);
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(310, hoverY, 20, 8);
-      ctx.fillStyle = '#7ef1ff';
-      ctx.fillRect(298, hoverY - 4, 44, 2);
-      ctx.fillStyle = 'rgba(11, 15, 29, 0.7)';
-      ctx.fillRect(308, 134, 24, 5);
-    } else if (encounterId === 'power-for-the-unknown') {
-      // Voyager RTG power bars & DSN wave
-      for (let b = 0; b < 5; b += 1) {
-        ctx.fillStyle = b < 3 ? '#0ec3dc' : '#1d263f';
-        ctx.fillRect(48 + b * 24, 64, 18, 10);
+      // Stars
+      for (let i = 0; i < 42; i += 1) {
+        const sx = (i * 151 + 17) % 640;
+        const sy = (i * 59 + 9) % 102;
+        ctx.fillStyle = i % 7 === 0 ? '#7ef1ff' : i % 3 === 0 ? '#b2b8d4' : '#8389a8';
+        ctx.fillRect(sx, sy, 1, 1);
       }
-      ctx.strokeStyle = '#0ec3dc';
-      ctx.beginPath();
-      ctx.arc(490, 74, 18, 0.7 * Math.PI, 1.3 * Math.PI);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(490, 74, 32, 0.75 * Math.PI, 1.25 * Math.PI);
-      ctx.stroke();
-    } else if (encounterId === 'one-chance-at-pluto') {
-      // Pluto + Charon flyby trajectory
-      ctx.fillStyle = '#e89e7d';
-      ctx.beginPath();
-      ctx.arc(320, 72, 26, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#8389a8';
-      ctx.beginPath();
-      ctx.arc(388, 56, 9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#7ef1ff';
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath();
-      ctx.moveTo(120, 108);
-      ctx.lineTo(520, 32);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else {
-      // Traverse / Lander / Sample inspection line
-      const px = Math.round(90 + progress * 430);
-      ctx.strokeStyle = '#087d99';
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(90, 146);
-      ctx.lineTo(520, 146);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(px - 6, 120, 12, 10);
-      ctx.fillStyle = '#7ef1ff';
-      ctx.fillRect(px - 2, 122, 5, 3);
-    }
 
-    // Bottom status overlay bar inside canvas
-    ctx.fillStyle = 'rgba(11, 15, 29, 0.88)';
-    ctx.fillRect(10, 10, 290, 22);
-    ctx.strokeStyle = '#087d99';
-    ctx.strokeRect(10.5, 10.5, 289, 21);
-    ctx.font = 'bold 10px "IBM Plex Mono", monospace';
-    ctx.fillStyle = outcome === 'active' ? '#0ec3dc' : '#f59e0b';
-    ctx.fillText(
-      outcome === 'active'
-        ? `TELEMETRY STAGE ${Math.min(stepIdx + 1, stepsTotal)}/${stepsTotal}`
-        : 'SIGNAL LOCK VERIFIED // COMPLETE',
-      18,
-      25
-    );
-  }, [encounterId, chapter, stepIdx, stepsTotal, outcome]);
+      // Hero light
+      if (isMoon) {
+        ctx.fillStyle = '#087d99';
+        ctx.beginPath();
+        ctx.arc(560, 44, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#7ef1ff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.beginPath();
+        ctx.arc(560, 44, 24, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#131a2e';
+        ctx.beginPath();
+        ctx.ellipse(568, 44, 12, 21, 0, -Math.PI / 2, Math.PI / 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#7ef1ff';
+        ctx.fillRect(560, 34, 3, 3);
+      }
+
+      // Horizon terrain
+      ctx.fillStyle = isMars ? '#7d331c' : isMoon ? '#3b3e59' : '#27293d';
+      ctx.fillRect(0, 128, 640, 52);
+      ctx.fillStyle = isMars ? '#cf724a' : isMoon ? '#b2b8d4' : '#8389a8';
+      ctx.fillRect(0, 128, 640, 1);
+      ctx.font = '10px "IBM Plex Mono", monospace';
+      const label = (text: string, x = 40, y = 157) => {
+        ctx.fillStyle = '#e2e6fa';
+        ctx.fillText(text, x, y);
+      };
+
+      // Encounter-specific pixel visualization
+      if (encounterId === 'echo-never-sleeps') {
+        // Earth -> Moon retroreflector laser beam
+        ctx.fillStyle = '#e2e6fa';
+        ctx.fillRect(390, 118, 28, 10);
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(548, 56);
+        const targetX = telemetry.aimTarget === 'tranquility' ? 404 : telemetry.aimTarget === 'tycho' ? 460 : 350;
+        ctx.lineTo(targetX, 118);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const travel = (phase % 4) / 4;
+        const pulse = telemetry.aimTarget === 'tranquility'
+          ? (travel < 0.5 ? travel * 2 : (1 - travel) * 2) : travel;
+        ctx.fillStyle = '#7ef1ff';
+        ctx.fillRect(Math.round(548 + (targetX - 548) * pulse), Math.round(56 + 62 * pulse), 3, 2);
+        // Repeated returns at one detector bin; scattered low noise elsewhere.
+        for (let i = 0; i < 32; i += 1) {
+          const peak = i === 16 && telemetry.aimTarget === 'tranquility';
+          const height = peak ? 12 + telemetry.echoHits * 8 : 2 + (i * 7) % 5;
+          ctx.fillStyle = peak ? '#7ef1ff' : '#595e7d';
+          ctx.fillRect(44 + i * 7, 113 - height, 2, height);
+        }
+        label(`PHOTON DETECTOR // ${telemetry.echoHits}/2 REPEATED RETURNS`);
+      } else if (encounterId === 'farther-than-footsteps') {
+        const stops = (encounter.game_support.suggested_stops as SuggestedStop[]) ?? [];
+        ctx.strokeStyle = '#087d99';
+        ctx.beginPath();
+        ctx.ellipse(300, 106, 220, 32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(80, 116);
+        stops.forEach((stop, i) => {
+          const x = 140 + i * 85;
+          const y = 92 + (i % 2) * 23;
+          const chosen = telemetry.selectedStops.includes(stop.label);
+          if (chosen) ctx.lineTo(x, y);
+          ctx.fillStyle = chosen ? '#7ef1ff' : '#595e7d';
+          ctx.fillRect(x - 4, y - 4, 8, 8);
+          if (chosen) {
+            const size = 7 + Math.sin(phase * 1.5) * 2;
+            ctx.strokeRect(x - size, y - size, size * 2, size * 2);
+          }
+          label(String(i + 1), x - 3, y - 10);
+        });
+        ctx.lineTo(80, 116);
+        ctx.stroke();
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(74, 108, 12, 8);
+        label(`TRAVERSE // ${telemetry.selectedStops.length}/3 STOPS · SAFE RETURN LOOP`);
+      } else if (encounterId === 'question-in-the-soil') {
+        const cards = (encounter.game_support.evidence_cards as EvidenceCard[]) ?? [];
+        cards.slice(0, 3).forEach((card, i) => {
+          const x = 82 + i * 165;
+          const inspected = telemetry.flippedCards.includes(card.id);
+          ctx.strokeStyle = inspected ? '#0ec3dc' : '#595e7d';
+          ctx.strokeRect(x + 0.5, 57.5, 110, 62);
+          ctx.fillStyle = inspected ? '#087d99' : '#522116';
+          ctx.fillRect(x + 5, inspected ? 78 : 107, 101, inspected ? 36 : 7);
+          if (inspected) {
+            ctx.fillStyle = '#7ef1ff';
+            for (let b = 0; b < 4; b += 1) {
+              ctx.fillRect(x + 18 + b * 23, Math.round(108 - ((phase * 7 + b * 9) % 27)), 2, 2);
+            }
+          }
+          label(card.label, x - 4, 47);
+        });
+        label(`ASSAYS // ${telemetry.flippedCards.length}/${cards.length} RECORDS INSPECTED · COMPARE, THEN INFER`);
+      } else if (encounterId === 'clues-beneath-the-wheel') {
+        const exposed = Math.min(telemetry.scrapeCount, 3);
+        ctx.fillStyle = '#e2e6fa';
+        ctx.fillRect(225, 130, exposed * 38, 8);
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(214 + exposed * 35, 106, 38, 18);
+        ctx.fillStyle = '#131a2e';
+        ctx.fillRect(218 + exposed * 35, 124, 10, 8);
+        ctx.fillRect(241 + exposed * 35, 124, 10, 8);
+        if (exposed > 0) {
+          ctx.fillStyle = '#cf724a';
+          for (let i = 0; i < 8; i += 1) {
+            ctx.fillRect(225 + exposed * 35 - i * 9, Math.round(125 - ((phase * 6 + i * 3) % 15)), 2, 2);
+          }
+        }
+        label(`WHEEL SCRAPE // ${exposed}/3 · ${exposed ? 'BRIGHT SOIL EXPOSED' : 'INSPECT THE REGOLITH'}`);
+      } else if (encounterId === 'air-thin-as-a-whisper') {
+        const lifting = telemetry.rotorSlider >= 65 && telemetry.rotorSlider <= 85;
+        const hoverY = Math.round(112 - (lifting ? Math.round(telemetry.altSlider * 0.45) : 0));
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(310, hoverY, 20, 8);
+        ctx.fillStyle = '#7ef1ff';
+        const rotorWidth = Math.round(16 + 28 * Math.abs(Math.cos(phase * (1.2 + telemetry.rotorSlider / 25))));
+        ctx.fillRect(320 - rotorWidth / 2, hoverY - 4, rotorWidth, 2);
+        ctx.fillStyle = 'rgba(11, 15, 29, 0.7)';
+        ctx.fillRect(308, 134, 24, 5);
+        ctx.strokeStyle = '#087d99';
+        ctx.strokeRect(365.5, hoverY + 0.5, 6, 128 - hoverY);
+        label(`ROTOR ${telemetry.rotorSlider}% // ALTITUDE ${lifting ? telemetry.altSlider : 0}% (MODEL)`);
+      } else if (encounterId === 'landing-not-planned') {
+        const targetX = telemetry.nearZone === 'saddle' ? 320 : telemetry.nearZone === 'ridge' ? 180 : 450;
+        const y = 48 + telemetry.nearTicks * 22;
+        ctx.strokeStyle = '#087d99';
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath();
+        ctx.moveTo(targetX, y);
+        ctx.lineTo(targetX, 124);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(targetX - 7, y, 14, 9);
+        ctx.strokeStyle = telemetry.nearZone === 'saddle' ? '#0ec3dc' : '#8389a8';
+        const radius = 18 + Math.sin(phase * 1.5) * 2;
+        ctx.beginPath();
+        ctx.ellipse(targetX, 126, radius, 6, 0, 0, Math.PI * 2);
+        ctx.moveTo(targetX - 25, 126);
+        ctx.lineTo(targetX + 25, 126);
+        ctx.stroke();
+        label(`HIMEROS DESCENT // ${telemetry.nearTicks}/3 CORRECTIONS · ${telemetry.nearTicks === 3 ? 'CONTACT' : 'RANGING'}`);
+      } else if (encounterId === 'power-for-the-unknown') {
+        // Voyager RTG power bars & DSN wave
+        const budget = telemetry.voyagerRound === 1 ? 10 : 8;
+        for (let b = 0; b < 14; b += 1) {
+          ctx.fillStyle = b < telemetry.voyagerPower ? (b < budget ? '#0ec3dc' : '#f59e0b') : '#1d263f';
+          ctx.fillRect(48 + b * 14, 64, 10, 10);
+        }
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.beginPath();
+        ctx.arc(490, 74, 18 + (phase * 7) % 14, 0.7 * Math.PI, 1.3 * Math.PI);
+        ctx.stroke();
+        label(`RTG MODEL // ${telemetry.voyagerPower}/${budget} GAME POWER UNITS`, 40, 99);
+        const loss = encounter.behind_the_memory.key_numbers.find((item) => item.label === 'Power lost each year');
+        if (loss) {
+          ctx.strokeStyle = '#f59e0b';
+          ctx.strokeRect(34.5, 142.5, 430, 18);
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillText(`[ VERIFIED RECORD ] RTG loss: ${loss.value}/year`, 40, 155);
+        }
+        label('DSN', 505, 80);
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.beginPath();
+        ctx.arc(490, 74, 32, 0.75 * Math.PI, 1.25 * Math.PI);
+        ctx.stroke();
+      } else if (encounterId === 'one-chance-at-pluto') {
+        // Pluto + Charon flyby trajectory
+        ctx.fillStyle = '#e89e7d';
+        ctx.beginPath();
+        ctx.arc(320, 72, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#8389a8';
+        ctx.beginPath();
+        ctx.arc(388, 56, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#7ef1ff';
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(120, 108);
+        ctx.lineTo(520, 32);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const scan = (Math.sin(phase * 0.6) + 1) / 2;
+        const px = 160 + scan * 320;
+        const py = 108 - (px - 120) * 76 / 400;
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(Math.round(px), Math.round(py), 10, 6);
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.beginPath();
+        ctx.moveTo(px + 5, py + 6);
+        ctx.lineTo(304, 92);
+        ctx.lineTo(340, 92);
+        ctx.closePath();
+        ctx.stroke();
+        for (let i = 0; i < 3; i += 1) {
+          ctx.fillStyle = i < telemetry.plutoSlots.length ? '#0ec3dc' : '#1d263f';
+          ctx.fillRect(50 + i * 23, 85, 18, 10);
+        }
+        label(`FLYBY CAMERA // ${telemetry.plutoSlots.length}/3 OBSERVATIONS QUEUED`);
+      }
+
+      // Bottom status overlay bar inside canvas
+      ctx.fillStyle = 'rgba(11, 15, 29, 0.88)';
+      ctx.fillRect(10, 10, 290, 22);
+      ctx.strokeStyle = '#087d99';
+      ctx.strokeRect(10.5, 10.5, 289, 21);
+      ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+      ctx.fillStyle = outcome === 'active' ? '#0ec3dc' : '#f59e0b';
+      ctx.fillText(
+        outcome === 'active'
+          ? `TELEMETRY STAGE ${Math.min(stepIdx + 1, stepsTotal)}/${stepsTotal}`
+          : 'SIGNAL LOCK VERIFIED // COMPLETE',
+        18,
+        25
+      );
+      ctx.font = '10px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#8389a8';
+      ctx.fillText('SI-Generated Illustration', 470, 174);
+      if (!motionQuery.matches && !paused && outcome === 'active' && !document.hidden) rafId = requestAnimationFrame(draw);
+    };
+    const redraw = () => {
+      cancelAnimationFrame(rafId);
+      draw(performance.now());
+    };
+    redraw();
+    motionQuery.addEventListener('change', redraw);
+    document.addEventListener('visibilitychange', redraw);
+    return () => {
+      cancelAnimationFrame(rafId);
+      motionQuery.removeEventListener('change', redraw);
+      document.removeEventListener('visibilitychange', redraw);
+    };
+  }, [encounterId, chapter, stepIdx, stepsTotal, outcome, telemetry, encounter, paused]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={640}
-      height={180}
-      className="encounter-visual-stage pixelated"
-      aria-hidden="true"
-    />
+    <div>
+      <canvas
+        ref={canvasRef}
+        width={640}
+        height={180}
+        className="encounter-visual-stage pixelated"
+        aria-hidden="true"
+      />
+      <button type="button" className="btn-secondary btn-sm" aria-pressed={paused} onClick={() => setPaused(!paused)}>
+        {paused ? 'RESUME TELEMETRY ANIMATION' : 'PAUSE TELEMETRY ANIMATION'}
+      </button>
+    </div>
   );
 }
 
@@ -226,13 +398,14 @@ export function NarrativeEncounterConsole({
   const [scrapeCount, setScrapeCount] = useState<number>(0);
   const [usedScanners, setUsedScanners] = useState<string[]>([]);
 
-  const [rotorSlider, setRotorSlider] = useState<number>(1800);
-  const [altSlider, setAltSlider] = useState<number>(14);
+  const [rotorSlider, setRotorSlider] = useState<number>(35);
+  const [altSlider, setAltSlider] = useState<number>(75);
   const [patchChoice, setPatchChoice] = useState<string | null>(null);
 
   const [nearZone, setNearZone] = useState<string | null>(null);
   const [nearTicks, setNearTicks] = useState<number>(0);
-  const [tickCursor, setTickCursor] = useState<number>(10);
+  const [tickCursor, setTickCursor] = useState<number>(50);
+  const [timingEnabled, setTimingEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   const [voyagerRound, setVoyagerRound] = useState<number>(1);
   const [voyagerOn, setVoyagerOn] = useState<string[]>(['inst-a', 'inst-b', 'inst-c', 'inst-d']);
@@ -240,40 +413,29 @@ export function NarrativeEncounterConsole({
 
   const [plutoSlots, setPlutoSlots] = useState<string[]>([]);
 
-  useEffect(() => {
-    setStepIdx(0);
-    setRetries(0);
-    setHintUsed(false);
-    setHintIdx(0);
-    setFeedback('');
-    setOutcome('active');
-    setAimTarget(null);
-    setEchoHits(0);
-    setHalveVal(20);
-    setSelectedStops([]);
-    setFlippedCards([]);
-    setScrapeCount(0);
-    setUsedScanners([]);
-    setRotorSlider(1800);
-    setAltSlider(14);
-    setPatchChoice(null);
-    setNearZone(null);
-    setNearTicks(0);
-    setTickCursor(10);
-    setVoyagerRound(1);
-    setVoyagerOn(['inst-a', 'inst-b', 'inst-c', 'inst-d']);
-    setSelectedPacket(null);
-    setPlutoSlots([]);
-  }, [encounter.id]);
-
   // Slow predictable ping bar for NEAR Shoemaker step 2
   useEffect(() => {
-    if (encounter.id !== 'landing-not-planned' || stepIdx !== 1 || outcome !== 'active') return;
+    if (encounter.id !== 'landing-not-planned' || stepIdx !== 1 || outcome !== 'active' || !timingEnabled) return;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
     const id = setInterval(() => {
-      setTickCursor((prev) => (prev + 6) % 100);
+      if (!document.hidden && document.hasFocus() && !query.matches) {
+        setTickCursor((prev) => (prev + 6) % 100);
+      }
     }, 110);
     return () => clearInterval(id);
-  }, [encounter.id, stepIdx, outcome]);
+  }, [encounter.id, stepIdx, outcome, timingEnabled]);
+
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => {
+      if (query.matches) {
+        setTimingEnabled(false);
+        setTickCursor(50);
+      }
+    };
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
 
   const badgeId = encounter.id;
   const alreadyCompleted = unlockedBadges.includes(badgeId);
@@ -353,11 +515,12 @@ export function NarrativeEncounterConsole({
     setFlippedCards([]);
     setScrapeCount(0);
     setUsedScanners([]);
-    setRotorSlider(1800);
-    setAltSlider(14);
+    setRotorSlider(35);
+    setAltSlider(75);
     setPatchChoice(null);
     setNearZone(null);
     setNearTicks(0);
+    setTickCursor(50);
     setVoyagerRound(1);
     setVoyagerOn(['inst-a', 'inst-b', 'inst-c', 'inst-d']);
     setSelectedPacket(null);
@@ -421,7 +584,6 @@ export function NarrativeEncounterConsole({
                     else failStep(undefined, 'on_miss');
                   }}
                 >
-                  {s.hit ? '◎ ' : '· '}
                   {s.label}
                 </button>
               ))}
@@ -439,7 +601,7 @@ export function NarrativeEncounterConsole({
               {ticks.map((t) => (
                 <button
                   key={t.id}
-                  className={t.real ? 'btn-observatory btn-sm' : 'btn-secondary btn-sm'}
+                  className="btn-secondary btn-sm"
                   onClick={() => {
                     if (t.real) {
                       const next = echoHits + 1;
@@ -504,7 +666,7 @@ export function NarrativeEncounterConsole({
                       key={stop.label}
                       className="encounter-tab"
                       style={{
-                        borderColor: picked ? 'var(--cyan)' : stop.inRing ? 'var(--line)' : 'var(--terracotta)',
+                        borderColor: picked ? 'var(--cyan)' : 'var(--line)',
                         background: picked ? 'var(--cyan-void)' : 'var(--indigo)',
                       }}
                       onClick={() => {
@@ -518,8 +680,8 @@ export function NarrativeEncounterConsole({
                         );
                       }}
                     >
-                      <span className="mono" style={{ fontSize: '10px', color: stop.inRing ? 'var(--cyan)' : 'var(--haze-peach)' }}>
-                        {stop.inRing ? 'INSIDE SAFE-RETURN RING' : 'OUTSIDE SAFE RING'} · {picked ? 'SELECTED' : 'TAP'}
+                      <span className="mono" style={{ fontSize: '10px', color: picked ? 'var(--cyan)' : 'var(--muted)' }}>
+                        TRAVERSE STATION · {picked ? 'SELECTED' : 'TAP'}
                       </span>
                       <strong style={{ fontSize: '14px' }}>{stop.label}</strong>
                       <span style={{ fontSize: '12px', color: 'var(--crust)' }}>{stop.science_tag}</span>
@@ -699,13 +861,13 @@ export function NarrativeEncounterConsole({
           return (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div className="mono" style={{ fontSize: '12px', color: 'var(--crust)' }}>
-                Rotor Speed: <b>{rotorSlider} RPM</b> (Target: 2,400–2,700 RPM for thin Martian air)
+                Rotor Speed Calibration: <b>{rotorSlider}%</b> (Goal: rapid blade spin in thin Martian air without wasting battery)
               </div>
               <input
                 type="range"
-                min={1400}
-                max={3200}
-                step={100}
+                min={0}
+                max={100}
+                step={5}
                 value={rotorSlider}
                 onChange={(e) => setRotorSlider(Number(e.target.value))}
                 aria-label="Rotor speed slider"
@@ -714,7 +876,7 @@ export function NarrativeEncounterConsole({
                 <button
                   className="btn-observatory btn-sm"
                   onClick={() => {
-                    if (rotorSlider >= 2400 && rotorSlider <= 2700) passStep();
+                    if (rotorSlider >= 65 && rotorSlider <= 85) passStep();
                     else failStep();
                   }}
                 >
@@ -728,13 +890,13 @@ export function NarrativeEncounterConsole({
           return (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div className="mono" style={{ fontSize: '12px', color: 'var(--crust)' }}>
-                Target Altitude: <b>{altSlider} m</b> (Safe low hover zone: 3–8 m)
+                Hover Altitude Setting: <b>{altSlider}%</b> (Goal: low safe hover band to preserve battery)
               </div>
               <input
                 type="range"
-                min={1}
-                max={20}
-                step={1}
+                min={10}
+                max={100}
+                step={5}
                 value={altSlider}
                 onChange={(e) => setAltSlider(Number(e.target.value))}
                 aria-label="Flight altitude slider"
@@ -743,7 +905,7 @@ export function NarrativeEncounterConsole({
                 <button
                   className="btn-observatory btn-sm"
                   onClick={() => {
-                    if (altSlider >= 3 && altSlider <= 8) passStep();
+                    if (altSlider >= 20 && altSlider <= 45) passStep();
                     else failStep();
                   }}
                 >
@@ -803,7 +965,7 @@ export function NarrativeEncounterConsole({
           );
         }
         if (stepIdx === 1) {
-          const inWindow = tickCursor >= 30 && tickCursor <= 72;
+          const inWindow = !timingEnabled || (tickCursor >= 30 && tickCursor <= 72);
           return (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div style={{ border: '1px solid var(--line)', padding: '10px', background: 'var(--void)' }}>
@@ -858,13 +1020,19 @@ export function NarrativeEncounterConsole({
                 >
                   PULSE DESCENT BURN ON TICK ({nearTicks}/3)
                 </button>
+                <label className="mono" style={{ display: 'block', marginTop: '10px' }}>
+                  <input type="checkbox" checked={timingEnabled} onChange={(event) => {
+                    setTimingEnabled(event.target.checked);
+                    setTickCursor(50);
+                  }} /> Timed descent (turn off for untimed corrections)
+                </label>
               </div>
             </div>
           );
         }
         const queues = [
           { id: 'eng', label: 'Slot 1: Housekeeping Log · Slot 2: Surface Data', ok: false },
-          { id: 'surf', label: 'Slot 1: SURFACE DATA · Slot 2: Engineering Margin', ok: true },
+          { id: 'surf', label: 'Slot 1: Surface Data · Slot 2: Engineering Margin', ok: true },
           { id: 'idle', label: 'Slot 1: Carrier Beacon Only · Slot 2: Blank', ok: false },
         ];
         return (
@@ -917,7 +1085,6 @@ export function NarrativeEncounterConsole({
                         {isOn ? 'ON' : 'OFF'} · DRAW {inst.power}W EQ
                       </span>
                       <strong>
-                        {inst.highValue ? '★ ' : ''}
                         {inst.name}
                       </strong>
                       <span style={{ fontSize: '12px', color: 'var(--crust)' }}>{inst.tag}</span>
@@ -1000,7 +1167,7 @@ export function NarrativeEncounterConsole({
                       }}
                     >
                       <span className="mono" style={{ fontSize: '10px', color: 'var(--cyan)' }}>
-                        {picked ? 'IN TIMELINE ✓' : 'TAP TO SCHEDULE'} · SCIENCE VALUE: {c.value.toUpperCase()}
+                        {picked ? 'IN TIMELINE ✓' : 'SCHEDULE OBSERVATION'}
                       </span>
                       <strong>{c.label}</strong>
                     </button>
@@ -1057,7 +1224,7 @@ export function NarrativeEncounterConsole({
         <div className="c-head">
           <span className="tag-story">
             <span className="signal-dot" aria-hidden="true" />
-            Memory echo · {encounter.echo_speaker}
+            [ MEMORY ECHO ] · {encounter.echo_speaker}
           </span>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             {alreadyCompleted && <span className="status-badge active">COMPLETED ✓</span>}
@@ -1071,10 +1238,6 @@ export function NarrativeEncounterConsole({
         </div>
 
         <div>
-          <div className="eyebrow" style={{ marginBottom: '4px' }}>
-            Encounter #{String(encounter.order).padStart(2, '0')} · {encounter.quick_task.task_name}
-            {datasetEncounter ? ` · ${datasetEncounter.mechanic_family.toUpperCase()}` : ''}
-          </div>
           <h2>{encounter.title}</h2>
         </div>
 
@@ -1085,6 +1248,13 @@ export function NarrativeEncounterConsole({
           stepIdx={stepIdx}
           stepsTotal={steps.length}
           outcome={outcome}
+          encounter={encounter}
+          telemetry={{
+            aimTarget, echoHits, selectedStops, flippedCards, scrapeCount, rotorSlider,
+            altSlider, nearZone, nearTicks, voyagerRound, plutoSlots,
+            voyagerPower: VOYAGER_INSTRUMENTS.filter((inst) => voyagerOn.includes(inst.id))
+              .reduce((sum, inst) => sum + inst.power, 0),
+          }}
         />
 
         {/* Intro Story Monologue */}
@@ -1095,28 +1265,6 @@ export function NarrativeEncounterConsole({
             </p>
           ))}
         </div>
-
-        {/* Verified Learning Intent & Evidence Chain Preview from encounters.json */}
-        {datasetEncounter && (
-          <div
-            style={{
-              background: 'var(--indigo)',
-              border: '1px solid var(--line)',
-              padding: '10px 12px',
-              display: 'grid',
-              gap: '4px',
-              fontSize: '12px',
-              color: 'var(--crust)',
-            }}
-          >
-            <span>
-              <strong style={{ color: 'var(--amber)' }}>LEARNING GOAL:</strong> {datasetEncounter.learning_intent}
-            </span>
-            <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>
-              EVIDENCE CHAIN: {datasetEncounter.evidence_chain.join(' -> ')}
-            </span>
-          </div>
-        )}
 
         {/* Active Step Instruction Box */}
         {outcome === 'active' && currentStep && (
@@ -1150,7 +1298,7 @@ export function NarrativeEncounterConsole({
             aria-live="polite"
             style={{
               background: 'var(--navy)',
-              borderLeft: '2px solid var(--cyan)',
+              border: '1px solid var(--cyan)',
               padding: '10px 12px',
               fontSize: '13px',
               color: 'var(--ink)',
@@ -1205,6 +1353,7 @@ export function NarrativeEncounterConsole({
         encounter={encounter}
         sourcesMap={sourcesMap}
         sectionLabels={sectionLabels}
+        learningIntent={datasetEncounter?.learning_intent}
       />
     </div>
   );

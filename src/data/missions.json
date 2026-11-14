@@ -142,7 +142,7 @@
       "objective": "Study Fra Mauro geology and deploy surface experiments.",
       "science_summary": "Apollo 14 returned samples, deployed a long-duration experiment package, and left a retroreflector used for lunar ranging.",
       "story_hook": "Geology and a returning beam of light at Fra Mauro.",
-      "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nssdca-apollo11-lm"],
+      "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nasa-nssdca"],
       "media_page_url": "https://science.nasa.gov/moon/missions/",
       "status_review_required_before_release": true
     },
@@ -162,7 +162,7 @@
       "objective": "Expand lunar field geology using the first Apollo Lunar Roving Vehicle.",
       "science_summary": "The rover extended traverse range, while surface experiments and a retroreflector supported geophysical and ranging science.",
       "story_hook": "The first wheels that carried people across the Moon.",
-      "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nssdca-apollo11-lm"],
+      "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nasa-nssdca"],
       "media_page_url": "https://science.nasa.gov/moon/missions/",
       "status_review_required_before_release": true
     },

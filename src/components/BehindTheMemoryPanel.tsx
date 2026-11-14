@@ -1,15 +1,20 @@
+// SI-assisted presentation; record content and sources are supplied by the local narrative dataset.
 import type { NarrativeEncounter, SourceRecord } from '../data/types';
 
 interface BehindTheMemoryPanelProps {
   encounter: NarrativeEncounter;
   sourcesMap: Map<string, SourceRecord>;
   sectionLabels: Record<string, string>;
+  learningIntent?: string;
+  embedded?: boolean;
 }
 
 export function BehindTheMemoryPanel({
   encounter,
   sourcesMap,
   sectionLabels,
+  learningIntent,
+  embedded = false,
 }: BehindTheMemoryPanelProps) {
   const { behind_the_memory: btm } = encounter;
 
@@ -17,26 +22,39 @@ export function BehindTheMemoryPanel({
     .map((id) => sourcesMap.get(id))
     .filter((s): s is SourceRecord => Boolean(s));
 
-  return (
-    <section
-      className="voice-card voice-record"
-      aria-label={`Behind the Memory: ${encounter.title}`}
-    >
-      <div className="c-head">
-        <span className="tag-record">Verified record · Behind the Memory</span>
-        <span className="mono muted" style={{ fontSize: '12px' }}>
-          Encounter #{String(encounter.order).padStart(2, '0')} · {encounter.id}
-        </span>
-      </div>
-
-      <div>
-        <div className="eyebrow" style={{ marginBottom: '4px' }}>
-          Factual Mission Record
-        </div>
-        <h3>{btm.headline}</h3>
-      </div>
+  const content = (
+    <>
+      {embedded ? (
+        <h3 style={{ color: 'var(--amber)' }}>Behind the Memory · {btm.headline}</h3>
+      ) : (
+        <>
+          <div className="c-head">
+            <span className="tag-record">[ VERIFIED RECORD ] · Behind the Memory</span>
+            <span className="mono muted" style={{ fontSize: '12px' }}>
+              Encounter #{String(encounter.order).padStart(2, '0')} · {encounter.id}
+            </span>
+          </div>
+          <div>
+            <h3>{btm.headline}</h3>
+          </div>
+        </>
+      )}
 
       <p style={{ color: 'var(--crust)', fontSize: '15px' }}>{btm.summary}</p>
+
+      {learningIntent && (
+        <div
+          style={{
+            background: 'var(--indigo)',
+            border: '1px solid var(--amber)',
+            padding: '10px 12px',
+            fontSize: '13px',
+            color: 'var(--crust)',
+          }}
+        >
+          <strong style={{ color: 'var(--amber)' }}>Learning Goal:</strong> {learningIntent}
+        </div>
+      )}
 
       {/* Key numbers */}
       {btm.key_numbers.length > 0 && (
@@ -104,7 +122,7 @@ export function BehindTheMemoryPanel({
       </div>
 
       {/* Primary Sources */}
-      {resolvedSources.length > 0 && (
+      {!embedded && resolvedSources.length > 0 && (
         <div style={{ borderTop: '1px solid var(--line)', paddingTop: '12px' }}>
           <div className="label" style={{ marginBottom: '8px', color: 'var(--amber)' }}>
             {sectionLabels.sources || 'Sources'}
@@ -124,6 +142,23 @@ export function BehindTheMemoryPanel({
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div style={{ borderTop: '1px solid var(--line)', paddingTop: '14px', display: 'grid', gap: '12px' }}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      className="voice-card voice-record"
+      aria-label={`Behind the Memory: ${encounter.title}`}
+    >
+      {content}
     </section>
   );
 }
