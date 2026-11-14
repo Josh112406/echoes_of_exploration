@@ -8,6 +8,7 @@ import { CONSTANTS } from '../core/Constants.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
 import { BackdropKind, CIN_MARGIN, getCinematicBackdrop, buildPlanet, buildRingedPlanet, buildBoosterSprite } from '../systems/TitleArt.ts';
+import { buildNebulaTile, buildStarTile, buildSunFlare, buildPeanutAsteroid } from '../systems/SpaceArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
 import { FINALE, getReel, getReelStats, getFinaleTheory, ReelSlide } from '../data/finale.ts';
 import { sourceHost } from '../data/story.ts';
@@ -37,9 +38,17 @@ const M = CIN_MARGIN;
 /** After a beat starts, input is ignored this long so its entrance animation is seen. */
 const BEAT_LOCK = 0.35;
 
-/** Where the robot stands on the surface shots, and Earth in the Mars sky. */
-const ROBOT_X = 232;
+/** Earth in the Mars sky (Mars record slides). */
 const EARTH_IN_MARS_SKY = { x: 448, y: 92 };
+
+/** The Elsewhere vista: where UNIT-7 hovers, the Sun, and Earth as one pale pixel beside it. */
+const ROBOT_POS = { x: 458, y: 200 };
+const SUN_POS = { x: 118, y: 76 };
+const EARTH_POS = { x: 149, y: 98 };
+/** Parallax of the Sun and Earth: effectively at infinity. */
+const SKY_F = 0.06;
+/** Letterbox bar height while a shot is "on film". */
+const BAR_H = 24;
 
 const STATUS_COLOR: Record<MachineStatus, number> = {
   active: PALETTE.cyanGlowHex,
@@ -52,15 +61,20 @@ const STATUS_COLOR: Record<MachineStatus, number> = {
 const CAPTION_COLOR: Record<CaptionKind, string> = {
   story: PALETTE.cyanLaser,
   record: PALETTE.beaconGold,
-  machine: PALETTE.beaconGold,
+  machine: PALETTE.cyanLaser,
 };
 
 /**
- * The finale. Four acts, all skippable and replayable:
+ * The finale. It opens and closes in deep space (Elsewhere): UNIT-7 hovering in
+ * the dark, the Sun a bright star and Earth one pale pixel beside it. Letterbox
+ * bars frame those shots; a slow crane move and parallax drift keep them alive.
+ * Four acts, all skippable and replayable:
  *  I.   THE RECORD : every recovered machine, in launch order, with its real NASA photo.
  *  II.  HOW FAR    : the worlds pull back; machines, worlds and years counted up.
  *  III. FARTHER    : NASA's next steps (sourced): Artemis, Europa Clipper, Dragonfly, Voyager.
- *  IV.  NOT DONE   : UNIT-7's resolution, then an end card with REPLAY ENDING.
+ *  IV.  NOT DONE   : UNIT-7's resolution. It locks onto Earth, uplinks every echo
+ *                    home, then drifts off until it is just another star; then the
+ *                    end card with REPLAY ENDING.
  *
  * Nothing advances on a timer: each beat waits for a click, Space/Enter/→ or the
  * NEXT button, so the player sets the pace. Every change between beats is animated
@@ -97,7 +111,25 @@ export class EndingScene extends Phaser.Scene {
   private backdrops = new Map<BackdropKind, Phaser.GameObjects.Container>();
   private activeBackdrop: BackdropKind | null = null;
   private dim!: Phaser.GameObjects.Rectangle;
-  private robot: Phaser.GameObjects.Image | null = null;
+  private robot: Phaser.GameObjects.Sprite | null = null;
+  private ion: Phaser.GameObjects.Image | null = null;
+  private visor: Phaser.GameObjects.Image | null = null;
+
+  // Elsewhere vista (opening and closing shots)
+  private vista: Phaser.GameObjects.Container | null = null;
+  private vistaFront: Phaser.GameObjects.Container | null = null;
+  private vistaTiles: { obj: Phaser.GameObjects.TileSprite; f: number }[] = [];
+  private vistaBodies: { obj: Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle; x0: number; y0: number; f: number }[] = [];
+  private rocks: { img: Phaser.GameObjects.Image; y0: number; vx: number; spin: number }[] = [];
+  /** Virtual camera over the vista, in px; tweened for crane moves. */
+  private vistaCam = { x: 0, y: 0 };
+  private vistaT = 0;
+  private vistaOffset = { x: 0, y: 0 };
+  private earthGlow: Phaser.GameObjects.Image | null = null;
+  private earthMark: Phaser.GameObjects.Container | null = null;
+  private bars: Phaser.GameObjects.Rectangle[] = [];
+  private uplink: Phaser.GameObjects.Text | null = null;
+  private cardPending = false;
 
   // Act I
   private reel: ReelSlide[] = [];
@@ -165,6 +197,9 @@ export class EndingScene extends Phaser.Scene {
     this.lastSlideYear = null;
     this.rulerAnim = { x: -1, year: 0 };
     this.trackAnim = { v: 0 };
+    this.vistaCam = { x: 0, y: 0 };
+    this.vistaT = 0;
+    this.cardPending = false;
     this.reel = getReel();
 
     // Real photos render smoothly; everything else stays pixel-crisp.
@@ -178,7 +213,12 @@ export class EndingScene extends Phaser.Scene {
 
     for (const kind of ['moon', 'mars', 'space'] as BackdropKind[]) this.backdrops.set(kind, this.buildBackdrop(kind));
     this.deepStage = this.buildDeepStage();
+    this.buildVista();
     this.dim = this.add.rectangle(W / 2, H / 2, W, H, PALETTE.spaceBlackHex, 0).setDepth(5);
+    this.bars = [
+      this.add.rectangle(0, -BAR_H, W, BAR_H, PALETTE.spaceBlackHex, 1).setOrigin(0, 0).setDepth(85),
+      this.add.rectangle(0, H, W, BAR_H, PALETTE.spaceBlackHex, 1).setOrigin(0, 0).setDepth(85),
+    ];
 
     this.starGfx = this.add.graphics().setDepth(4);
     this.stars = Array.from({ length: 90 }, (_v, i) => ({ x: (i * 137) % W, y: (i * 71) % (H - 80), z: 0.3 + ((i * 53) % 70) / 100 }));
@@ -193,7 +233,7 @@ export class EndingScene extends Phaser.Scene {
     this.bindInput();
 
     // Opening and Part I: the record, remembered
-    Soundscape.set({ music: 'ending_record', ambience: 'mars', ambienceLevel: 0.6, fade: 2.5 });
+    Soundscape.set({ music: 'ending_record', ambience: 'space', ambienceLevel: 0.7, fade: 2.5 });
     this.beats = this.buildBeats();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
     this.nextBeat();
@@ -213,10 +253,10 @@ export class EndingScene extends Phaser.Scene {
     const story = (text: string, tag = 'UNIT-7 // FINAL LOG'): Caption => ({ tag, text, kind: 'story' });
     const stats = getReelStats();
 
-    // Opening: Mars, the robot, the pale blue dot
+    // Opening: deep space, the robot flies in, the pale blue dot beside the Sun
     FINALE.opening.forEach((text, i) => beats.push({
       part: 'TRANSMISSION COMPLETE',
-      enter: i === 0 ? () => this.setupSurface('mars') : undefined,
+      enter: i === 0 ? () => this.setupVista(false, true) : undefined,
       caption: story(text),
     }));
 
@@ -225,7 +265,7 @@ export class EndingScene extends Phaser.Scene {
     this.reel.forEach((r, i) => beats.push({
       part: `I · THE RECORD · ${String(i + 1).padStart(2, '0')} / ${String(this.reel.length).padStart(2, '0')}`,
       enter: () => this.showSlide(i),
-      caption: { tag: `${r.entry.name.toUpperCase()} · ${r.year} · ${r.entry.world.toUpperCase()}`, text: `"${r.entry.hook}"`, kind: 'machine' },
+      caption: { tag: `${r.entry.name.toUpperCase()} · ${r.year} · DRAMATIZED VOICE`, text: `"${r.entry.hook}"`, kind: 'machine' },
     }));
 
     // II. HOW FAR
@@ -251,11 +291,15 @@ export class EndingScene extends Phaser.Scene {
       if (h.thought) beats.push({ part: `III · FARTHER · ${h.destination}`, caption: story(h.thought, 'UNIT-7 // REFLECTION') });
     });
 
-    // IV. NOT DONE: dusk deepens line by line, then the end card
+    // IV. NOT DONE: back out in the dark; UNIT-7 turns its antenna toward Earth
     beats.push({ part: 'IV · NOT DONE', enter: () => this.showSection('PART IV', 'NOT DONE', '', 'ending_resolve') });
     FINALE.resolution.forEach((text, i) => beats.push({
       part: 'IV · NOT DONE',
-      enter: i === 0 ? () => this.setupSurface('mars', true) : () => this.setDim(Math.min(0.4, 0.18 + i * 0.06), 2400),
+      enter: () => {
+        if (i === 0) this.setupVista(true);
+        else this.setDim(Math.min(0.3, 0.1 + i * 0.06), 2400);
+        if (/earth/i.test(text)) this.markEarth();
+      },
       caption: story(text),
     }));
     beats.push({ part: 'END OF TRANSMISSION', enter: () => this.showEndCard() });
@@ -283,6 +327,7 @@ export class EndingScene extends Phaser.Scene {
     const dt = Math.min(delta, 50) / 1000;
     this.updateStars(dt);
     this.updateBooster();
+    this.updateVista(dt);
     if (this.finished) return;
 
     if (this.lockT > 0) this.lockT -= dt;
@@ -302,7 +347,11 @@ export class EndingScene extends Phaser.Scene {
   }
 
   private advance(): void {
-    if (this.finished) return;
+    if (this.finished) {
+      // During the final shot, any input jumps straight to the end card
+      if (this.cardPending) this.mountEndCard();
+      return;
+    }
     if (this.capTyping) {
       this.talk.finish();
       this.capText.setText(this.talk.visible);
@@ -325,7 +374,8 @@ export class EndingScene extends Phaser.Scene {
     this.hideSection();
     Soundscape.set({ music: 'ending_resolve', fade: 2 });
     this.beatIdx = this.beats.length - 2;
-    this.setupSurface('mars', true);
+    this.setupVista(true);
+    this.markEarth();
     this.nextBeat();
   }
 
@@ -401,6 +451,16 @@ export class EndingScene extends Phaser.Scene {
     }
     if (!this.textures.exists('cin_booster')) this.textures.addCanvas('cin_booster', buildBoosterSprite());
     if (!this.textures.exists('cin_ringed_giant')) this.textures.addCanvas('cin_ringed_giant', buildRingedPlanet(96, 7));
+    // Same art as the Elsewhere sector, so the finale is set where the journey ended
+    const tex = (key: string, make: () => HTMLCanvasElement) => { if (!this.textures.exists(key)) this.textures.addCanvas(key, make()); };
+    tex('space_nebula', () => buildNebulaTile(384, 61));
+    tex('space_stars_far', () => buildStarTile(256, 520, 71, 0.55, false));
+    tex('space_stars_mid', () => buildStarTile(320, 170, 83, 0.9, true));
+    tex('space_stars_near', () => buildStarTile(384, 60, 97, 1.15, true));
+    tex('space_sun_flare', () => buildSunFlare(48));
+    tex('space_saturn', () => buildRingedPlanet(96, 17));
+    tex('end_rock_a', () => buildPeanutAsteroid(22, 13, 41));
+    tex('end_rock_b', () => buildPeanutAsteroid(14, 10, 43));
   }
 
   private buildBackdrop(kind: BackdropKind): Phaser.GameObjects.Container {
@@ -467,31 +527,164 @@ export class EndingScene extends Phaser.Scene {
     this.tweens.add({ targets: this.dim, fillAlpha: alpha, duration: this.ms(duration), ease: 'Sine.easeInOut' });
   }
 
-  private groundAt(kind: BackdropKind, x: number): number {
-    const near = getCinematicBackdrop(kind).near;
-    if (!near) return H - 60;
-    return near.heights[Phaser.Math.Clamp(Math.round(x) + M, 0, near.heights.length - 1)] - M + 1;
+  // ---------------------------------------------------------------------------
+  // Elsewhere vista
+  // ---------------------------------------------------------------------------
+
+  /** Deep space as the Elsewhere sector paints it: nebula, three star depths, the Sun, Earth, a ringed giant. */
+  private buildVista(): void {
+    this.vistaTiles = [];
+    this.vistaBodies = [];
+    this.rocks = [];
+    const c = this.add.container(0, 0).setDepth(1.5).setAlpha(0).setVisible(false);
+    const pad = 90;
+    c.add(this.add.rectangle(0, 0, W, H, PALETTE.spaceBlackHex, 1).setOrigin(0, 0));
+    const tile = (key: string, f: number, alpha = 1) => {
+      const t = this.add.tileSprite(-pad, -pad, W + pad * 2, H + pad * 2, key).setOrigin(0, 0).setAlpha(alpha);
+      c.add(t);
+      this.vistaTiles.push({ obj: t, f });
+    };
+    const body = <T extends Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle>(obj: T, f: number): T => {
+      c.add(obj);
+      this.vistaBodies.push({ obj, x0: obj.x, y0: obj.y, f });
+      return obj;
+    };
+    const glow = (x: number, y: number, tint: number, sx: number, sy: number, alpha: number) =>
+      body(this.add.image(x, y, 'glow_disk').setTint(tint).setScale(sx, sy).setAlpha(alpha).setBlendMode(Phaser.BlendModes.ADD), SKY_F);
+
+    tile('space_nebula', 0.04);
+    tile('space_stars_far', 0.1);
+    tile('space_stars_mid', 0.22);
+    tile('space_stars_near', 0.4, 0.8);
+
+    // The Sun: from this far out, just the brightest star, with an anamorphic streak
+    glow(SUN_POS.x, SUN_POS.y, PALETTE.beaconGoldHex, 3.6, 3.6, 0.18);
+    glow(SUN_POS.x, SUN_POS.y, PALETTE.lunarHighlightHex, 1.1, 1.1, 0.5);
+    glow(SUN_POS.x, SUN_POS.y, PALETTE.cyanLaserHex, 9, 0.05, 0.4);
+    glow(SUN_POS.x, SUN_POS.y, PALETTE.beaconGoldHex, 0.05, 2.2, 0.22);
+    body(this.add.image(SUN_POS.x, SUN_POS.y, 'space_sun_flare').setBlendMode(Phaser.BlendModes.ADD), SKY_F);
+    // Earth: one pale blue pixel
+    this.earthGlow = glow(EARTH_POS.x, EARTH_POS.y, PALETTE.cyanLaserHex, 0.12, 0.12, 0.45);
+    body(this.add.rectangle(EARTH_POS.x, EARTH_POS.y, 1, 1, PALETTE.cyanLaserHex), SKY_F);
+
+    // A ringed giant close enough to fill a corner
+    body(this.add.image(46, 262, 'space_saturn').setScale(2).setAlpha(0.9), 0.35);
+    this.vista = c;
+
+    // Foreground debris tumbling past, in front of the robot
+    const front = this.add.container(0, 0).setDepth(22).setAlpha(0).setVisible(false);
+    const rock = (key: string, x: number, y: number, vx: number, spin: number, scale: number) => {
+      const img = this.add.image(x, y, key).setScale(scale).setTint(0x8a90b0);
+      front.add(img);
+      this.rocks.push({ img, y0: y, vx, spin });
+    };
+    rock('end_rock_a', 170, 300, -7, 9, 3);
+    rock('end_rock_b', 600, 64, -11, -14, 2);
+    rock('end_rock_b', 330, 226, -5, 6, 1);
+    this.vistaFront = front;
+
+    // The odd meteor streaking far off
+    if (!this.reducedMotion) {
+      this.time.addEvent({
+        delay: 3800, loop: true, callback: () => {
+          if (!c.visible || Math.random() < 0.35) return;
+          const x = 200 + Math.random() * 380, y = 40 + Math.random() * 90;
+          const m = this.add.rectangle(x, y, 16, 1, PALETTE.lunarHighlightHex, 0.9).setAngle(160).setBlendMode(Phaser.BlendModes.ADD);
+          c.add(m);
+          this.tweens.add({ targets: m, x: x - 70, y: y + 25, alpha: 0, duration: 700, ease: 'Sine.easeIn', onComplete: () => m.destroy() });
+        },
+      });
+    }
   }
 
-  /** The robot settles onto the surface, then idles with a slow hover bob. */
-  private showRobot(kind: 'moon' | 'mars'): void {
+  private setVista(on: boolean, fade = 1600): void {
+    for (const c of [this.vista, this.vistaFront]) {
+      if (!c) continue;
+      this.tweens.killTweensOf(c);
+      if (on) c.setVisible(true);
+      this.tweens.add({
+        targets: c, alpha: on ? 1 : 0, duration: this.ms(fade), ease: 'Sine.easeInOut',
+        onComplete: () => { if (!on) c.setVisible(false); },
+      });
+    }
+    if (!on) {
+      this.fadeOutAndDestroy(this.earthMark, 400);
+      this.earthMark = null;
+    }
+  }
+
+  /** Cinematic bars slide in for the deep-space shots and out for the record. */
+  private setLetterbox(on: boolean): void {
+    const [top, bot] = this.bars;
+    if (!top || !bot) return;
+    this.tweens.killTweensOf(this.bars);
+    this.tweens.add({ targets: top, y: on ? 0 : -BAR_H, duration: this.ms(1200), ease: 'Cubic.easeInOut' });
+    this.tweens.add({ targets: bot, y: on ? H - BAR_H : H, duration: this.ms(1200), ease: 'Cubic.easeInOut' });
+  }
+
+  /** Where Earth currently sits on screen (it drifts with the slow parallax). */
+  private earthScreen(): { x: number; y: number } {
+    return { x: Math.round(EARTH_POS.x - this.vistaOffset.x * SKY_F), y: Math.round(EARTH_POS.y - this.vistaOffset.y * SKY_F) };
+  }
+
+  private updateVista(dt: number): void {
+    if (!this.vista?.visible) return;
+    this.vistaT += dt;
+    // A slow dolly back and forth so the shot never sits still
+    const drift = this.reducedMotion ? 0 : Math.sin(this.vistaT * 0.035) * 46;
+    const ox = this.vistaCam.x + drift, oy = this.vistaCam.y;
+    this.vistaOffset = { x: ox, y: oy };
+    for (const t of this.vistaTiles) {
+      t.obj.tilePositionX = Math.round(ox * t.f);
+      t.obj.tilePositionY = Math.round(oy * t.f);
+    }
+    for (const b of this.vistaBodies) b.obj.setPosition(Math.round(b.x0 - ox * b.f), Math.round(b.y0 - oy * b.f));
+    if (!this.reducedMotion) {
+      for (const r of this.rocks) {
+        r.img.x += r.vx * dt;
+        if (r.img.x < -40) r.img.x += W + 80;
+        r.img.y = Math.round(r.y0 - oy * 1.4);
+        r.img.angle += r.spin * dt;
+      }
+    }
+    const rb = this.robot;
+    if (rb?.active) {
+      this.ion?.setPosition(rb.x, rb.y + 2).setAlpha(rb.alpha * 0.5);
+      this.visor?.setPosition(rb.x, rb.y - 13 * rb.scaleY).setAlpha(rb.alpha * 0.35).setScale(0.12 * rb.scaleY);
+    }
+    if (this.earthMark?.active) {
+      const p = this.earthScreen();
+      this.earthMark.setPosition(p.x, p.y);
+    }
+  }
+
+  /** UNIT-7, flight pack deployed, hovering in the dark. On the opening it flies in from off-screen. */
+  private showFlyingRobot(flyIn: boolean): void {
     if (!this.robot) {
-      this.robot = this.add.image(ROBOT_X, 0, 'robot_idle').setOrigin(0.5, 21 / 24).setScale(2).setDepth(20).setAlpha(0);
+      const key = this.textures.exists('robot_fly_sheet') ? 'robot_fly_sheet' : 'robot_fly_idle';
+      this.ion = this.add.image(ROBOT_POS.x, ROBOT_POS.y, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.9).setAlpha(0).setDepth(19);
+      this.robot = this.add.sprite(ROBOT_POS.x, ROBOT_POS.y, key, 0).setOrigin(0.5, 21 / 24).setScale(3).setDepth(20).setAlpha(0);
+      this.visor = this.add.image(ROBOT_POS.x, ROBOT_POS.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setDepth(21).setAlpha(0);
+      if (!this.reducedMotion && this.anims.exists('robot_fly_anim')) this.robot.play('robot_fly_anim');
     }
     const r = this.robot;
     this.tweens.killTweensOf(r);
-    const gy = this.groundAt(kind, ROBOT_X);
-    const fresh = !r.visible || r.alpha < 0.99;
-    r.setVisible(true);
+    r.setVisible(true).setScale(3);
     const bob = () => {
-      if (!this.reducedMotion && r.active) this.tweens.add({ targets: r, y: gy - 1, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      if (!this.reducedMotion && r.active) this.tweens.add({ targets: r, y: ROBOT_POS.y - 4, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     };
-    if (fresh && !this.reducedMotion) {
-      r.setPosition(ROBOT_X, gy - 10);
-      this.tweens.add({ targets: r, alpha: 1, y: gy, duration: 900, delay: 350, ease: 'Cubic.easeOut', onComplete: bob });
+    if (this.reducedMotion) {
+      r.setPosition(ROBOT_POS.x, ROBOT_POS.y).setAlpha(1);
+      return;
+    }
+    if (flyIn) {
+      // Enters from the right, banking in, and eases to a hover
+      r.setPosition(W + 50, ROBOT_POS.y - 46).setAlpha(1).setAngle(-14);
+      this.tweens.add({ targets: r, x: ROBOT_POS.x, y: ROBOT_POS.y, angle: 0, duration: 3600, delay: 1600, ease: 'Cubic.easeOut', onComplete: bob });
+      this.time.delayedCall(1700, () => SoundFX.playIonPulse(0.6));
     } else {
-      r.setPosition(ROBOT_X, gy).setAlpha(1);
-      bob();
+      r.setPosition(ROBOT_POS.x, ROBOT_POS.y + 8).setAngle(0);
+      this.tweens.add({ targets: r, alpha: 1, y: ROBOT_POS.y, duration: 1000, delay: 300, ease: 'Cubic.easeOut', onComplete: bob });
     }
   }
 
@@ -502,8 +695,8 @@ export class EndingScene extends Phaser.Scene {
     this.tweens.add({ targets: r, alpha: 0, duration: this.ms(350), onComplete: () => r.setVisible(false) });
   }
 
-  /** The robot on a world's surface, looking at the sky. */
-  private setupSurface(kind: 'moon' | 'mars', dusk = false): void {
+  /** The opening and closing shot: UNIT-7 in deep space, Earth a pale dot beside the Sun. */
+  private setupVista(dusk = false, intro = false): void {
     this.clearSlide();
     this.clearRuler();
     this.fadeOutAndDestroy(this.planets);
@@ -518,10 +711,46 @@ export class EndingScene extends Phaser.Scene {
     this.booster = null;
     this.warpTarget = 0;
     this.setDeepStage(false);
-    this.showBackdrop(kind, 1.6);
-    Soundscape.set({ ambience: kind, ambienceLevel: dusk ? 0.75 : 0.6, fade: 2.5 });
-    this.setDim(dusk ? 0.18 : 0, 1400);
-    this.showRobot(kind);
+    this.showBackdrop('space', 1.6);
+    this.setVista(true, intro ? 2600 : 1600);
+    this.setLetterbox(true);
+    Soundscape.set({ ambience: 'space', ambienceLevel: dusk ? 0.85 : 0.7, fade: 2.5 });
+    this.setDim(dusk ? 0.1 : 0, 1400);
+    this.tweens.killTweensOf(this.vistaCam);
+    if (intro && !this.reducedMotion) {
+      // Crane down from the stars to find the Sun, then the robot arriving
+      this.vistaCam.x = 70;
+      this.vistaCam.y = -150;
+      this.tweens.add({ targets: this.vistaCam, x: 0, y: 0, duration: 7000, ease: 'Sine.easeInOut' });
+    } else {
+      this.tweens.add({ targets: this.vistaCam, x: 0, y: 0, duration: this.ms(2400), ease: 'Sine.easeInOut' });
+    }
+    this.showFlyingRobot(intro);
+  }
+
+  /** Targeting brackets lock onto the pale blue dot. */
+  private markEarth(): void {
+    if (this.earthMark || !this.vista) return;
+    const p = this.earthScreen();
+    const c = this.add.container(p.x, p.y).setDepth(21).setAlpha(0);
+    const g = this.add.graphics();
+    g.fillStyle(PALETTE.cyanLaserHex, 1);
+    const s = 7, l = 3;
+    for (const sx of [-1, 1]) {
+      for (const sy of [-1, 1]) {
+        g.fillRect(sx < 0 ? -s : s - l + 1, sy < 0 ? -s : s, l, 1);
+        g.fillRect(sx < 0 ? -s : s, sy < 0 ? -s : s - l + 1, 1, l);
+      }
+    }
+    const label = this.add.text(0, 11, 'EARTH', { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanLaser, letterSpacing: 3 }).setOrigin(0.5, 0);
+    c.add([g, label]);
+    this.earthMark = c;
+    SoundFX.playRadarPing(0.2);
+    this.tweens.add({ targets: c, alpha: 1, duration: this.ms(500) });
+    if (this.reducedMotion) return;
+    g.setScale(2.4);
+    this.tweens.add({ targets: g, scale: 1, duration: 650, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: g, alpha: 0.4, duration: 700, delay: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   /** Destroys an object and its children, stopping their looping tweens first. */
@@ -622,6 +851,8 @@ export class EndingScene extends Phaser.Scene {
     const following = this.slide !== null;
     this.lastSlideYear = year;
     this.hideRobot();
+    this.setVista(false, 1100);
+    this.setLetterbox(false);
     this.showBackdrop(entry.world === 'elsewhere' ? 'space' : entry.world, 1.1);
     this.setDeepStage(entry.world === 'elsewhere');
     this.setDim(entry.world === 'elsewhere' ? 0.3 : 0.5);
@@ -858,6 +1089,8 @@ export class EndingScene extends Phaser.Scene {
     this.clearSlide();
     this.clearRuler();
     this.hideRobot();
+    this.setVista(false, 1200);
+    this.setLetterbox(false);
     this.setDeepStage(false);
     this.showBackdrop('space', 1.6);
     Soundscape.set({ ambience: 'space', ambienceLevel: 0.8, fade: 3 });
@@ -915,16 +1148,17 @@ export class EndingScene extends Phaser.Scene {
     // Beacon counts per sector, taken from the reel itself
     const count = (w: 'moon' | 'mars' | 'elsewhere') => this.reel.filter((r) => r.entry.world === w).length;
     world([
-      label(moon.x, moon.y - moonImg.height / 2 - 14, `${count('moon')} BEACONS`, PALETTE.lunarDustLight),
-      label(mars.x, mars.y - marsImg.height / 2 - 14, `${count('mars')} BEACONS`, PALETTE.lunarDustLight),
-      label(deepSpace.x, deepSpace.y - 34, `${count('elsewhere')} BEACONS`, PALETTE.lunarDustLight),
+      label(moon.x, moon.y - moonImg.height / 2 - 14, `${count('moon')} MACHINES`, PALETTE.lunarDustLight),
+      label(mars.x, mars.y - marsImg.height / 2 - 14, `${count('mars')} MACHINES`, PALETTE.lunarDustLight),
+      label(deepSpace.x, deepSpace.y - 34, `${count('elsewhere')} MACHINES`, PALETTE.lunarDustLight),
     ], 2700);
     if (!rm) {
       this.tweens.add({ targets: progress, u: 1, duration: 1800, delay: 400, ease: 'Sine.easeInOut', onUpdate: () => { if (route.active) drawRoute(); } });
       this.tweens.add({ targets: [moonImg, marsImg], y: '-=2', duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 1800 });
     }
 
-    // One beacon per machine, still out there on its world, popping on as the route arrives
+    // One marker per machine, still out there on its world. Only the ones still working
+    // (cyan) pulse; dormant hardware stays a steady gold point: it does not transmit.
     const beacons = (w: 'moon' | 'mars' | 'elsewhere', cx: number, cy: number, r: number, start: number) => {
       this.reel.filter((s) => s.entry.world === w).forEach((s, k) => {
         const a = k * 2.399; // golden angle spread
@@ -934,7 +1168,9 @@ export class EndingScene extends Phaser.Scene {
         c.add(b);
         if (rm) return;
         this.tweens.add({ targets: b, scale: 0.12, duration: 380, delay: start + k * 110, ease: 'Back.easeOut' });
-        this.tweens.add({ targets: b, alpha: 0.15, duration: 300, hold: 200, repeatDelay: 900 + k * 170, yoyo: true, repeat: -1, delay: start + 600 + k * 120 });
+        if (s.entry.status === 'active') {
+          this.tweens.add({ targets: b, alpha: 0.15, duration: 300, hold: 200, repeatDelay: 900 + k * 170, yoyo: true, repeat: -1, delay: start + 600 + k * 120 });
+        }
       });
     };
     beacons('moon', moon.x, moon.y, moonImg.width * 0.36, 1300);
@@ -1099,50 +1335,116 @@ export class EndingScene extends Phaser.Scene {
     this.events.emit('finale-ended');
     this.clearCaption();
     this.hideNextButton();
-    this.setDim(0.42, 2600);
-    this.startSignalHome();
-    if (this.reducedMotion) this.mountEndCard();
-    else this.time.delayedCall(1400, () => this.mountEndCard());
+    this.setDim(0, 1800);
+    if (this.reducedMotion || !this.robot?.active) {
+      this.mountEndCard();
+      return;
+    }
+    // The final shot plays out; any input skips straight to the card
+    this.cardPending = true;
+    this.markEarth();
+    this.time.delayedCall(900, () => this.playUplink());
   }
 
-  /** Pulses rise from the robot's antenna toward Earth in the Mars sky, on a loop. */
-  private startSignalHome(): void {
+  /** One pulse leaves the antenna and arcs to Earth; Earth glints when it lands. */
+  private sendPulse(fromX: number, fromY: number, scale: number, duration: number, onArrive?: () => void): void {
+    const p = this.add.image(fromX, fromY, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(scale).setDepth(21);
+    const path = { u: 0 };
+    this.tweens.add({
+      targets: path, u: 1, duration, ease: 'Sine.easeIn',
+      onUpdate: () => {
+        if (!p.active) return;
+        const e = this.earthScreen();
+        const u = path.u;
+        p.setPosition(fromX + (e.x - fromX) * u, fromY + (e.y - fromY) * u - Math.sin(u * Math.PI) * 46);
+        p.setAlpha(1 - u * 0.6).setScale(scale * (1 - u * 0.7));
+      },
+      onComplete: () => {
+        p.destroy();
+        const g = this.earthGlow;
+        if (g?.active) {
+          this.tweens.killTweensOf(g);
+          g.setScale(0.12).setAlpha(0.45);
+          this.tweens.add({ targets: g, alpha: 0.95, scale: 0.42, duration: 220, yoyo: true, ease: 'Sine.easeOut' });
+        }
+        onArrive?.();
+      },
+    });
+  }
+
+  /** Every echo, uplinked home one by one, with a live counter over the robot. */
+  private playUplink(): void {
     const r = this.robot;
-    const sky = this.backdrops.get('mars');
-    if (this.reducedMotion || !r || !sky || this.activeBackdrop !== 'mars') return;
-    const earthGlow = sky.getByName('earthGlow') as Phaser.GameObjects.Image | null;
-    const antenna = this.add.image(r.x, r.y - 40, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.12).setDepth(21).setAlpha(0);
-    this.tweens.add({ targets: antenna, alpha: 0.9, duration: 500, yoyo: true, hold: 200, repeat: -1, repeatDelay: 500 });
-    const pulse = () => {
-      if (!r.active) return;
-      const sx = r.x, sy = r.y - 40;
-      const p = this.add.image(sx, sy, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.14).setDepth(21);
-      const path = { u: 0 };
-      this.tweens.add({
-        targets: path, u: 1, duration: 2200, ease: 'Sine.easeIn',
-        onUpdate: () => {
-          if (!p.active) return;
-          const ex = sky.x + EARTH_IN_MARS_SKY.x, ey = EARTH_IN_MARS_SKY.y;
-          const u = path.u;
-          p.setPosition(sx + (ex - sx) * u, sy + (ey - sy) * u - Math.sin(u * Math.PI) * 30);
-          p.setAlpha(1 - u * 0.7).setScale(0.14 * (1 - u * 0.6));
-        },
-        onComplete: () => {
-          p.destroy();
-          if (earthGlow?.active) {
-            this.tweens.add({ targets: earthGlow, alpha: 0.75, scale: 0.5, duration: 260, yoyo: true, ease: 'Sine.easeOut' });
-          }
-        },
+    if (!r?.active) return;
+    const total = this.reel.length;
+    const ax = r.x, ay = r.y - 62;
+    const label = (n: number) => `UPLINK · ECHO ${String(n).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+    this.uplink = this.add.text(ax, ay - 22, label(0), { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5, 1).setDepth(23).setAlpha(0);
+    this.tweens.add({ targets: this.uplink, alpha: 1, duration: 400 });
+    const antenna = this.add.image(ax, ay, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.16).setDepth(21).setAlpha(0);
+    this.tweens.add({ targets: antenna, alpha: 0.95, duration: 140, yoyo: true, repeat: -1, repeatDelay: 120 });
+    let arrived = 0;
+    for (let k = 0; k < total; k++) {
+      this.time.delayedCall(k * 230, () => {
+        if (!r.active) return;
+        this.uplink?.setText(label(k + 1));
+        if (k % 3 === 0) SoundFX.playChime(k % 5);
+        this.sendPulse(r.x, r.y - 62, 0.3, 1500, () => {
+          arrived++;
+          if (arrived === total) this.uplinkComplete(antenna);
+        });
       });
-    };
-    pulse();
-    this.time.addEvent({ delay: 1500, loop: true, callback: pulse });
+    }
+  }
+
+  private uplinkComplete(antenna: Phaser.GameObjects.Image): void {
+    SoundFX.playDownlink();
+    this.tweens.killTweensOf(antenna);
+    this.tweens.add({ targets: antenna, alpha: 0, duration: 600, onComplete: () => antenna.destroy() });
+    const t = this.uplink;
+    if (t?.active) {
+      t.setText(`TRANSMISSION COMPLETE · ${this.reel.length} ECHOES HOME`).setColor(PALETTE.beaconGold);
+      t.setX(Math.min(t.x, W - 16 - t.width / 2));
+      this.tweens.add({ targets: t, alpha: 0, duration: 900, delay: 2200 });
+    }
+    // Earth answers with one bright glint
+    const g = this.earthGlow;
+    if (g?.active) {
+      this.tweens.killTweensOf(g);
+      this.tweens.add({ targets: g, alpha: 1, scale: 0.9, duration: 500, yoyo: true, hold: 300, ease: 'Sine.easeOut' });
+    }
+    this.time.delayedCall(2600, () => this.becomeAStar());
+  }
+
+  /** UNIT-7 drifts away into the dark until it is one more blinking star, still keeping the record. */
+  private becomeAStar(): void {
+    const r = this.robot;
+    if (!r?.active) return;
+    this.tweens.killTweensOf(r);
+    // The camera cranes up and away as the robot recedes
+    this.tweens.killTweensOf(this.vistaCam);
+    this.tweens.add({ targets: this.vistaCam, y: -40, x: 30, duration: 6000, ease: 'Sine.easeInOut' });
+    const tx = ROBOT_POS.x + 70, ty = ROBOT_POS.y - 96;
+    this.tweens.add({
+      targets: r, x: tx, y: ty, scale: 0.35, duration: 4200, ease: 'Sine.easeIn',
+      onComplete: () => {
+        r.setVisible(false);
+        this.ion?.setVisible(false);
+        this.visor?.setVisible(false);
+        const star = this.add.image(tx, ty - 3, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.07).setDepth(20);
+        this.tweens.add({ targets: star, alpha: 0.25, duration: 600, hold: 300, yoyo: true, repeat: -1, repeatDelay: 1600, ease: 'Sine.easeInOut' });
+        // A faint pulse home every few seconds, forever
+        this.time.addEvent({ delay: 3200, loop: true, callback: () => { if (star.active) this.sendPulse(star.x, star.y, 0.12, 2600); } });
+        this.time.delayedCall(1400, () => { if (this.cardPending) this.mountEndCard(); });
+      },
+    });
   }
 
   private mountEndCard(): void {
+    this.cardPending = false;
+    if (this.card) return;
     const s = getReelStats();
     const stage = document.getElementById('game-stage') ?? document.body;
-    this.card?.remove();
     const card = document.createElement('section');
     card.className = this.reducedMotion ? 'finale-card finale-card--still' : 'finale-card';
     card.setAttribute('role', 'dialog');
@@ -1312,6 +1614,18 @@ export class EndingScene extends Phaser.Scene {
     this.backdrops.clear();
     this.activeBackdrop = null;
     this.robot = null;
+    this.ion = null;
+    this.visor = null;
+    this.vista = null;
+    this.vistaFront = null;
+    this.vistaTiles = [];
+    this.vistaBodies = [];
+    this.rocks = [];
+    this.earthGlow = null;
+    this.earthMark = null;
+    this.bars = [];
+    this.uplink = null;
+    this.cardPending = false;
     this.slide = null;
     this.deepStage = null;
     this.planets = null;
