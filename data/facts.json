@@ -21,7 +21,7 @@
     {
       "id": "lunar_laser_ranging",
       "text": "The Apollo laser retroreflectors left on the Moon require zero electrical power and continue reflecting laser pulses back to Earth observatories, proving the Moon recedes by 3.8 centimeters annually.",
-      "source_url": "https://science.nasa.gov/mission/apollo-11/",
+      "source_url": "https://www.nasa.gov/mission/apollo-11/",
       "trigger": "exploration_time_360s"
     },
     {

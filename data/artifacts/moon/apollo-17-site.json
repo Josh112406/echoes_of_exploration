@@ -12,7 +12,7 @@
       "label": "Challenger LM Descent Stage, Taurus-Littrow",
       "lat": 20.1908,
       "lon": 30.77168,
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html",
+      "source_url": "https://www.nasa.gov/mission/apollo-17/",
       "approximate": false
     }
   ],
@@ -23,7 +23,7 @@
   "facts": [
     {
       "text": "Harrison Schmitt, the Lunar Module Pilot on Apollo 17, was the first professional geologist on the Moon.",
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+      "source_url": "https://www.nasa.gov/mission/apollo-17/"
     },
     {
       "text": "The crew traveled over 35 kilometers in their rover and gathered 110 kg of soil and rock samples.",
@@ -38,7 +38,7 @@
     "alt": "Harrison Schmitt beside the flag at Taurus-Littrow, with the Lunar Module and Lunar Roving Vehicle in the background"
   },
   "sources": [
-    "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+    "https://www.nasa.gov/mission/apollo-17/"
   ],
   "written_by": "agent:content-author",
   "verified_by": "agent:source-verifier",

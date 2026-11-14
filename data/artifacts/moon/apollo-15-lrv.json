@@ -12,7 +12,7 @@
       "label": "Hadley-Apennine (near Falcon LM Descent Stage)",
       "lat": 26.13222,
       "lon": 3.63386,
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html",
+      "source_url": "https://www.nasa.gov/mission/apollo-15/",
       "approximate": true
     }
   ],
@@ -23,7 +23,7 @@
   "facts": [
     {
       "text": "The rover was parked about 160 meters from the Lunar Module so its camera could film liftoff.",
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+      "source_url": "https://www.nasa.gov/mission/apollo-15/"
     },
     {
       "text": "Its tires were made of woven zinc-coated piano wire with titanium chevrons for grip.",
@@ -38,7 +38,7 @@
     "alt": "Astronaut James Irwin works at the Lunar Roving Vehicle at Hadley-Apennine, with Mount Hadley behind"
   },
   "sources": [
-    "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+    "https://www.nasa.gov/mission/apollo-15/"
   ],
   "written_by": "agent:content-author",
   "verified_by": "agent:source-verifier",

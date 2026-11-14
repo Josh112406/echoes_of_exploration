@@ -152,6 +152,30 @@ for (const id of ids) {
   if (!/^NASA\b/.test(credit)) fail(id, `image credit "${credit}" is not NASA (RULES.md §3)`);
 }
 
+// Practice runs (CATALOG_PRACTICE in src/data/minigames.ts): only for catalog missions
+// that are not playable echoes, and each must run on a scene that knows its siteId
+const mappedMissions = new Set([...mapBlock.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((id) => !entries[id]));
+const practiceBlock = minigamesTs.slice(minigamesTs.indexOf('CATALOG_PRACTICE:'));
+const flybyTs = readFileSync(resolve(root, 'src/scenes/FlybyScene.ts'), 'utf8');
+let practiceCount = 0;
+for (const [, mid, scene, siteId] of practiceBlock.matchAll(/'?([a-z0-9-]+)'?:\s*\{\s*scene:\s*'(\w+)',\s*siteId:\s*'([^']+)'/g)) {
+  practiceCount++;
+  if (!missionIds.has(mid)) fail('practice', `unknown mission "${mid}"`);
+  if (mappedMissions.has(mid)) fail('practice', `"${mid}" is already a playable echo`);
+  const known = entries[siteId] || (scene === 'FlybyScene' && flybyTs.includes(`this.siteId === '${siteId}'`));
+  if (!known) fail('practice', `${mid}: ${scene} has no setup for siteId "${siteId}"`);
+}
+if (practiceCount < 9) fail('practice', `expected 9 practice runs, found ${practiceCount}`);
+
+// Field tasks (src/data/fieldTasks.ts) must point at real encounters, echoes and sources
+const fieldTs = readFileSync(resolve(root, 'src/data/fieldTasks.ts'), 'utf8');
+const encounterIds = new Set(encounters.map((e) => e.id));
+for (const [, enc] of fieldTs.matchAll(/encounterId:\s*'([^']+)'/g)) if (!encounterIds.has(enc)) fail('field task', `unknown encounter "${enc}"`);
+for (const [, ent] of fieldTs.matchAll(/entryId:\s*'([^']+)'/g)) if (!entries[ent]) fail('field task', `unknown echo "${ent}"`);
+for (const [, list] of fieldTs.matchAll(/sourceIds:\s*\[([^\]]*)\]/g)) {
+  for (const [, sid] of list.matchAll(/'([^']+)'/g)) if (!sourceIds.has(sid)) fail('field task', `unknown source "${sid}"`);
+}
+
 // Transition cinematic
 const cin = json('data/cinematics/transition-elsewhere.json');
 if (!Array.isArray(cin.events) || !cin.events.length) fail('transition-elsewhere', 'no events');

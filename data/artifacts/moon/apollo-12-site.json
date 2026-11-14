@@ -12,7 +12,7 @@
       "label": "Intrepid LM Descent Stage, Oceanus Procellarum",
       "lat": -3.01239,
       "lon": -23.42157,
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-12.html",
+      "source_url": "https://www.nasa.gov/mission/apollo-12/",
       "approximate": false
     }
   ],
@@ -23,7 +23,7 @@
   "facts": [
     {
       "text": "Astronauts walked over to the robotic Surveyor 3 lander and inspected parts exposed to vacuum for over two years.",
-      "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-12.html"
+      "source_url": "https://www.nasa.gov/mission/apollo-12/"
     },
     {
       "text": "Left a SNAP-27 radioisotope thermoelectric generator on the Moon that transmitted data until 1977.",
@@ -38,7 +38,7 @@
     "alt": "Astronaut Alan Bean works at the equipment stowage bay of the Apollo 12 Lunar Module"
   },
   "sources": [
-    "https://www.nasa.gov/mission_pages/apollo/apollo-12.html"
+    "https://www.nasa.gov/mission/apollo-12/"
   ],
   "written_by": "agent:content-author",
   "verified_by": "agent:source-verifier",

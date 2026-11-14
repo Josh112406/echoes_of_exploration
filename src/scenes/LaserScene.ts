@@ -9,7 +9,7 @@ import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import {
   MG_W as W, MG_H as H, Particles, Banner, drawSegBar, hudText, fitText, touchButton, exitButton,
-  showBriefing, completeMinigame, failMinigame, smoothNoise,
+  showBriefing, missionName, completeMinigame, failMinigame, smoothNoise,
 } from '../systems/MinigameKit.ts';
 
 /**
@@ -150,7 +150,7 @@ export class LaserScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(PALETTE.spaceBlack);
     this.buildViewport();
     new PostProcessing(this).createVignette(W, H, 95);
-    this.createHUD(entry?.name ?? this.siteId);
+    this.createHUD(missionName(this.siteId));
 
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT') as LaserScene['keys'];
@@ -164,7 +164,7 @@ export class LaserScene extends Phaser.Scene {
     });
 
     showBriefing(this, {
-      title: `${this.theme.title} // ${(entry?.name ?? this.siteId).toUpperCase()}`,
+      title: `${this.theme.title} // ${missionName(this.siteId).toUpperCase()}`,
       subtitle: this.theme.subtitle,
       lines: [
         '• [WASD / ARROWS / POINTER] STEER THE RETICLE   [SPACE / CLICK] PULSE',

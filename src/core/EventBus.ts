@@ -50,6 +50,10 @@ export const EVENTS = {
   NAVIGATE_TO_HUB: 'nav:hub',
   NAVIGATE_TO_SITE: 'nav:site',
   START_LANDING: 'landing:start',
+  /** Practice run of a catalog-only mission (no echo is recovered). Arg: missionId. */
+  START_PRACTICE: 'practice:start',
+  /** Interactive field task (Viking soil evidence, Voyager power budget). Args: taskId, onDone?. */
+  OPEN_FIELD_TASK: 'ui:fieldtask:open',
   LANDING_COMPLETE: 'landing:complete',
   LANDING_FAILED: 'landing:failed',
   

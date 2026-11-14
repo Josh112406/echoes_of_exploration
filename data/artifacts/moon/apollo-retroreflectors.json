@@ -12,7 +12,7 @@
       "label": "Apollo 11 LRRR, Mare Tranquillitatis",
       "lat": 0.67337,
       "lon": 23.47293,
-      "source_url": "https://science.nasa.gov/mission/apollo-11/",
+      "source_url": "https://www.nasa.gov/mission/apollo-11/",
       "approximate": false
     },
     {
@@ -20,7 +20,7 @@
       "label": "Apollo 14 LRRR, Fra Mauro",
       "lat": -3.64421,
       "lon": -17.4788,
-      "source_url": "https://science.nasa.gov/mission/apollo-14/",
+      "source_url": "https://www.nasa.gov/mission/apollo-14/",
       "approximate": false
     },
     {
@@ -28,7 +28,7 @@
       "label": "Apollo 15 LRRR, Hadley-Apennine",
       "lat": 26.13333,
       "lon": 3.62837,
-      "source_url": "https://science.nasa.gov/mission/apollo-15/",
+      "source_url": "https://www.nasa.gov/mission/apollo-15/",
       "approximate": false
     }
   ],

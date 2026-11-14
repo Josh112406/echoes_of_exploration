@@ -14,6 +14,7 @@
     "palette:check": "tsx tools/palette-lock.ts",
     "validate": "tsx tools/palette-lock.ts && tsx tools/validate-data.ts --strict",
     "validate:entries": "node tools/validate-entries.mjs",
+    "references": "tsx tools/build-references.ts",
     "validate:dev": "tsx tools/validate-data.ts --dev",
     "solve": "tsx tools/solve-levels.ts",
     "test": "vitest run",

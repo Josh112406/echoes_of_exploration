@@ -6,6 +6,13 @@ import { typeInto } from './Talk.ts';
 import { MOON_CHRONOLOGY, MARS_CHRONOLOGY, ELSEWHERE_CHRONOLOGY } from '../data/entries.ts';
 import { STORY, MOTIVE_IDS, getSiteStory, getAnswer, getTheory, getMotiveTally } from '../data/story.ts';
 import { MISSIONS, MISSION_CATALOG, MISSION_STATUS_LABEL, entryForMission, sourcesForMission, encounterForMission, Mission } from '../data/catalog.ts';
+import { CATALOG_PRACTICE } from '../data/minigames.ts';
+import { fieldTaskForEncounter } from '../data/fieldTasks.ts';
+
+interface OpenArchiveOptions {
+  tab?: 'archive' | 'catalog' | 'journal';
+  practice?: { name: string; result: 'complete' | 'failed' | 'exited' };
+}
 
 type ArchiveTab = 'archive' | 'catalog' | 'journal';
 
@@ -14,6 +21,8 @@ export class ArchiveModal {
   private filterWorld: string = 'all';
   private tab: ArchiveTab = 'archive';
   private featuredOnly = false;
+  /** One-shot note after returning from a practice run. */
+  private practiceNote: string | null = null;
   /** Chapter whose reply UNIT-7 should speak (type out) on the next journal render. */
   private speakReplyFor: string | null = null;
   private cancelTalk: () => void = () => {};
@@ -22,7 +31,14 @@ export class ArchiveModal {
     this.container = container;
     this.render();
 
-    EventBus.on(EVENTS.OPEN_ARCHIVE, () => {
+    EventBus.on(EVENTS.OPEN_ARCHIVE, (opts?: OpenArchiveOptions) => {
+      if (opts?.tab) this.tab = opts.tab;
+      if (opts?.practice) {
+        const { name, result } = opts.practice;
+        this.practiceNote = result === 'complete'
+          ? `PRACTICE RUN COMPLETE · ${name.toUpperCase()}. Practice runs do not recover echoes.`
+          : `PRACTICE RUN ENDED · ${name.toUpperCase()}. Try it again any time.`;
+      }
       this.container.classList.remove('hidden');
       this.render();
     });
@@ -131,6 +147,8 @@ export class ArchiveModal {
       .slice()
       .sort((a, b) => a.launch_date.localeCompare(b.launch_date));
     const cards = missions.map((m) => this.missionCardHtml(m)).join('');
+    const note = this.practiceNote;
+    this.practiceNote = null;
 
     this.container.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:14px; gap:8px; flex-wrap:wrap;">
@@ -145,7 +163,8 @@ export class ArchiveModal {
           <button id="btn-close-archive" class="btn">CLOSE [X]</button>
         </div>
       </div>
-      <p class="catalog-note">${MISSION_CATALOG.scope} Story hooks are dramatized and marked as such; every other line comes from the linked NASA sources.</p>
+      ${note ? `<p class="catalog-practice-note" role="status">${note}</p>` : ''}
+      <p class="catalog-note">${MISSION_CATALOG.scope} Story hooks are dramatized and marked as such; every other line comes from the linked NASA sources. Missions that are not playable echoes have a practice run.</p>
       <div class="card-grid">
         ${cards || `<p class="catalog-note">No missions match these filters.</p>`}
       </div>
@@ -171,13 +190,20 @@ export class ArchiveModal {
             ? `<button class="btn catalog-open" data-entry-id="${entryId}">OPEN RECORD</button>`
             : `<span class="catalog-muted">NOT YET RECOVERED</span>`}
         </div>`
-      : `<div class="catalog-play catalog-muted">CATALOG ONLY · NOT A PLAYABLE ECHO</div>`;
+      : CATALOG_PRACTICE[m.id]
+        ? `<div class="catalog-play">
+            <span class="catalog-muted">NOT A PLAYABLE ECHO</span>
+            <button class="btn btn--primary catalog-practice" data-mission-id="${m.id}">▶ PRACTICE RUN</button>
+          </div>`
+        : `<div class="catalog-play catalog-muted">CATALOG ONLY · NOT A PLAYABLE ECHO</div>`;
+    const task = encounter ? fieldTaskForEncounter(encounter.id) : undefined;
     const lesson = encounter
       ? `<div class="catalog-lesson">
           <div class="catalog-label">FIELD LESSON · ${encounter.title}</div>
           <p>${encounter.learning_intent}</p>
           <div class="catalog-label">HOW A GAME SIMPLIFIES IT</div>
           <p>${encounter.simplification_note}</p>
+          ${task ? `<button class="btn catalog-task" data-task-id="${task.id}">▶ TRY THE FIELD TASK</button>` : ''}
         </div>`
       : '';
     return `
@@ -315,6 +341,21 @@ export class ArchiveModal {
     this.container.querySelector<HTMLInputElement>('#chk-featured')?.addEventListener('change', (e) => {
       this.featuredOnly = (e.target as HTMLInputElement).checked;
       this.render();
+    });
+    this.container.querySelectorAll<HTMLElement>('.catalog-practice').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.container.classList.add('hidden');
+        EventBus.emit(EVENTS.START_PRACTICE, btn.dataset.missionId!);
+      });
+    });
+    this.container.querySelectorAll<HTMLElement>('.catalog-task').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.container.classList.add('hidden');
+        EventBus.emit(EVENTS.OPEN_FIELD_TASK, btn.dataset.taskId!, () => {
+          this.container.classList.remove('hidden');
+          this.render();
+        });
+      });
     });
     this.container.querySelectorAll<HTMLElement>('.catalog-open').forEach((btn) => {
       btn.addEventListener('click', () => {

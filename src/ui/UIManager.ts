@@ -5,6 +5,7 @@ import { EntryReaderModal } from './EntryReaderModal.ts';
 import { FailureAssistModal } from './FailureAssistModal.ts';
 import { SettingsModal } from './SettingsModal.ts';
 import { AboutModal } from './AboutModal.ts';
+import { FieldTaskModal } from './FieldTaskModal.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
@@ -18,6 +19,7 @@ export class UIManager {
     new FailureAssistModal(document.getElementById('failure-overlay')!);
     new SettingsModal(document.getElementById('settings-overlay')!);
     new AboutModal(document.getElementById('about-overlay')!);
+    new FieldTaskModal(document.getElementById('fieldtask-overlay')!);
 
     this.bindHeaderNav();
   }

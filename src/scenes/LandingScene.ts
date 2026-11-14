@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { CONSTANTS } from '../core/Constants.ts';
 import { GameState } from '../core/GameState.ts';
-import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { LevelConfig } from '../data/schema.ts';
 import { LandingPhysicsEngine, LandingState } from '../systems/LandingPhysics.ts';
 import { getLevelConfig, ALL_LEVELS } from '../data/levels.ts';
@@ -11,6 +10,8 @@ import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUDGauges, HUD_FONT } from '../ui/NineSliceHUD.ts';
 import { CIN_MARGIN, buildLandingTerrain } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
+import { completeMinigame, failMinigame, leaveMinigame, missionName } from '../systems/MinigameKit.ts';
+import { Practice } from '../systems/Practice.ts';
 
 interface Particle {
   x: number;
@@ -351,7 +352,7 @@ export class LandingScene extends Phaser.Scene {
     bg.fillRect(-158, 42, 316, 1);
     this.tutorialContainer.add(bg);
 
-    const title = this.add.text(0, -68, `PRE-FLIGHT AVIONICS // ${this.siteId.toUpperCase()}`, {
+    const title = this.add.text(0, -68, `${Practice.run ? 'PRACTICE RUN' : 'PRE-FLIGHT AVIONICS'} // ${missionName(this.siteId).toUpperCase()}`, {
       fontSize: '9px',
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
@@ -372,26 +373,41 @@ export class LandingScene extends Phaser.Scene {
       '• [A / D / ARROWS / STEER BTNS]: RCS JETS, TILT & DRIFT SIDEWAYS',
       `• SAFE VELOCITY: TOUCH DOWN AT VY ≤ ${phys.safeVerticalSpeed.toFixed(1)} m/s & VX ≤ ${phys.safeHorizontalSpeed.toFixed(1)} m/s`,
       '• WATCH FUEL: RESERVE BURNS RAPIDLY UNDER CONTINUOUS FIRING',
+      ...(Practice.run ? ['• PRACTICE RUN: NO ECHO IS RECOVERED. ' + Practice.run.note.toUpperCase()] : []),
     ];
-    lines.forEach((line, i) => {
-      this.tutorialContainer.add(this.add.text(-150, -30 + i * 17, line, {
+    let ly = -30;
+    lines.forEach((line) => {
+      const t = this.add.text(-150, ly, line, {
         fontSize: '7px',
         fontFamily: HUD_FONT,
-        color: PALETTE.lunarCrustCream,
-      }));
+        color: line.startsWith('• PRACTICE') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
+        wordWrap: { width: 300, useAdvancedWrap: true },
+      });
+      this.tutorialContainer.add(t);
+      ly += Math.max(17, t.height + 6);
     });
+    // A long practice note pushes the panel taller
+    const extra = Math.max(0, ly - 38);
+    if (extra > 0) {
+      bg.clear();
+      NineSliceHUD.drawFrame(bg, -170, -85, 340, 170 + extra, 'panel');
+      bg.fillStyle(PALETTE.atmosphericDuskHex, 1);
+      bg.fillRect(-158, -40, 316, 1);
+      bg.fillRect(-158, 42 + extra, 316, 1);
+      this.tutorialContainer.setY(this.tutorialContainer.y - extra / 2);
+    }
 
     const btnBg = this.add.graphics();
-    NineSliceHUD.drawFrame(btnBg, -110, 52, 220, 22, 'primary');
+    NineSliceHUD.drawFrame(btnBg, -110, 52 + extra, 220, 22, 'primary');
     this.tutorialContainer.add(btnBg);
-    this.tutorialContainer.add(this.add.text(0, 63, 'ENGAGE DESCENT ➔', {
+    this.tutorialContainer.add(this.add.text(0, 63 + extra, 'ENGAGE DESCENT ➔', {
       fontSize: '8px',
       fontFamily: HUD_FONT,
       color: PALETTE.spaceBlack,
       letterSpacing: 3,
     }).setOrigin(0.5));
 
-    const zone = this.add.zone(0, 63, 220, 22).setInteractive({ cursor: 'pointer' });
+    const zone = this.add.zone(0, 63 + extra, 220, 22).setInteractive({ cursor: 'pointer' });
     zone.on('pointerdown', () => {
       SoundFX.playClick();
       this.closeTutorial();
@@ -420,7 +436,8 @@ export class LandingScene extends Phaser.Scene {
     exitZone.on('pointerdown', () => {
       SoundFX.setThruster(false);
       SoundFX.playClick();
-      this.scene.start('SiteScene');
+      if (Practice.run) leaveMinigame(this, 'exited');
+      else this.scene.start('SiteScene');
     });
     const exitText = this.ui(this.add.text(W - 53, 21, 'SURFACE MAP', {
       fontSize: '7px',
@@ -748,12 +765,7 @@ export class LandingScene extends Phaser.Scene {
       this.cameras.main.shake(160, 0.004);
     }
 
-    GameState.unlockEntry(this.siteId, this.assisted, this.state.fuel, this.state.vy);
-    EventBus.emit(EVENTS.LANDING_COMPLETE, this.siteId);
-    this.time.delayedCall(900, () => {
-      this.scene.start('SiteScene', { siteId: this.siteId });
-      EventBus.emit(EVENTS.OPEN_ENTRY, this.siteId);
-    });
+    completeMinigame(this, this.siteId, this.assisted, this.state.fuel, this.state.vy, 900);
   }
 
   private onLandingCrash(): void {
@@ -791,9 +803,6 @@ export class LandingScene extends Phaser.Scene {
     this.thrusterFlame.clear();
     this.thrusterGlow.setVisible(false);
 
-    const fails = GameState.recordFailure(this.siteId);
-    this.time.delayedCall(1000, () => {
-      EventBus.emit(EVENTS.LANDING_FAILED, { siteId: this.siteId, attempts: fails });
-    });
+    failMinigame(this, this.siteId, 1000);
   }
 }

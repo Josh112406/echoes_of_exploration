@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { CONSTANTS } from '../core/Constants.ts';
-import { ALL_ENTRIES } from '../data/entries.ts';
 import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
@@ -11,7 +10,7 @@ import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import {
   MG_W as W, MG_H as H, Particles, Banner, drawSegBar, drawPips, hudText, fitText, touchButton, exitButton,
-  showBriefing, completeMinigame, failMinigame, smoothNoise,
+  showBriefing, missionName, completeMinigame, failMinigame, smoothNoise,
 } from '../systems/MinigameKit.ts';
 
 /**
@@ -95,7 +94,6 @@ export class RotorScene extends Phaser.Scene {
 
   create(): void {
     document.body.classList.add('in-game');
-    const entry = ALL_ENTRIES[this.siteId];
     this.reduced = GameState.getState().settings.reducedMotion;
     // Mars: thin air, barely enough lift
     this.tune = { g: 150, lift: 1.55, drag: 0.5, windBase: 8, windAmp: 34, spin: 1.1 };
@@ -142,12 +140,12 @@ export class RotorScene extends Phaser.Scene {
     this.craft = this.add.container(this.x, this.y, [this.rotorGfx, this.robot]).setDepth(20);
 
     new PostProcessing(this).createVignette(W, H, 95);
-    this.createHUD(entry?.name ?? this.siteId);
+    this.createHUD(missionName(this.siteId));
 
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SPACE') as RotorScene['keys'];
 
     showBriefing(this, {
-      title: `MARS HELICOPTER FLIGHT // ${(entry?.name ?? this.siteId).toUpperCase()}`,
+      title: `MARS HELICOPTER FLIGHT // ${missionName(this.siteId).toUpperCase()}`,
       subtitle: 'AIR ABOUT 1% AS DENSE AS EARTH · BARELY ENOUGH LIFT',
       lines: [
         '• [W / ↑ / SPACE] COLLECTIVE: SPIN UP THE ROTORS. RPM TAKES TIME TO BUILD',

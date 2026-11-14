@@ -5,6 +5,22 @@ import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { ALL_ENTRIES } from '../data/entries.ts';
+import { Practice } from './Practice.ts';
+import { fieldTaskForEntry } from '../data/fieldTasks.ts';
+
+/** The name a minigame shows: the echo's name, or the catalog mission's during a practice run. */
+export function missionName(siteId: string): string {
+  return Practice.run?.name ?? ALL_ENTRIES[siteId]?.name ?? siteId;
+}
+
+/** Leave a minigame: a practice run goes back to the Mission Catalog, a real one to the site. */
+export function leaveMinigame(scene: Phaser.Scene, practiceResult?: 'complete' | 'failed' | 'exited'): void {
+  const run = Practice.run;
+  Practice.end();
+  scene.scene.start('SiteScene');
+  if (run) EventBus.emit(EVENTS.OPEN_ARCHIVE, { tab: 'catalog', practice: { name: run.name, result: practiceResult ?? 'exited' } });
+}
 
 /**
  * Shared building blocks for the four skill minigames (Rover, Laser, Rotor,
@@ -186,7 +202,8 @@ export function exitButton(scene: Phaser.Scene, label: string, onExit: () => voi
     .setOrigin(0.5).setDepth(102).setScrollFactor(0);
   zone.on('pointerdown', () => {
     SoundFX.playClick();
-    onExit();
+    if (Practice.run) leaveMinigame(scene, 'exited');
+    else onExit();
   });
   zone.on('pointerover', () => txt.setColor(PALETTE.cyanLaser));
   zone.on('pointerout', () => txt.setColor(PALETTE.lunarHighlight));
@@ -229,21 +246,32 @@ export interface BriefingSpec {
 export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: () => void): void {
   const W = MG_W;
   const H = MG_H;
+  const run = Practice.run;
+  const lines = run
+    ? [...spec.lines, '• PRACTICE RUN: NO ECHO IS RECOVERED.', `• TRUE STORY: ${run.note.toUpperCase()}`]
+    : spec.lines;
   const c = scene.add.container(W / 2, H / 2).setDepth(150).setScrollFactor(0);
-  const hgt = 120 + spec.lines.length * 15;
+  // Lines are laid out by their wrapped height, so long notes never overlap
+  const texts = lines.map((line) => scene.add.text(-164, 0, line, {
+    fontFamily: HUD_FONT, fontSize: '7px', color: line.startsWith('• TRUE STORY') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
+    wordWrap: { width: 328, useAdvancedWrap: true },
+  }));
+  const body = texts.reduce((sum, t) => sum + Math.max(15, t.height + 5), 0);
+  const hgt = Math.min(H - 16, 105 + body);
   const top = -hgt / 2;
   const bg = scene.add.graphics();
   NineSliceHUD.drawFrame(bg, -180, top, 360, hgt, 'panel');
   bg.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(-168, top + 44, 336, 1);
   c.add(bg);
-  c.add(scene.add.text(0, top + 16, spec.title, { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3 }).setOrigin(0.5));
+  const title = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
+  c.add(fitText(scene.add.text(0, top + 16, title, { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3 }).setOrigin(0.5), 340));
   c.add(scene.add.text(0, top + 32, spec.subtitle, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.beaconGold, letterSpacing: 2 }).setOrigin(0.5));
-  spec.lines.forEach((line, i) => {
-    c.add(scene.add.text(-164, top + 54 + i * 15, line, {
-      fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarCrustCream,
-      wordWrap: { width: 328, useAdvancedWrap: true },
-    }));
-  });
+  let ly = top + 54;
+  for (const t of texts) {
+    t.setY(ly);
+    c.add(t);
+    ly += Math.max(15, t.height + 5);
+  }
   const by = top + hgt - 36;
   const btn = scene.add.graphics();
   NineSliceHUD.drawFrame(btn, -110, by, 220, 22, 'primary');
@@ -278,16 +306,29 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
 
 /** Unlock the echo, return to the site and open its briefing. */
 export function completeMinigame(scene: Phaser.Scene, siteId: string, assisted: boolean, scoreA: number | null, scoreB: number | null, delay = 1400): void {
+  if (Practice.run) {
+    scene.time.delayedCall(delay, () => leaveMinigame(scene, 'complete'));
+    return;
+  }
   GameState.unlockEntry(siteId, assisted, scoreA, scoreB);
   EventBus.emit(EVENTS.LANDING_COMPLETE, siteId);
   scene.time.delayedCall(delay, () => {
     scene.scene.start('SiteScene', { siteId });
-    EventBus.emit(EVENTS.OPEN_ENTRY, siteId);
+    // Some echoes have a field task (the encounter's evidence step) before their record opens
+    const task = fieldTaskForEntry(siteId);
+    if (task) EventBus.emit(EVENTS.OPEN_FIELD_TASK, task.id, () => EventBus.emit(EVENTS.OPEN_ENTRY, siteId));
+    else EventBus.emit(EVENTS.OPEN_ENTRY, siteId);
   });
 }
 
 /** Count the failure and open the retry / assist dialog. */
 export function failMinigame(scene: Phaser.Scene, siteId: string, delay = 1100): void {
+  if (Practice.run) {
+    // Practice: no failure count or assist offer; just run it again
+    const key = scene.scene.key;
+    scene.time.delayedCall(delay, () => scene.scene.start(key, { siteId, assisted: false }));
+    return;
+  }
   const fails = GameState.recordFailure(siteId);
   scene.time.delayedCall(delay, () => {
     EventBus.emit(EVENTS.LANDING_FAILED, { siteId, attempts: fails });

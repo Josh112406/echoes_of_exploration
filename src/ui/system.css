@@ -1086,3 +1086,88 @@ header.nav {
 @media (max-width: 480px) {
   .about-panel { padding: 14px; max-height: calc(100vh - 16px); }
 }
+
+/* Practice-run result note in the Mission Catalog */
+.catalog-practice-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-laser);
+  border: 1px solid var(--accent);
+  background: rgba(14, 195, 220, 0.08);
+  padding: 6px 10px;
+  margin: 0;
+}
+.catalog-task { margin-top: 8px; font-size: 10px; padding: 6px 10px; }
+.catalog-practice { font-size: 10px; padding: 6px 10px; }
+
+/* Field tasks (src/ui/FieldTaskModal.ts) */
+.ft-panel {
+  max-width: 760px;
+  width: calc(100% - 32px);
+  margin: auto;
+  padding: 20px 24px;
+  background: var(--g-main);
+  border: 1px solid var(--accent);
+  box-shadow: 0 12px 36px rgba(5, 7, 15, 0.95);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.ft-panel:focus { outline: none; }
+.ft-panel p { margin: 0 0 8px; }
+.ft-panel a { color: var(--accent-laser); }
+.ft-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.ft-head h2 { margin: 2px 0 0; font-size: 16px; letter-spacing: 0.06em; color: var(--ink); }
+.ft-kicker { font-size: 10px; color: var(--verified); letter-spacing: 0.06em; margin: 0 !important; }
+.ft-intro { color: var(--moon-dust); }
+.ft-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 10px 0; }
+.ft-card { background: var(--g-alt); border: 1px solid var(--g-card); padding: 10px; }
+.ft-card h3 { margin: 0 0 6px; font-size: 11px; color: var(--accent-laser); letter-spacing: 0.05em; }
+.ft-card p { font-size: 11px; }
+.ft-label { display: inline-block; font-size: 9px; color: var(--muted); letter-spacing: 0.08em; margin-right: 4px; }
+.ft-prompt { font-size: 12px; margin: 12px 0 8px; color: var(--ink); letter-spacing: 0.04em; }
+.ft-choices { display: flex; flex-direction: column; gap: 6px; }
+.ft-choice { text-align: left; justify-content: flex-start; white-space: normal; line-height: 1.4; width: 100%; }
+.ft-choice.is-right { border-color: #4ade80; background: rgba(74, 222, 128, 0.12); }
+.ft-choice.is-wrong { border-color: var(--thruster); background: rgba(230, 81, 0, 0.12); }
+.ft-choice:disabled { cursor: default; opacity: 0.75; transform: none; box-shadow: none; }
+.ft-choice.is-right:disabled { opacity: 1; }
+.ft-feedback { min-height: 1.2em; margin-top: 8px !important; }
+.ft-feedback.is-right { color: #4ade80; }
+.ft-feedback.is-wrong { color: #ff8a50; }
+.ft-epilogue { border-left: 2px solid var(--verified); padding-left: 10px; color: var(--moon-dust); }
+.ft-era { background: var(--g-alt); border: 1px solid var(--g-card); padding: 8px 10px; margin: 8px 0; }
+.ft-era strong { color: var(--accent-laser); letter-spacing: 0.05em; }
+.ft-era p { margin: 4px 0 0; }
+.ft-meter { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; margin: 8px 0; }
+.ft-cell { width: 18px; height: 12px; border: 1px solid var(--accent); background: transparent; }
+.ft-cell.is-used { background: var(--accent); }
+.ft-cell.is-over { background: var(--thruster); border-color: var(--thruster); }
+.ft-meter-label { margin-left: 8px; font-size: 11px; color: var(--muted); }
+.ft-items { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.ft-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: start;
+  padding: 6px 8px;
+  border: 1px solid var(--g-card);
+  background: var(--g-alt);
+  cursor: pointer;
+}
+.ft-item input { grid-row: span 2; margin-top: 2px; accent-color: var(--accent); width: 16px; height: 16px; }
+.ft-item.is-locked { cursor: default; opacity: 0.85; }
+.ft-item-name { font-size: 11px; letter-spacing: 0.04em; }
+.ft-item-name em { font-style: normal; color: var(--verified); margin-left: 6px; font-size: 10px; }
+.ft-item-what { font-size: 10px; color: var(--muted); }
+.ft-panel .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.ft-sources { margin-top: 12px !important; font-size: 10px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+@media (max-width: 480px) {
+  .ft-panel { padding: 14px; width: calc(100% - 16px); max-height: calc(100vh - 16px); }
+  .ft-head h2 { font-size: 14px; }
+  .ft-cards { grid-template-columns: 1fr; }
+}

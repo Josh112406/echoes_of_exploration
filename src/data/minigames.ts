@@ -84,6 +84,57 @@ export const SITE_MINIGAMES: Record<string, MinigameSceneKey> = {
   'new-horizons': 'FlybyScene',
 };
 
+/**
+ * Practice runs for catalog missions that are not playable echoes. Each borrows
+ * the minigame that best matches what the real mission did; `siteId` picks the
+ * scene's terrain / theme. A practice run never recovers an echo.
+ */
+export interface CatalogPractice {
+  scene: MinigameSceneKey;
+  siteId: string;
+  /** What the real mission did, and how the minigame simplifies it. */
+  note: string;
+}
+
+export const CATALOG_PRACTICE: Record<string, CatalogPractice> = {
+  'ranger-7-9': {
+    scene: 'FlybyScene', siteId: 'ranger-7-9',
+    note: 'Rangers 7, 8 and 9 sent back TV pictures right up until they hit the Moon on purpose. Here you only frame the targets on the way in.',
+  },
+  'lunar-orbiter-program': {
+    scene: 'FlybyScene', siteId: 'lunar-orbiter-program',
+    note: 'Five Lunar Orbiters photographed nearly all of the Moon from orbit to scout Apollo landing sites. Here one pass stands in for months of mapping.',
+  },
+  'surveyor-1': {
+    scene: 'LandingScene', siteId: 'surveyor-3',
+    note: 'Surveyor 1 landed itself automatically. Here you fly the descent by hand on the Surveyor 3 course; both landed in Oceanus Procellarum.',
+  },
+  'apollo-16-surface': {
+    scene: 'RoverScene', siteId: 'apollo-17-site',
+    note: 'Apollo 16 astronauts drove a Lunar Roving Vehicle across the Descartes Highlands. The course here is simplified game terrain.',
+  },
+  'pioneer-10': {
+    scene: 'FlybyScene', siteId: 'pioneer-10',
+    note: 'Pioneer 10 made the first close pass of Jupiter in 1973. Its real camera scanned the planet line by line as the spacecraft spun.',
+  },
+  'pioneer-11': {
+    scene: 'FlybyScene', siteId: 'pioneer-11',
+    note: "Pioneer 11 passed Jupiter's polar regions in 1974, then became the first spacecraft to fly past Saturn in 1979.",
+  },
+  'voyager-2': {
+    scene: 'FlybyScene', siteId: 'voyager-2',
+    note: 'Voyager 2 is still the only spacecraft to have flown past Uranus (1986) and Neptune (1989).',
+  },
+  dawn: {
+    scene: 'FlybyScene', siteId: 'dawn',
+    note: 'Dawn orbited the asteroid Vesta and then the dwarf planet Ceres, where it is still in orbit, now silent. One pass stands in for years of orbits.',
+  },
+  kepler: {
+    scene: 'LaserScene', siteId: 'voyager-1',
+    note: "Kepler watched about 150,000 stars for the tiny dips of passing planets, and sent its data home over NASA's Deep Space Network. Here you hold that radio link.",
+  },
+};
+
 export function getMinigameKeyForSite(siteId: string): MinigameSceneKey {
   return SITE_MINIGAMES[siteId] ?? 'LandingScene';
 }

@@ -3,19 +3,7 @@ import { PALETTE } from './theme.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { MISSIONS, SOURCES } from '../data/catalog.ts';
 import { sourceHost } from '../data/story.ts';
-
-/** Third-party software shipped in the build (versions pinned in package.json). */
-const SOFTWARE: [name: string, licence: string, url: string][] = [
-  ['Phaser 3.90', 'MIT', 'https://github.com/phaserjs/phaser'],
-  ['Zod 3.24', 'MIT', 'https://github.com/colinhacks/zod'],
-  ['Vite 6.1 (build tool)', 'MIT', 'https://github.com/vitejs/vite'],
-  ['TypeScript 5.7 (build tool)', 'Apache-2.0', 'https://github.com/microsoft/TypeScript'],
-];
-
-const MAPS: [name: string, credit: string, url: string][] = [
-  ['Moon map: LRO WAC global mosaic', 'NASA/GSFC/Arizona State University, via NASA Moon Trek', 'https://trek.nasa.gov/moon/'],
-  ['Mars map: MGS MOLA color shaded relief', 'NASA/JPL/GSFC, via NASA Mars Trek', 'https://trek.nasa.gov/mars/'],
-];
+import { SOFTWARE, MAPS, FONT_CREDIT, ART_CREDIT, AUDIO_CREDIT, AI_DISCLOSURE, MEDIA_GUIDELINES_URL } from '../data/credits.ts';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const link = (url: string, label: string) => `<a href="${esc(url)}" target="_blank" rel="noreferrer">${esc(label)} ↗</a>`;
@@ -68,12 +56,12 @@ export class AboutModal {
 
           <section>
             ${h('NOT A NASA PRODUCT', PALETTE.beaconGold)}
-            <p>This is a student team project for the NASA International Space Apps Challenge 2026. It is not made, sponsored or endorsed by NASA. NASA imagery is used following the ${link('https://www.nasa.gov/nasa-brand-center/images-and-media/', 'NASA Images and Media Usage Guidelines')}; the NASA insignia is not used. NASA does not endorse any non-U.S. Government entity and is not responsible for information on non-U.S. Government websites linked here.</p>
+            <p>This is a student team project for the NASA International Space Apps Challenge 2026. It is not made, sponsored or endorsed by NASA. NASA imagery is used following the ${link(MEDIA_GUIDELINES_URL, 'NASA Images and Media Usage Guidelines')}; the NASA insignia is not used. NASA does not endorse any non-U.S. Government entity and is not responsible for information on non-U.S. Government websites linked here.</p>
           </section>
 
           <section>
             ${h('AI ASSISTANCE DISCLOSURE', PALETTE.beaconGold)}
-            <p>Parts of the code, the procedural pixel art and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic). A team member reviewed the generated code, and every fact was checked by a person against the linked NASA sources. Illustrations made this way are labelled as illustrations, never presented as NASA photographs.</p>
+            <p>${esc(AI_DISCLOSURE)}</p>
           </section>
 
           <section>
@@ -99,9 +87,9 @@ export class AboutModal {
               <summary>Maps, fonts, audio and software</summary>
               ${list([
                 ...MAPS.map(([n, c, u]) => `${esc(n)} · ${esc(c)} · ${link(u, 'source')}`),
-                'Elsewhere map, planets, sprites and backgrounds: original team pixel art, made procedurally in code (CC0).',
-                `Font: Silkscreen, © 2001 The Silkscreen Project Authors, SIL Open Font License 1.1 · ${link('assets/fonts/OFL.txt', 'licence')} · ${link('https://github.com/googlefonts/silkscreen', 'source')}`,
-                'Music and sound effects: original, synthesized live in the browser with the Web Audio API. No recorded or licensed audio.',
+                esc(ART_CREDIT),
+                `${esc(FONT_CREDIT.text)} · ${link(FONT_CREDIT.licencePath.replace(/^public\//, ''), 'licence')} · ${link(FONT_CREDIT.sourceUrl, 'source')}`,
+                esc(AUDIO_CREDIT),
                 ...SOFTWARE.map(([n, l, u]) => `${esc(n)} · ${l} licence · ${link(u, 'source')}`),
               ])}
             </details>

@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { CONSTANTS } from '../core/Constants.ts';
-import { ALL_ENTRIES } from '../data/entries.ts';
 import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
@@ -12,7 +11,7 @@ import { buildRingedPlanet } from '../systems/TitleArt.ts';
 import { buildBandedGiant, buildSmallMoon, buildHazeMoon } from '../systems/SpaceArt.ts';
 import {
   MG_W as W, MG_H as H, Particles, Banner, drawSegBar, hudText, fitText, touchButton, exitButton,
-  showBriefing, completeMinigame, failMinigame,
+  showBriefing, missionName, completeMinigame, failMinigame,
 } from '../systems/MinigameKit.ts';
 
 /**
@@ -40,7 +39,7 @@ interface Debris { x: number; y: number; vx: number; vy: number; size: number; h
 interface Star { x: number; y: number; z: number }
 
 interface BodyTheme {
-  kind: 'europa' | 'comet' | 'pluto' | 'eros' | 'enceladus';
+  kind: 'europa' | 'comet' | 'pluto' | 'eros' | 'enceladus' | 'luna' | 'giant' | 'ceres';
   /** Target that is a separate moon orbiting in view rather than a surface feature. */
   moonTarget?: string;
   /** Index of the target that vents a plume while it faces the camera. */
@@ -53,9 +52,21 @@ interface BodyTheme {
   oblate: number;
   /** A line in the briefing for what the real mission did beyond this flyby. */
   realNote?: string;
+  /** Storm spots on a banded giant: [lat°, lon°, radius (rad), map code]. */
+  spots?: [number, number, number, number][];
+  /** Band frequency for a banded giant. */
+  bands?: number;
+  /** Atmosphere glow tint behind the limb. */
+  limb?: number;
 }
 
 const D = Math.PI / 180;
+
+/** Approximate lunar maria for the Moon map: [lat°, lon°E, angular radius (rad)]. */
+const LUNAR_MARIA: [number, number, number][] = [
+  [33, 342, 0.28], [28, 17, 0.17], [8.5, 31, 0.2], [17, 59, 0.11], [-8, 51, 0.15],
+  [-21, 343, 0.15], [-10, 337, 0.09], [18, 303, 0.35], [56, 1, 0.1],
+];
 
 export class FlybyScene extends Phaser.Scene {
   private siteId = 'new-horizons';
@@ -126,7 +137,6 @@ export class FlybyScene extends Phaser.Scene {
 
   create(): void {
     document.body.classList.add('in-game');
-    const entry = ALL_ENTRIES[this.siteId];
     this.reduced = GameState.getState().settings.reducedMotion;
     this.theme = this.pickTheme();
     Soundscape.set({ music: 'landing', ambience: 'space', ambienceLevel: 0.55, fade: 1.4 });
@@ -153,7 +163,7 @@ export class FlybyScene extends Phaser.Scene {
     if (this.textures.exists(key)) this.textures.remove(key);
     this.bodyTex = this.textures.createCanvas(key, R * 2 + 2, R * 2 + 2)!;
     this.limb = this.add.image(0, 0, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setDepth(2).setAlpha(0.18)
-      .setTint(this.theme.kind === 'pluto' ? PALETTE.marsHazePeachHex : this.theme.kind === 'comet' || this.theme.kind === 'enceladus' ? PALETTE.cyanGlowHex : PALETTE.lunarCrustCreamHex);
+      .setTint(this.theme.limb ?? (this.theme.kind === 'pluto' ? PALETTE.marsHazePeachHex : this.theme.kind === 'comet' || this.theme.kind === 'enceladus' ? PALETTE.cyanGlowHex : PALETTE.lunarCrustCreamHex));
     this.body = this.add.image(0, 0, key).setDepth(3);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { if (this.textures.exists(key)) this.textures.remove(key); });
     this.plume = new Particles(this, 4, 320);
@@ -164,7 +174,7 @@ export class FlybyScene extends Phaser.Scene {
     this.placeBody();
 
     new PostProcessing(this).createVignette(W, H, 95);
-    this.createHUD(entry?.name ?? this.siteId);
+    this.createHUD(missionName(this.siteId));
 
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT,E') as FlybyScene['keys'];
@@ -177,7 +187,7 @@ export class FlybyScene extends Phaser.Scene {
     });
 
     showBriefing(this, {
-      title: `${this.theme.title} // ${(entry?.name ?? this.siteId).toUpperCase()}`,
+      title: `${this.theme.title} // ${missionName(this.siteId).toUpperCase()}`,
       subtitle: this.theme.subtitle,
       lines: [
         '• [WASD / ARROWS / POINTER] SLEW THE CAMERA   [SPACE / CLICK] SHUTTER',
@@ -224,6 +234,55 @@ export class FlybyScene extends Phaser.Scene {
         targets: [['TIGER STRIPES', -50, 120], ['SOUTH POLAR PLUMES', -58, 250], ['TITAN', 0, 0]],
         debris: 'E-RING ICE', plumeTarget: 1, moonTarget: 'TITAN',
         realNote: "CASSINI'S HUYGENS PROBE PARACHUTED TO TITAN'S SURFACE IN 2005",
+      };
+    }
+    const grey = [PALETTE.deepIndigoHex, PALETTE.lunarBasaltDarkHex, PALETTE.lunarRegolithDeepHex, PALETTE.lunarRegolithMidHex, PALETTE.lunarDustLightHex];
+    const jupiter = [PALETTE.deepIndigoHex, PALETTE.marsShadowUmberHex, PALETTE.marsDustTanHex, PALETTE.marsHazePeachHex, PALETTE.lunarCrustCreamHex];
+    if (this.siteId === 'ranger-7-9') {
+      return {
+        kind: 'luna', title: 'LUNAR IMPACT APPROACH', subtitle: 'RANGER · PICTURES ALL THE WAY DOWN', oblate: 1, ramp: grey,
+        // Impact sites of Rangers 7, 8 and 9
+        targets: [['MARE COGNITUM', -10.35, 339.42], ['MARE TRANQUILLITATIS', 2.64, 24.79], ['ALPHONSUS CRATER', -12.83, 357.61]],
+        debris: 'MICROMETEOROID DUST',
+      };
+    }
+    if (this.siteId === 'lunar-orbiter-program') {
+      return {
+        kind: 'luna', title: 'LUNAR ORBITAL MAPPING', subtitle: 'LUNAR ORBITER · SCOUTING APOLLO LANDING SITES', oblate: 1, ramp: grey,
+        targets: [['TRANQUILLITY LANDING SITE', 0.67, 23.47], ['COPERNICUS CRATER', 9.62, 339.92], ['ORIENTALE BASIN', -19.4, 267.2]],
+        debris: 'MICROMETEOROID DUST',
+      };
+    }
+    if (this.siteId === 'pioneer-10') {
+      return {
+        kind: 'giant', title: 'JUPITER FLYBY', subtitle: 'PIONEER 10 · FIRST SPACECRAFT TO PASS JUPITER', oblate: 0.93, ramp: jupiter, bands: 9,
+        spots: [[-22, 60, 0.17, 11]],
+        targets: [['GREAT RED SPOT', -22, 60], ['NORTH EQUATORIAL BELT', 12, 200], ['SOUTH TEMPERATE ZONE', -35, 300]],
+        debris: 'RADIATION GLITCHES',
+      };
+    }
+    if (this.siteId === 'pioneer-11') {
+      return {
+        kind: 'giant', title: 'JUPITER POLAR PASS', subtitle: "PIONEER 11 · THE FIRST LOOK AT JUPITER'S POLES", oblate: 0.93, ramp: jupiter, bands: 9,
+        spots: [[-22, 60, 0.17, 11]],
+        targets: [['NORTH POLAR REGION', 62, 120], ['GREAT RED SPOT', -22, 60], ['SOUTH POLAR REGION', -60, 260]],
+        debris: 'RADIATION GLITCHES',
+      };
+    }
+    if (this.siteId === 'voyager-2') {
+      return {
+        kind: 'giant', title: 'NEPTUNE FLYBY', subtitle: 'VOYAGER 2 · THE ONLY VISIT TO NEPTUNE', oblate: 0.98, bands: 5,
+        ramp: [PALETTE.deepIndigoHex, PALETTE.cyanShadowHex, PALETTE.cyanDeepHex, PALETTE.cyanGlowHex, PALETTE.cyanLaserHex],
+        spots: [[-20, 120, 0.15, 0], [-42, 240, 0.05, 12]],
+        targets: [['GREAT DARK SPOT', -20, 120], ['SCOOTER CLOUD', -42, 240], ['TRITON', 0, 0]],
+        debris: 'RING DUST', moonTarget: 'TRITON', limb: PALETTE.cyanGlowHex,
+      };
+    }
+    if (this.siteId === 'dawn') {
+      return {
+        kind: 'ceres', title: 'DWARF PLANET ORBIT', subtitle: 'DAWN · THE BRIGHT SPOTS OF CERES', oblate: 0.93, ramp: grey,
+        targets: [['OCCATOR BRIGHT SPOTS', 19.8, 239.3], ['AHUNA MONS', -10.5, 316.2], ['KERWAN BASIN', -10.8, 124]],
+        debris: 'REGOLITH DUST',
       };
     }
     return {
@@ -278,6 +337,32 @@ export class FlybyScene extends Phaser.Scene {
           v = n < 0.3 ? 2 : 3;
           if (lat > 0.2 && hash(i, j, 9) > 0.94) v = 1; // old cratered north
           if (lat < -45 * D && Math.abs(Math.sin(lon * 2 + lat * 10)) < 0.09) v = 15; // tiger stripes
+        } else if (kind === 'luna') {
+          v = n < 0.45 ? 2 : 3;
+          if (hash(i, j, 13) > 0.965) v = 4; // small bright crater rims
+          // Dark maria (lat°, lon°E, radius)
+          for (const [mla, mlo, mr] of LUNAR_MARIA) if (near(lat, lon, mla * D, mlo * D) < mr + (n - 0.5) * 0.12) v = 1;
+          const cop = near(lat, lon, 9.62 * D, 339.92 * D);
+          if (cop < 0.05) v = 2; else if (cop < 0.075) v = 4; // Copernicus
+          const ori = near(lat, lon, -19.4 * D, 267.2 * D);
+          if (ori < 0.1) v = 1; else if (Math.abs(ori - 0.22) < 0.025) v = 4; // Orientale rings
+        } else if (kind === 'giant') {
+          const k = this.theme.bands ?? 8;
+          const band = Math.sin(lat * k + Math.sin(lon * 2 + lat * 6) * 0.18 + (n - 0.5) * 0.5);
+          v = band > 0.55 ? 4 : band > 0.1 ? 3 : band > -0.4 ? 2 : 1;
+          for (const [sla, slo, sr, code] of this.theme.spots ?? []) {
+            const d = near(lat, lon, sla * D, slo * D);
+            if (d < sr) v = code;
+            else if (d < sr * 1.35 && code >= 10) v = 4; // pale collar
+          }
+        } else if (kind === 'ceres') {
+          v = n < 0.4 ? 1 : n < 0.75 ? 2 : 3;
+          if (hash(i, j, 17) > 0.955) v = hash(i, j, 18) > 0.5 ? 4 : 1; // small craters
+          const ker = near(lat, lon, -10.8 * D, 124 * D);
+          if (ker < 0.28) v = 2; else if (ker < 0.32) v = 4; // Kerwan basin
+          const occ = near(lat, lon, 19.8 * D, 239.3 * D);
+          if (occ < 0.025) v = 12; else if (occ < 0.1) v = 1; else if (occ < 0.12) v = 4; // Occator + bright faculae
+          if (near(lat, lon, -10.5 * D, 316.2 * D) < 0.04) v = 4; // Ahuna Mons
         } else {
           v = n < 0.4 ? 2 : 3;
           if (Math.abs(lat) > 1.1) v = 4;
@@ -371,6 +456,8 @@ export class FlybyScene extends Phaser.Scene {
       this.moonObj = this.add.image(0, 0, tex('flyby_titan', () => buildHazeMoon(30, 19))).setFlipX(true).setDepth(3);
     } else if (kind === 'pluto') {
       this.moonObj = this.add.image(0, 0, tex('flyby_charon', () => buildSmallMoon(40, 31, false))).setFlipX(true).setDepth(3);
+    } else if (this.theme.moonTarget === 'TRITON') {
+      this.moonObj = this.add.image(0, 0, tex('flyby_triton', () => buildSmallMoon(30, 41, true))).setFlipX(true).setDepth(3);
     }
   }
 

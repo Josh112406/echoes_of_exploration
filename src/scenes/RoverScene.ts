@@ -11,7 +11,7 @@ import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import {
   MG_W as W, MG_H as H, Particles, Banner, drawSegBar, drawPips, hudText, fitText, touchButton, exitButton,
-  showBriefing, completeMinigame, failMinigame,
+  showBriefing, missionName, completeMinigame, failMinigame,
 } from '../systems/MinigameKit.ts';
 
 /**
@@ -145,7 +145,7 @@ export class RoverScene extends Phaser.Scene {
     this.robot = this.add.image(0, 0, 'robot_idle').setOrigin(0.5, 21 / 24).setDepth(21);
 
     new PostProcessing(this).createVignette(W, H, 95);
-    this.createHUD(entry?.name ?? this.siteId);
+    this.createHUD(missionName(this.siteId));
 
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,LEFT,RIGHT') as RoverScene['keys'];
@@ -156,7 +156,7 @@ export class RoverScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.DESTROY, stop);
 
     showBriefing(this, {
-      title: `SURFACE TRAVERSE // ${(entry?.name ?? this.siteId).toUpperCase()}`,
+      title: `SURFACE TRAVERSE // ${missionName(this.siteId).toUpperCase()}`,
       subtitle: `GRAVITY ${this.world === 'mars' ? '3.71' : '1.62'} M/S² · ${this.required} CORES · ${this.maxHull} HULL`,
       lines: [
         '• [D / →] DRIVE   [A / ←] BRAKE & REVERSE',

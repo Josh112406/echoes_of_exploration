@@ -6,6 +6,7 @@ import { GameState } from './core/GameState.ts';
 import { SoundFX } from './audio/SoundEffects.ts';
 import { Soundscape } from './audio/Soundscape.ts';
 import { getMinigameKeyForSite } from './data/minigames.ts';
+import { Practice } from './systems/Practice.ts';
 
 // Music, ambience and effects: unlocks on the first click or key press
 Soundscape.install();
@@ -26,6 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('failure-overlay')?.classList.add('hidden');
     document.getElementById('settings-overlay')?.classList.add('hidden');
     document.getElementById('about-overlay')?.classList.add('hidden');
+    document.getElementById('fieldtask-overlay')?.classList.add('hidden');
   };
 
   const setTopBarVisible = (visible: boolean) => {
@@ -90,11 +92,23 @@ window.addEventListener('DOMContentLoaded', () => {
   // 4. Start Site Minigame (Landing / Rover / Laser / Rotor / Flyby)
   EventBus.on(EVENTS.START_LANDING, (siteId: string, assisted?: boolean) => {
     if (!GameState.isSiteActive(siteId)) return; // chronological order
+    Practice.end(); // a real run is never a practice run
     hideAllOverlays();
     setTopBarVisible(false);
     stopActivePlayScenes();
     const sceneKey = getMinigameKeyForSite(siteId);
     game.scene.start(sceneKey, { siteId, assisted });
+  });
+
+  // 4b. Practice run of a catalog-only mission (from the Mission Catalog; recovers nothing)
+  EventBus.on(EVENTS.START_PRACTICE, (missionId: string) => {
+    const run = Practice.prepare(missionId);
+    if (!run) return;
+    Practice.begin(run);
+    hideAllOverlays();
+    setTopBarVisible(false);
+    stopActivePlayScenes();
+    game.scene.start(run.scene, { siteId: run.siteId, assisted: false });
   });
 
   // 5. Interplanetary Transition (Moon -> Mars / Elsewhere)
@@ -132,6 +146,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Dialogs are closed through their own buttons so their normal close logic runs.
   const ESCAPE_DIALOGS: ReadonlyArray<[overlayId: string, closeSelector: string]> = [
     ['about-overlay', '#btn-close-about'],
+    ['fieldtask-overlay', '#btn-close-fieldtask'],
     ['settings-overlay', '#btn-close-settings'],
     ['failure-overlay', '#btn-back-to-site'],
     ['entry-overlay', '#btn-close-entry'],

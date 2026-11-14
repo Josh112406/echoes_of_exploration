@@ -28,7 +28,7 @@
       },
       {
         "text": "Laser pulses from Earth are still reflected off mirror prisms placed at the site.",
-        "source_url": "https://science.nasa.gov/mission/apollo-11/"
+        "source_url": "https://www.nasa.gov/mission/apollo-11/"
       }
     ],
     "image": {
@@ -68,7 +68,7 @@
         "label": "Intrepid LM Descent Stage, Oceanus Procellarum",
         "lat": -3.01239,
         "lon": -23.42157,
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-12.html",
+        "source_url": "https://www.nasa.gov/mission/apollo-12/",
         "approximate": false
       }
     ],
@@ -79,7 +79,7 @@
     "facts": [
       {
         "text": "Astronauts walked over to the robotic Surveyor 3 lander and inspected parts exposed to vacuum for over two years.",
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-12.html"
+        "source_url": "https://www.nasa.gov/mission/apollo-12/"
       },
       {
         "text": "Left a SNAP-27 radioisotope thermoelectric generator on the Moon that transmitted data until 1977.",
@@ -94,7 +94,7 @@
       "alt": "Astronaut Alan Bean works at the equipment stowage bay of the Apollo 12 Lunar Module"
     },
     "sources": [
-      "https://www.nasa.gov/mission_pages/apollo/apollo-12.html"
+      "https://www.nasa.gov/mission/apollo-12/"
     ],
     "written_by": "agent:content-author",
     "verified_by": "agent:source-verifier",
@@ -123,7 +123,7 @@
         "label": "Hadley-Apennine (near Falcon LM Descent Stage)",
         "lat": 26.13222,
         "lon": 3.63386,
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html",
+        "source_url": "https://www.nasa.gov/mission/apollo-15/",
         "approximate": true
       }
     ],
@@ -134,7 +134,7 @@
     "facts": [
       {
         "text": "The rover was parked about 160 meters from the Lunar Module so its camera could film liftoff.",
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+        "source_url": "https://www.nasa.gov/mission/apollo-15/"
       },
       {
         "text": "Its tires were made of woven zinc-coated piano wire with titanium chevrons for grip.",
@@ -149,7 +149,7 @@
       "alt": "Astronaut James Irwin works at the Lunar Roving Vehicle at Hadley-Apennine, with Mount Hadley behind"
     },
     "sources": [
-      "https://www.nasa.gov/mission_pages/apollo/apollo-15.html"
+      "https://www.nasa.gov/mission/apollo-15/"
     ],
     "written_by": "agent:content-author",
     "verified_by": "agent:source-verifier",
@@ -178,7 +178,7 @@
         "label": "Challenger LM Descent Stage, Taurus-Littrow",
         "lat": 20.1908,
         "lon": 30.77168,
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html",
+        "source_url": "https://www.nasa.gov/mission/apollo-17/",
         "approximate": false
       }
     ],
@@ -189,7 +189,7 @@
     "facts": [
       {
         "text": "Harrison Schmitt, the Lunar Module Pilot on Apollo 17, was the first professional geologist on the Moon.",
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+        "source_url": "https://www.nasa.gov/mission/apollo-17/"
       },
       {
         "text": "The crew traveled over 35 kilometers in their rover and gathered 110 kg of soil and rock samples.",
@@ -204,7 +204,7 @@
       "alt": "Harrison Schmitt beside the flag at Taurus-Littrow, with the Lunar Module and Lunar Roving Vehicle in the background"
     },
     "sources": [
-      "https://www.nasa.gov/mission_pages/apollo/apollo-17.html"
+      "https://www.nasa.gov/mission/apollo-17/"
     ],
     "written_by": "agent:content-author",
     "verified_by": "agent:source-verifier",
@@ -233,7 +233,7 @@
         "label": "Apollo 11 LRRR, Mare Tranquillitatis",
         "lat": 0.67337,
         "lon": 23.47293,
-        "source_url": "https://science.nasa.gov/mission/apollo-11/",
+        "source_url": "https://www.nasa.gov/mission/apollo-11/",
         "approximate": false
       },
       {
@@ -241,7 +241,7 @@
         "label": "Apollo 14 LRRR, Fra Mauro",
         "lat": -3.64421,
         "lon": -17.4788,
-        "source_url": "https://science.nasa.gov/mission/apollo-14/",
+        "source_url": "https://www.nasa.gov/mission/apollo-14/",
         "approximate": false
       },
       {
@@ -249,7 +249,7 @@
         "label": "Apollo 15 LRRR, Hadley-Apennine",
         "lat": 26.13333,
         "lon": 3.62837,
-        "source_url": "https://science.nasa.gov/mission/apollo-15/",
+        "source_url": "https://www.nasa.gov/mission/apollo-15/",
         "approximate": false
       }
     ],
@@ -425,7 +425,7 @@
     "facts": [
       {
         "text": "Apollo 12 landed within walking distance in 1969 and brought Surveyor 3 camera parts home to Earth.",
-        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-12.html"
+        "source_url": "https://www.nasa.gov/mission/apollo-12/"
       },
       {
         "text": "Returned 6,315 television images during its first lunar day of surface operation.",
@@ -649,7 +649,7 @@
       },
       {
         "text": "Carried two microprobes designed to penetrate the surface soil upon high-speed impact.",
-        "source_url": "https://science.nasa.gov/mission/mars-polar-lander/"
+        "source_url": "https://science.nasa.gov/mission/mars-polar-lander-deep-space-2/"
       }
     ],
     "image": {
@@ -1003,7 +1003,7 @@
       },
       {
         "text": "Radio signals between Earth and Voyager 1 take more than 22 hours to travel each way at the speed of light.",
-        "source_url": "https://voyager.jpl.nasa.gov/mission/status/"
+        "source_url": "https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/"
       }
     ],
     "image": {
@@ -1015,7 +1015,7 @@
     },
     "sources": [
       "https://science.nasa.gov/mission/voyager/voyager-1/",
-      "https://voyager.jpl.nasa.gov/mission/status/"
+      "https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/"
     ],
     "written_by": "agent:content-author",
     "verified_by": "agent:source-verifier",
@@ -1059,7 +1059,7 @@
       },
       {
         "text": "On December 7, 1995, Galileo's atmospheric probe descended 156 kilometers into Jupiter before pressure crushed its hull.",
-        "source_url": "https://science.nasa.gov/mission/galileo/in-depth/"
+        "source_url": "https://science.nasa.gov/mission/galileo/"
       }
     ],
     "image": {
@@ -1207,7 +1207,7 @@
         "label": "Impact Crater Site, Comet 9P/Tempel",
         "lat": -12.0,
         "lon": 144.0,
-        "source_url": "https://science.nasa.gov/mission/deep-impact/",
+        "source_url": "https://science.nasa.gov/mission/deep-impact-epoxi/",
         "approximate": true
       }
     ],
@@ -1218,7 +1218,7 @@
     "facts": [
       {
         "text": "The impactor continued snapping close-up images until only 3 seconds before colliding with comet Tempel 1 on July 4, 2005.",
-        "source_url": "https://science.nasa.gov/mission/deep-impact/"
+        "source_url": "https://science.nasa.gov/mission/deep-impact-epoxi/"
       },
       {
         "text": "After its primary encounter, the flyby spacecraft was repurposed as EPOXI to image comet Hartley 2 and search for exoplanets.",
@@ -1233,7 +1233,7 @@
       "alt": "Comet Tempel 1 photographed by the Deep Impact flyby spacecraft 67 seconds after the impactor struck it, with a bright burst of light and debris erupting from the nucleus."
     },
     "sources": [
-      "https://science.nasa.gov/mission/deep-impact/"
+      "https://science.nasa.gov/mission/deep-impact-epoxi/"
     ],
     "written_by": "agent:content-author",
     "verified_by": "agent:source-verifier",
@@ -1276,7 +1276,7 @@
       },
       {
         "text": "On January 1, 2019, it achieved the farthest planetary flyby ever performed at Kuiper Belt object Arrokoth (486958).",
-        "source_url": "https://science.nasa.gov/mission/new-horizons/in-depth/"
+        "source_url": "https://science.nasa.gov/mission/new-horizons/"
       }
     ],
     "image": {
