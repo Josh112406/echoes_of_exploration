@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Validates the 23-entry archive and UNIT-7 story script.
+// Validates the 23-entry archive, the UNIT-7 story script, and the team's NASA
+// mission catalog (src/data/missions.json, sources.json, encounters.json).
 // Usage: node tools/validate-entries.mjs   (exit 1 on any failure)
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -115,6 +116,42 @@ for (const k of ['opening', 'reflection', 'resolution']) {
   if (!story.finale?.[k]) fail('finale', `missing ${k}`);
 }
 
+// NASA mission catalog (RULES.md §4: every mission links to an official source)
+const missions = json('src/data/missions.json').records ?? [];
+const sources = json('src/data/sources.json').sources ?? [];
+const encounters = json('src/data/encounters.json').encounters ?? [];
+const sourceIds = new Set(sources.map((s) => s.id));
+const missionIds = new Set(missions.map((m) => m.id));
+if (missions.length < 31) fail('catalog', `expected 31+ missions, found ${missions.length}`);
+if (missionIds.size !== missions.length) fail('catalog', 'duplicate mission ids');
+for (const s of sources) if (!/^https:\/\//.test(s.url ?? '')) fail(`source ${s.id}`, 'url must be https');
+for (const m of missions) {
+  if (!['moon', 'mars', 'elsewhere'].includes(m.chapter)) fail(`mission ${m.id}`, `bad chapter "${m.chapter}"`);
+  if (!m.source_ids?.length) fail(`mission ${m.id}`, 'no source_ids');
+  for (const sid of m.source_ids ?? []) if (!sourceIds.has(sid)) fail(`mission ${m.id}`, `unknown source "${sid}"`);
+  if (!/^https:\/\/[^/]*nasa\.gov\//.test(m.media_page_url ?? '')) fail(`mission ${m.id}`, 'media_page_url must be a nasa.gov page');
+}
+for (const enc of encounters) {
+  if (!missionIds.has(enc.mission_id)) fail(`encounter ${enc.id}`, `unknown mission "${enc.mission_id}"`);
+  if (!sourceIds.has(enc.primary_source_id)) fail(`encounter ${enc.id}`, `unknown source "${enc.primary_source_id}"`);
+}
+// Every playable echo's catalog link (ENTRY_MISSIONS in src/data/catalog.ts) must resolve
+const catalogTs = readFileSync(resolve(root, 'src/data/catalog.ts'), 'utf8');
+const mapBlock = catalogTs.slice(catalogTs.indexOf('ENTRY_MISSIONS'), catalogTs.indexOf('};', catalogTs.indexOf('ENTRY_MISSIONS')));
+const mapped = new Set();
+for (const [, key, list] of mapBlock.matchAll(/^\s*'?([a-z0-9-]+)'?:\s*\[([^\]]*)\]/gm)) {
+  mapped.add(key);
+  if (!entries[key]) fail('catalog map', `unknown echo "${key}"`);
+  for (const [, mid] of list.matchAll(/'([^']+)'/g)) if (!missionIds.has(mid)) fail('catalog map', `${key} -> unknown mission "${mid}"`);
+}
+for (const id of ids) if (!mapped.has(id)) fail(id, 'missing from ENTRY_MISSIONS in src/data/catalog.ts');
+
+// RULES.md §3: shipped photos must be NASA public-domain imagery
+for (const id of ids) {
+  const credit = entries[id].image?.credit ?? '';
+  if (!/^NASA\b/.test(credit)) fail(id, `image credit "${credit}" is not NASA (RULES.md §3)`);
+}
+
 // Transition cinematic
 const cin = json('data/cinematics/transition-elsewhere.json');
 if (!Array.isArray(cin.events) || !cin.events.length) fail('transition-elsewhere', 'no events');
@@ -124,4 +161,4 @@ if (errors.length) {
   console.error(`✗ ${errors.length} problem(s):\n  ` + errors.join('\n  '));
   process.exit(1);
 }
-console.log(`✓ ${ids.length} entries (moon ${perWorld.moon} · mars ${perWorld.mars} · elsewhere ${perWorld.elsewhere}) and story script valid`);
+console.log(`✓ ${ids.length} entries (moon ${perWorld.moon} · mars ${perWorld.mars} · elsewhere ${perWorld.elsewhere}), story script, and catalog (${missions.length} missions · ${sources.length} sources · ${encounters.length} encounters) valid`);

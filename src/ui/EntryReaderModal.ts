@@ -6,6 +6,7 @@ import type { ArtifactEntry } from '../data/schema.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { TalkClock } from './Talk.ts';
 import { buildRobotCanvas } from '../systems/SpriteArt.ts';
+import { missionsForEntry, sourcesForMission, encountersForEntry, MISSION_STATUS_LABEL } from '../data/catalog.ts';
 
 /** How the reader was opened: the post-landing briefing, or browsing from the Archive. */
 export type EntryOpenMode = 'briefing' | 'browse';
@@ -557,7 +558,7 @@ export class EntryReaderModal {
           <h3 class="briefing__h">${e.name}</h3>
           <p class="briefing__p">${e.summary}</p>
           <div class="briefing__hook">
-            <div class="briefing__hook-label">HISTORICAL FIRST-PERSON MACHINE RECORD:</div>
+            <div class="briefing__hook-label">STORY HOOK · DRAMATIZED IN THE MACHINE'S VOICE (FACTS ARE SOURCED ON THE NEXT PAGES):</div>
             <p>"${e.hook}"</p>
           </div>`;
       case 2:
@@ -577,8 +578,28 @@ export class EntryReaderModal {
               <div class="briefing__muted">LAT: ${l.lat.toFixed(4)}° · LON: ${l.lon.toFixed(4)}° ${l.approximate ? '[APPROXIMATE]' : '[VERIFIED]'}</div>
               <a href="${l.source_url}" target="_blank" rel="noreferrer">[NASA LOCATION SOURCE ↗]</a>
             </div>`).join('')}
+          ${this.catalogHtml(e)}
           <div class="briefing__muted briefing__byline">CATALOGUED BY: ${e.written_by} // VERIFIED BY: ${e.verified_by}</div>`;
     }
+  }
+
+  /** The matching record(s) from the team's NASA mission catalog (src/data/missions.json). */
+  private catalogHtml(e: ArtifactEntry): string {
+    const missions = missionsForEntry(e.id);
+    if (!missions.length) {
+      return `<div class="briefing__loc briefing__catalog"><strong>NASA MISSION CATALOG</strong>
+        <div class="briefing__muted">Not in the 31-mission catalog: this echo is sourced from the citations above.</div></div>`;
+    }
+    const lessons = encountersForEntry(e.id).map((enc) => `
+      <div class="briefing__muted">FIELD LESSON · ${enc.title.toUpperCase()}: ${enc.learning_intent}</div>
+      <div class="briefing__muted">HOW A GAME SIMPLIFIES IT: ${enc.simplification_note}</div>`).join('');
+    const rows = missions.map((m) => `
+      <div class="briefing__loc briefing__catalog">
+        <strong>CATALOG RECORD · ${m.name.toUpperCase()}</strong>
+        <div class="briefing__muted">${MISSION_STATUS_LABEL[m.status].toUpperCase()} · ${m.location_summary}</div>
+        ${sourcesForMission(m).map((s) => `<a href="${s.url}" target="_blank" rel="noreferrer">[${s.organization.toUpperCase()} · ${s.title.toUpperCase()} ↗]</a>`).join(' ')}
+      </div>`).join('');
+    return `<h3 class="briefing__h briefing__h--small">NASA Mission Catalog</h3>${rows}${lessons}`;
   }
 
   private renderDialogue(): void {

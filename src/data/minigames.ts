@@ -26,7 +26,7 @@ export const MINIGAME_META: Record<MinigameSceneKey, MinigameMeta> = {
     code: 'ROVER',
     title: 'Surface Rover Traverse',
     promptVerb: 'START ROVER TRAVERSE',
-    description: 'Drive through boulder fields, collect 3 science cores, and reach the sample beacon before battery runs dry.',
+    description: 'Drive over craters and dust, collect 3 science cores, and park on the extraction pad before the battery runs dry.',
   },
   LaserScene: {
     scene: 'LaserScene',
@@ -73,7 +73,9 @@ export const SITE_MINIGAMES: Record<string, MinigameSceneKey> = {
   'perseverance-landing-hardware': 'LandingScene',
   ingenuity: 'RotorScene',
 
-  // Elsewhere // Deep Space (6): nothing lands out here, so no landing or surface games
+  // Elsewhere // Deep Space (6): the robot can't follow these machines down, so each echo is
+  // played as the flyby / orbital science that made up most of its mission. (NEAR Shoemaker
+  // did land on Eros and Huygens on Titan: their record pages say so.)
   'near-shoemaker': 'FlybyScene',
   galileo: 'FlybyScene',
   'cassini-huygens': 'FlybyScene',

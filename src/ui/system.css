@@ -222,6 +222,44 @@ header.nav {
   transform: translateY(-2px);
 }
 
+.archive-select {
+  background: var(--g-alt);
+  color: inherit;
+  border: 1px solid var(--accent);
+  padding: 6px 12px;
+  border-radius: 0;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+/* Mission catalog (src/data/missions.json) */
+.catalog-card {
+  background: var(--g-alt);
+  border: 1px solid var(--hairline);
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.catalog-card p { margin: 0 0 4px; }
+.catalog-name { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin: 0; }
+.catalog-meta { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+.catalog-label { font-family: var(--font-mono); font-size: 10px; color: var(--accent-laser); letter-spacing: 0.06em; margin-top: 6px; }
+.catalog-hook { font-style: italic; color: var(--muted); margin-top: 6px !important; }
+.catalog-hook .catalog-label { font-style: normal; display: block; margin-top: 0; }
+.catalog-lesson { border-left: 2px solid var(--verified); padding-left: 10px; margin-top: 6px; }
+.catalog-lesson .catalog-label { color: var(--verified); }
+.catalog-play { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
+.catalog-muted { color: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+.catalog-sources { list-style: none; padding: 0; margin: 2px 0 0; font-size: 11px; }
+.catalog-sources a { color: var(--accent-laser); }
+.catalog-note { font-size: 11px; color: var(--muted); line-height: 1.5; max-width: 900px; margin: 0; }
+.catalog-toggle { font-family: var(--font-mono); font-size: 11px; display: inline-flex; gap: 6px; align-items: center; }
+
 .artifact-card.locked {
   opacity: 0.5;
   border-color: rgba(255, 255, 255, 0.05);
@@ -1005,3 +1043,46 @@ header.nav {
 .finale-card.finale-card--still, .finale-card.finale-card--still > * { transition: none !important; }
 
 .menu-btn--ending { color: var(--verified); border-color: rgba(245, 158, 11, 0.5); }
+
+.map-credit {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: #c9cfe4;
+  background: rgba(5, 7, 15, 0.7);
+  padding: 2px 6px;
+  pointer-events: none;
+  max-width: calc(100% - 12px);
+}
+
+/* About & References */
+.about-panel {
+  max-width: 720px;
+  margin: auto;
+  padding: 24px;
+  box-shadow: 0 12px 36px rgba(5, 7, 15, 0.95);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.about-body {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-wrap: anywhere;
+}
+.about-body p { margin: 0 0 6px; }
+.about-body a { color: var(--accent-laser); }
+.about-body details { border: 1px solid var(--hairline); padding: 6px 10px; margin-bottom: 6px; }
+.about-body summary { cursor: pointer; color: var(--accent-laser); letter-spacing: 0.04em; }
+.about-list { margin: 6px 0 0; padding-left: 18px; font-size: 11px; }
+.about-list li { margin-bottom: 3px; }
+@media (max-width: 480px) {
+  .about-panel { padding: 14px; max-height: calc(100vh - 16px); }
+}

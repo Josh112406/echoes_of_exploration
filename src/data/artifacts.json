@@ -378,11 +378,11 @@
       }
     ],
     "image": {
-      "nasa_id": "IM_00309",
+      "nasa_id": "KSC-20240215-PH-KLS01_0023",
       "file": "assets/images/artifacts/im-1-odysseus.jpg",
-      "credit": "Intuitive Machines",
-      "source_url": "https://images.nasa.gov/details/IM_00309",
-      "alt": "Intuitive Machines Nova-C lunar lander for the IM-1 mission"
+      "credit": "NASA/Kim Shiflett",
+      "source_url": "https://images.nasa.gov/details/KSC-20240215-PH-KLS01_0023",
+      "alt": "A SpaceX Falcon 9 rocket lifts off at night from Kennedy Space Center's Launch Pad 39A, carrying the Intuitive Machines Nova-C lander Odysseus for the IM-1 mission"
     },
     "sources": [
       "https://www.nasa.gov/clps"

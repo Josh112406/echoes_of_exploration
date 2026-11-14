@@ -7,6 +7,13 @@ import { getMinigameMetaForSite } from '../data/minigames.ts';
 
 export { ALL_ENTRIES };
 
+/** Credit lines for the map backgrounds. Moon and Mars are full-globe NASA Trek mosaics. */
+const MAP_CREDIT: Record<string, string> = {
+  moon: 'MAP: LRO WAC GLOBAL MOSAIC · NASA/GSFC/ARIZONA STATE UNIV. · VIA NASA MOON TREK',
+  mars: 'MAP: MGS MOLA COLOR SHADED RELIEF · NASA/JPL/GSFC · VIA NASA MARS TREK',
+  elsewhere: 'TEAM-MADE ILLUSTRATION · NOT A NASA PHOTOGRAPH · POSITIONS ARE SCHEMATIC',
+};
+
 export class HubMap {
   private container: HTMLElement;
   private isListView: boolean = false;
@@ -164,6 +171,9 @@ export class HubMap {
         </svg>
 
         ${markersHtml}
+
+        <!-- Map credit (RULES.md §3: real NASA data vs team illustration, clearly labelled) -->
+        <div class="map-credit">${MAP_CREDIT[currentWorld] ?? ''}</div>
 
         <!-- Docked Telemetry Deck -->
         <div id="marker-card-popover"></div>

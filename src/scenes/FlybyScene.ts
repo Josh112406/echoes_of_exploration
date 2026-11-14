@@ -18,7 +18,8 @@ import {
 /**
  * HIGH-VELOCITY DEEP-SPACE FLYBY IMAGING (Galileo at Europa, Deep Impact at
  * comet Tempel 1, New Horizons at Pluto, NEAR Shoemaker at Eros, Cassini at
- * Enceladus). Nothing lands in deep space: every Elsewhere echo is a flyby.
+ * Enceladus). Every Elsewhere echo is played as its flyby / orbital imaging work (NEAR's
+ * year in orbit before its landing on Eros; Cassini's passes before Huygens' descent).
  *
  * The target body swings past on a curved flyby path, growing toward closest
  * approach and shrinking away, while it rotates three science targets through
@@ -50,6 +51,8 @@ interface BodyTheme {
   targets: [string, number, number][];
   debris: string;
   oblate: number;
+  /** A line in the briefing for what the real mission did beyond this flyby. */
+  realNote?: string;
 }
 
 const D = Math.PI / 180;
@@ -182,6 +185,7 @@ export class FlybyScene extends Phaser.Scene {
         '• TARGETS ONLY COUNT IN SUNLIGHT. THE BODY ROTATES THEM INTO VIEW',
         `• ${this.theme.debris} KICKS THE GIMBAL. HOLD [SHIFT / E] FOR THE DUST COVER`,
         `• ONE PASS, NO BRAKES: 3 TARGETS, ${this.storageMax} FRAMES OF STORAGE`,
+        ...(this.theme.realNote ? [`• TRUE STORY: ${this.theme.realNote}`] : []),
       ],
       cta: 'ARM THE CAMERA ➔',
     }, () => { this.started = true; this.armedAt = this.time.now; });
@@ -210,6 +214,7 @@ export class FlybyScene extends Phaser.Scene {
         ramp: [PALETTE.deepIndigoHex, PALETTE.lunarBasaltDarkHex, PALETTE.lunarRegolithDeepHex, PALETTE.lunarRegolithMidHex, PALETTE.lunarDustLightHex],
         targets: [['PSYCHE CRATER', 15, 90], ['HIMEROS SADDLE', -5, 270], ['BOULDER FIELD', -20, 180]],
         debris: 'REGOLITH DUST',
+        realNote: 'NEAR MAPPED EROS FROM ORBIT FOR A YEAR, THEN LANDED ON IT IN 2001',
       };
     }
     if (this.siteId === 'cassini-huygens') {
@@ -218,6 +223,7 @@ export class FlybyScene extends Phaser.Scene {
         ramp: [PALETTE.deepIndigoHex, PALETTE.lunarRegolithMidHex, PALETTE.lunarDustLightHex, PALETTE.lunarCrustCreamHex, PALETTE.lunarHighlightHex],
         targets: [['TIGER STRIPES', -50, 120], ['SOUTH POLAR PLUMES', -58, 250], ['TITAN', 0, 0]],
         debris: 'E-RING ICE', plumeTarget: 1, moonTarget: 'TITAN',
+        realNote: "CASSINI'S HUYGENS PROBE PARACHUTED TO TITAN'S SURFACE IN 2005",
       };
     }
     return {
