@@ -59,6 +59,7 @@ html, body {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
+  height: var(--visible-viewport-height, 100dvh);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -219,7 +220,7 @@ header.nav {
 @media (pointer: coarse) and (orientation: landscape) {
   body.site-scene #mobile-site-actions {
     position: absolute;
-    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
     bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 20;
     display: block;

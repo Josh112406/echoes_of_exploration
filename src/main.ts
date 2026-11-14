@@ -16,6 +16,21 @@ window.addEventListener('DOMContentLoaded', () => {
   const game = new Phaser.Game(gameConfig);
   (window as any).__PHASER_GAME__ = game;
 
+  // Android browser bars can change the visible height without updating CSS viewport units.
+  const fitVisibleViewport = () => {
+    document.documentElement.style.setProperty(
+      '--visible-viewport-height',
+      `${window.visualViewport?.height ?? window.innerHeight}px`,
+    );
+    requestAnimationFrame(() => {
+      game.scale.getParentBounds();
+      game.scale.refresh();
+    });
+  };
+  window.visualViewport?.addEventListener('resize', fitVisibleViewport);
+  window.addEventListener('resize', fitVisibleViewport);
+  fitVisibleViewport();
+
   // Mount UI Overlays
   new UIManager();
 
