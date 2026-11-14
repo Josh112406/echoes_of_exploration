@@ -135,6 +135,17 @@ export class EndingScene extends Phaser.Scene {
   private reel: ReelSlide[] = [];
   private slide: Phaser.GameObjects.Container | null = null;
   private slideMask: Phaser.GameObjects.Graphics | null = null;
+  private photoItems: {
+    el: HTMLDivElement;
+    img: HTMLImageElement;
+    slide: Phaser.GameObjects.Container;
+    fx: number;
+    fy: number;
+    fw: number;
+    fh: number;
+    reveal: { h: number };
+    kb: { scale: number; dx: number };
+  }[] = [];
   private lastSlideYear: number | null = null;
   private rulerLayer!: Phaser.GameObjects.Container;
   private ruler!: Phaser.GameObjects.Graphics;
@@ -328,6 +339,7 @@ export class EndingScene extends Phaser.Scene {
     this.updateStars(dt);
     this.updateBooster();
     this.updateVista(dt);
+    this.syncPhotos();
     if (this.finished) return;
 
     if (this.lockT > 0) this.lockT -= dt;
@@ -372,6 +384,8 @@ export class EndingScene extends Phaser.Scene {
     if (this.finished) return;
     SoundFX.playClick();
     this.hideSection();
+    this.clearSlide();
+    this.clearRuler();
     Soundscape.set({ music: 'ending_resolve', fade: 2 });
     this.beatIdx = this.beats.length - 2;
     this.setupVista(true);
@@ -830,6 +844,33 @@ export class EndingScene extends Phaser.Scene {
   // Act I: the reel
   // ---------------------------------------------------------------------------
 
+  /** Syncs native-resolution DOM photographs with their Phaser slide container & scanline reveal. */
+  private syncPhotos(): void {
+    if (this.photoItems.length === 0) return;
+    const canvas = this.sys.game.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const sx = rect.width / W;
+    const sy = rect.height / H;
+
+    for (let k = this.photoItems.length - 1; k >= 0; k--) {
+      const item = this.photoItems[k];
+      if (!item.slide.active) {
+        item.el.remove();
+        this.photoItems.splice(k, 1);
+        continue;
+      }
+      const st = item.el.style;
+      st.left = `${rect.left + (item.fx + item.slide.x) * sx}px`;
+      st.top = `${rect.top + (item.fy + item.slide.y) * sy}px`;
+      st.width = `${item.fw * sx}px`;
+      st.height = `${item.fh * sy}px`;
+      st.opacity = String(item.slide.alpha);
+      const clipBottom = Math.max(0, Math.min(100, ((item.fh - item.reveal.h) / item.fh) * 100));
+      st.clipPath = `inset(0 0 ${clipBottom.toFixed(2)}% 0)`;
+      item.img.style.transform = `scale(${item.kb.scale.toFixed(4)}) translateX(${((item.kb.dx / item.fw) * 100).toFixed(3)}%)`;
+    }
+  }
+
   /** The current slide glides out to the left as the next one arrives. */
   private clearSlide(): void {
     if (!this.slide) return;
@@ -840,8 +881,15 @@ export class EndingScene extends Phaser.Scene {
     this.tweens.killTweensOf(old);
     this.tweens.add({
       targets: old, alpha: 0, x: old.x - (this.reducedMotion ? 0 : 40), duration: this.ms(380), ease: 'Cubic.easeIn',
-      onUpdate: () => { if (mask) mask.x = old.x; },
-      onComplete: () => { this.destroyDeep(old); mask?.destroy(); },
+      onUpdate: () => {
+        if (mask) mask.x = old.x;
+        this.syncPhotos();
+      },
+      onComplete: () => {
+        this.destroyDeep(old);
+        mask?.destroy();
+        this.syncPhotos();
+      },
     });
   }
 
@@ -864,48 +912,50 @@ export class EndingScene extends Phaser.Scene {
     const c = this.add.container(this.reducedMotion ? 0 : 44, 0).setDepth(30).setAlpha(0);
     this.slide = c;
 
-    // Photo, framed and masked: a scan line reveals it top to bottom, then a slow push-in
+    // Photo, framed and masked: rendered via native-resolution DOM <img> so NASA archival
+    // photographs are crisp at 1080p/4K instead of quantized to the 640×360 pixel canvas.
     const fx = 30, fy = 56, fw = 304, fh = 196;
     const frame = this.add.graphics();
     frame.fillStyle(PALETTE.spaceBlackHex, 0.9).fillRect(fx - 4, fy - 4, fw + 8, fh + 8);
     frame.lineStyle(1, PALETTE.beaconGoldHex, 0.7).strokeRect(fx - 4.5, fy - 4.5, fw + 9, fh + 9);
     c.add(frame);
     const key = `photo_${entry.id}`;
-    if (this.textures.exists(key)) {
-      const photo = this.add.image(fx + fw / 2, fy + fh / 2, key);
-      const cover = Math.max(fw / photo.width, fh / photo.height);
-      const contain = Math.min(fw / photo.width, fh / photo.height);
-      // Very wide or tall photos would lose the machine when cropped: show them whole.
-      const ratio = (photo.width / photo.height) / (fw / fh);
-      const base = ratio > 1.6 || ratio < 0.6 ? contain : cover;
-      const shape = this.make.graphics({}, false);
-      shape.x = c.x;
-      this.slideMask = shape;
-      const reveal = { h: this.reducedMotion ? fh : 0 };
-      const drawMask = () => shape.clear().fillStyle(0xffffff).fillRect(fx, fy, fw, Math.max(1, reveal.h));
-      drawMask();
-      photo.setMask(shape.createGeometryMask());
-      c.add(photo);
+    const texImg = this.textures.exists(key)
+      ? (this.textures.get(key).getSourceImage() as HTMLImageElement | undefined)
+      : undefined;
+    const ratio = texImg && texImg.height ? (texImg.width / texImg.height) / (fw / fh) : 1;
+    const objectFit = ratio > 1.6 || ratio < 0.6 ? 'contain' : 'cover';
 
-      if (this.reducedMotion) {
-        photo.setScale(base);
-      } else {
-        const scan = this.add.rectangle(fx + fw / 2, fy, fw, 2, PALETTE.cyanLaserHex, 0.9).setBlendMode(Phaser.BlendModes.ADD);
-        c.add(scan);
-        this.tweens.add({
-          targets: reveal, h: fh, duration: 900, delay: enter + 120, ease: 'Sine.easeInOut',
-          onUpdate: () => { if (shape.active) { drawMask(); scan.y = fy + reveal.h; } },
-          onComplete: () => { if (scan.active) this.tweens.add({ targets: scan, alpha: 0, duration: 260, onComplete: () => scan.destroy() }); },
-        });
-        photo.setScale(base * 1.12);
-        const drift = i % 2 ? 8 : -8;
-        this.tweens.add({
-          targets: photo, scale: base * 1.02, duration: 1400, delay: enter, ease: 'Cubic.easeOut',
-          onComplete: () => {
-            if (photo.active) this.tweens.add({ targets: photo, scale: base * 1.08, x: photo.x + drift, duration: 12000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
-          },
-        });
-      }
+    const stage = document.getElementById('game-stage') ?? document.body;
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;overflow:hidden;pointer-events:none;z-index:6;background:#05070f;opacity:0;will-change:left,top,opacity,clip-path;';
+    const img = document.createElement('img');
+    img.src = entry.image.file;
+    img.alt = entry.image.alt;
+    img.style.cssText = `width:100%;height:100%;object-fit:${objectFit};image-rendering:auto;transform-origin:center center;display:block;will-change:transform;`;
+    el.appendChild(img);
+    stage.appendChild(el);
+
+    const reveal = { h: this.reducedMotion ? fh : 0 };
+    const kb = { scale: this.reducedMotion ? 1 : 1.12, dx: 0 };
+    this.photoItems.push({ el, img, slide: c, fx, fy, fw, fh, reveal, kb });
+    this.syncPhotos();
+
+    if (!this.reducedMotion) {
+      const scan = this.add.rectangle(fx + fw / 2, fy, fw, 2, PALETTE.cyanLaserHex, 0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(32);
+      c.add(scan);
+      this.tweens.add({
+        targets: reveal, h: fh, duration: 900, delay: enter + 120, ease: 'Sine.easeInOut',
+        onUpdate: () => { if (scan.active) scan.y = fy + reveal.h; },
+        onComplete: () => { if (scan.active) this.tweens.add({ targets: scan, alpha: 0, duration: 260, onComplete: () => scan.destroy() }); },
+      });
+      const drift = i % 2 ? 8 : -8;
+      this.tweens.add({
+        targets: kb, scale: 1.02, duration: 1400, delay: enter, ease: 'Cubic.easeOut',
+        onComplete: () => {
+          if (c.active) this.tweens.add({ targets: kb, scale: 1.08, dx: drift, duration: 12000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
+        },
+      });
     }
     const creditLine = entry.image.nasa_id === 'SI-ILLUSTRATION'
       ? 'SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH'
@@ -1608,6 +1658,8 @@ export class EndingScene extends Phaser.Scene {
   private cleanup(): void {
     this.card?.remove();
     this.card = null;
+    for (const p of this.photoItems) p.el.remove();
+    this.photoItems = [];
     if (this.live) this.live.textContent = '';
     this.slideMask?.destroy();
     this.slideMask = null;
