@@ -402,7 +402,7 @@ export function buildEarthSheet(): HTMLCanvasElement {
           continue;
         }
 
-        const nz = Math.sqrt(1 - r2);
+        const nz = Math.sqrt(Math.max(0, 1 - r2));
         const lambert = Math.max(0, dx * L[0] + dy * L[1] + nz * L[2]);
         const lat = Math.asin(-dy);
         const lon = Math.atan2(dx, nz);

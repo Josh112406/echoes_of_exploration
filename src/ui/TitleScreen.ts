@@ -238,7 +238,7 @@ export class TitleScreen {
     st.setProperty('--cv-w', `${r.width}px`);
     st.setProperty('--cv-h', `${r.height}px`);
     const wasCompact = this.compact;
-    this.compact = r.height < 330 && r.top - box.top > 200;
+    this.compact = r.height < 330 && box.height > box.width;
     this.container.classList.toggle('is-compact', this.compact);
     if (wasCompact !== this.compact) this.sayHint();
   }

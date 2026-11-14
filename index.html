@@ -36,6 +36,12 @@
       <main id="game-stage">
         <!-- Persistent Phaser Canvas Mount -->
         <div id="game-container"></div>
+        <div id="graphics-fallback" hidden role="status" aria-live="polite">
+          <img src="/assets/sprites/earth.png" alt="Pixel-art Earth" />
+          <small>SI-GENERATED ILLUSTRATION</small>
+          <p>GRAPHICS INTERRUPTED</p>
+          <button type="button" id="retry-graphics" class="btn">RELOAD GAME</button>
+        </div>
 
         <!-- Accessible DOM Overlays -->
         <div id="title-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: transparent;"></div>

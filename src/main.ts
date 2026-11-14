@@ -8,12 +8,48 @@ import { Soundscape } from './audio/Soundscape.ts';
 import { getMinigameKeyForSite } from './data/minigames.ts';
 import { Practice } from './systems/Practice.ts';
 
+// Prefer Canvas when an older driver cannot compile the fragment precision Phaser needs.
+function supportsWebGLShaders(): boolean {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    if (!gl || !gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)?.precision) return false;
+    const shader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!shader) return false;
+    gl.shaderSource(shader, 'precision highp float; void main() { gl_FragColor = vec4(1.0); }');
+    gl.compileShader(shader);
+    const compiled = Boolean(gl.getShaderParameter(shader, gl.COMPILE_STATUS));
+    gl.deleteShader(shader);
+    return compiled;
+  } catch {
+    return false;
+  }
+}
+
 // Music, ambience and effects: unlocks on the first click or key press
 Soundscape.install();
 
 window.addEventListener('DOMContentLoaded', () => {
   // Mount Phaser Game
-  const game = new Phaser.Game(gameConfig);
+  const fallback = document.getElementById('graphics-fallback');
+  const showFallback = () => { if (fallback) fallback.hidden = false; };
+  const hideFallback = () => { if (fallback) fallback.hidden = true; };
+  document.getElementById('retry-graphics')?.addEventListener('click', () => window.location.reload());
+
+  let game: Phaser.Game;
+  try {
+    game = new Phaser.Game({ ...gameConfig, type: supportsWebGLShaders() ? Phaser.AUTO : Phaser.CANVAS });
+  } catch {
+    showFallback();
+    return;
+  }
+  const watchRenderer = () => {
+    if (game.renderer.type !== Phaser.WEBGL) return;
+    const renderer = game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+    renderer.on(Phaser.Renderer.Events.LOSE_WEBGL, showFallback);
+    renderer.on(Phaser.Renderer.Events.RESTORE_WEBGL, hideFallback);
+  };
+  if (game.isBooted) watchRenderer();
+  else game.events.once(Phaser.Core.Events.BOOT, watchRenderer);
   (window as any).__PHASER_GAME__ = game;
 
   // Android browser bars can change the visible height without updating CSS viewport units.

@@ -171,6 +171,25 @@ header.nav {
   touch-action: none;
 }
 
+#graphics-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--g-main);
+  color: var(--accent-laser);
+  font: 12px var(--font-pixel);
+  text-align: center;
+}
+
+#graphics-fallback[hidden] { display: none; }
+#graphics-fallback img { width: min(45vw, 180px); image-rendering: pixelated; }
+#graphics-fallback small { font-size: 8px; color: var(--muted); }
+
 #mobile-game-controls, .mobile-action-buttons { display: none; }
 
 @media (pointer: coarse) {
@@ -180,7 +199,7 @@ header.nav {
   body.laser-scene #mobile-game-controls,
   body.flyby-scene #mobile-game-controls {
     position: absolute;
-    left: max(12px, env(safe-area-inset-left));
+    left: max(48px, calc(env(safe-area-inset-left) + 32px));
     right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 20;
@@ -720,6 +739,10 @@ header.nav {
 .tmenu-hud__count small { font-size: 0.6em; color: var(--muted); }
 
 .tmenu-hud .pips i { width: clamp(5px, 0.4vw, 8px); height: clamp(8px, 0.75vw, 13px); }
+
+@media (pointer: coarse) and (orientation: landscape) {
+  .tmenu-hud .pips { display: none; }
+}
 
 .tmenu-keys,
 .tmenu-credit {

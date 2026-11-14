@@ -302,14 +302,19 @@ export class TitleScene extends Phaser.Scene {
     const h = Math.max(36, Math.ceil(this.bubbleText.height) + 28);
     const w = this.bubbleW;
     const x = Math.max(28, this.robotX - 52);
-    const y = Math.round(this.robotTop - 10 - h);
+    const touchLandscape = window.matchMedia('(pointer: coarse) and (orientation: landscape)').matches;
+    const y = touchLandscape
+      ? Math.min(Math.round(this.robotTop - 10 - h), Math.round(CONSTANTS.CANVAS.HEIGHT * 0.41 - h - 10))
+      : Math.round(this.robotTop - 10 - h);
     const g = this.bubbleGfx;
     g.clear();
     NineSliceHUD.drawFrame(g, 0, 0, w, h, 'panel');
-    // Pixel tail pointing down at the robot's head
-    const tx = this.robotX - x;
-    g.fillStyle(PALETTE.deepIndigoHex, 1).fillRect(tx - 4, h - 1, 8, 2).fillRect(tx - 3, h + 1, 6, 2).fillRect(tx - 2, h + 3, 4, 2).fillRect(tx - 1, h + 5, 2, 2);
-    g.fillStyle(PALETTE.cyanGlowHex, 1).fillRect(tx - 5, h + 1, 1, 2).fillRect(tx + 4, h + 1, 1, 2).fillRect(tx - 4, h + 3, 1, 2).fillRect(tx + 3, h + 3, 1, 2).fillRect(tx - 3, h + 5, 1, 2).fillRect(tx + 2, h + 5, 1, 2).fillRect(tx - 2, h + 7, 4, 1);
+    if (!touchLandscape) {
+      // Pixel tail pointing down at the robot's head
+      const tx = this.robotX - x;
+      g.fillStyle(PALETTE.deepIndigoHex, 1).fillRect(tx - 4, h - 1, 8, 2).fillRect(tx - 3, h + 1, 6, 2).fillRect(tx - 2, h + 3, 4, 2).fillRect(tx - 1, h + 5, 2, 2);
+      g.fillStyle(PALETTE.cyanGlowHex, 1).fillRect(tx - 5, h + 1, 1, 2).fillRect(tx + 4, h + 1, 1, 2).fillRect(tx - 4, h + 3, 1, 2).fillRect(tx + 3, h + 3, 1, 2).fillRect(tx - 3, h + 5, 1, 2).fillRect(tx + 2, h + 5, 1, 2).fillRect(tx - 2, h + 7, 4, 1);
+    }
     c.setPosition(x, y).setVisible(true);
 
     this.talk.start(text, { instant: this.reducedMotion });
