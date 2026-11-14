@@ -31,7 +31,8 @@
     {"id":"nasa-nssdca","title":"NASA Space Science Data Coordinated Archive (NSSDCA)","organization":"NASA Goddard","url":"https://nssdc.gsfc.nasa.gov/","tier":"primary-mission-authority","local_snapshot":null},
     {"id":"nssdca-apollo11-lm","title":"Apollo 11 Lunar Module Descent Stage","organization":"NASA Goddard / NSSDCA","url":"https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-059C","tier":"primary-mission-authority","local_snapshot":null},
     {"id":"nssdca-lrv","title":"Lunar Roving Vehicle (LRV-1)","organization":"NASA Goddard / NSSDCA","url":"https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1971-063C","tier":"primary-mission-authority","local_snapshot":null},
-    {"id":"nssdca-alsep","title":"Apollo 11 ALSEP Package","organization":"NASA Goddard / NSSDCA","url":"https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-099C","tier":"primary-mission-authority","local_snapshot":null},
+    {"id":"nssdca-alsep","title":"Apollo 12 ALSEP Package (1969-099C)","organization":"NASA Goddard / NSSDCA","url":"https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1969-099C","tier":"primary-mission-authority","local_snapshot":null},
+    {"id":"jpl-voyager1-2026-078","title":"NASA's Voyager 1 Conserves Power, Resolves Brief Communications Pause","organization":"NASA JPL","url":"https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/","tier":"primary-mission-authority","local_snapshot":null},
     {"id":"nasa-pds","title":"Planetary Data System","organization":"NASA","url":"https://pds.nasa.gov/","tier":"primary-data-archive","local_snapshot":null},
     {"id":"nasa-media-guidelines","title":"NASA Images and Media Usage Guidelines","organization":"NASA","url":"https://www.nasa.gov/nasa-brand-center/images-and-media/","tier":"rights-authority","local_snapshot":null}
   ]
