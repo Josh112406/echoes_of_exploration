@@ -1,0 +1,1888 @@
+{
+  "schema_version": "1.0.0",
+  "campaign_id": "echoes-launch-nine",
+  "authored_by": "Member 4 (Science Writer & Narrative Designer)",
+  "reviewed_against": {
+    "encounters": "encounters.json 1.0.0",
+    "sources": "sources.json reviewed_on 2026-11-09"
+  },
+  "voice_rules": {
+    "memory_echo": "Dramatized first-person narration built from mission records and shown as an archive replay. It never claims feelings or awareness, never says dormant hardware is active today, and never states a fact that is not also in Behind the Memory. Use 'my software' or 'my sensors' instead of 'I decide'. Past or replay tense for anything that has ended.",
+    "behind_the_memory": "Factual, third person, past tense for history, qualified language for debated results. Every number carries a source_id.",
+    "reading_level": "About grade 8-9",
+    "max_chars": {
+      "echo_line": 150,
+      "outcome": 170,
+      "summary": 330
+    },
+    "trigger_vocabulary": [
+      "on_start",
+      "on_hint",
+      "on_correct",
+      "on_incorrect",
+      "on_launch",
+      "on_success",
+      "on_partial",
+      "on_fail",
+      "on_miss",
+      "on_hit",
+      "on_noise",
+      "on_card_open",
+      "on_inspect_camera",
+      "on_inspect_chemistry"
+    ]
+  },
+  "ui_copy": {
+    "honesty_label": "Memory Echo is an imagined voice. Behind the Memory is the verified record.",
+    "buttons": {
+      "start": "Start encounter",
+      "hint": "Show a hint",
+      "retry": "Try again",
+      "reveal": "Open Behind the Memory",
+      "continue": "Continue",
+      "close": "Close"
+    },
+    "section_labels": {
+      "what_happened": "What happened",
+      "why_it_matters": "Why it matters",
+      "key_numbers": "Key numbers",
+      "simplifies": "How the game simplifies this",
+      "evidence": "The evidence chain",
+      "sources": "Sources"
+    },
+    "needs_review_badge": "Status may have changed since release",
+    "echo_frame": "Archive replay: a dramatized voice built from mission records.",
+    "frame_rule": "Show echo_frame and the encounter's status_badge together at the start of every encounter."
+  },
+  "glossary": [
+    {
+      "term": "Retroreflector",
+      "definition": "A set of mirrors that sends light straight back toward its source, from any angle."
+    },
+    {
+      "term": "Round-trip time",
+      "definition": "How long light takes to go out and come back. The one-way distance is half of the trip."
+    },
+    {
+      "term": "Telemetry",
+      "definition": "Measurements a spacecraft sends back, such as speed, height, or temperature."
+    },
+    {
+      "term": "Downlink",
+      "definition": "The radio link that carries data from a spacecraft to Earth."
+    },
+    {
+      "term": "Heliopause",
+      "definition": "The boundary where the Sun's wind gives way to interstellar space."
+    },
+    {
+      "term": "Silica",
+      "definition": "A mineral material (silicon and oxygen) that can form when water interacts with rock."
+    },
+    {
+      "term": "Autonomous",
+      "definition": "Able to make decisions onboard, without waiting for commands from Earth."
+    }
+  ],
+  "encounters": [
+    {
+      "id": "gentle-touch",
+      "mission_id": "surveyor-1",
+      "chapter": "moon",
+      "order": 1,
+      "title": "A Gentle Touch",
+      "echo_speaker": "Surveyor 1 lander",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I am a lander with no pilot. Everything I know comes from my sensors.",
+          "The Moon is rising to meet me. Read my numbers, then choose my next move."
+        ],
+        "beats": [
+          {
+            "id": "gt-hint-1",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Look at both gauges. How high am I, and how fast am I falling?"
+          },
+          {
+            "id": "gt-stage1-ok",
+            "trigger": "on_correct",
+            "stage": 1,
+            "speaker": "echo",
+            "text": "Braking burn started early. I am still falling, but much more slowly."
+          },
+          {
+            "id": "gt-stage1-bad",
+            "trigger": "on_incorrect",
+            "stage": 1,
+            "speaker": "echo",
+            "text": "Too fast, too high. Waiting now means less room to slow down later."
+          },
+          {
+            "id": "gt-stage2-ok",
+            "trigger": "on_correct",
+            "stage": 2,
+            "speaker": "echo",
+            "text": "Small thruster corrections. Steady and slow. That is the whole trick."
+          },
+          {
+            "id": "gt-stage2-bad",
+            "trigger": "on_incorrect",
+            "stage": 2,
+            "speaker": "echo",
+            "text": "A big burn this close can overshoot. Gentle, repeated corrections are safer."
+          },
+          {
+            "id": "gt-stage3-ok",
+            "trigger": "on_correct",
+            "stage": 3,
+            "speaker": "echo",
+            "text": "Engines off. My landing legs will take the last bit of motion."
+          },
+          {
+            "id": "gt-stage3-bad",
+            "trigger": "on_incorrect",
+            "stage": 3,
+            "speaker": "echo",
+            "text": "Firing right at the surface could kick up trouble. Let the legs do their job."
+          }
+        ],
+        "outcomes": {
+          "success": "Touchdown. My legs flex and settle. Soon my camera starts sending pictures home.",
+          "partial": "Contact, but rougher than planned. I am down, though with less margin than Earth hoped.",
+          "fail": "Too fast at the end. Rewind: braking has to start early, and the last meters need patience."
+        }
+      },
+      "game_support": {
+        "cue_table": [
+          {
+            "stage": 1,
+            "cue": "High altitude, fast descent",
+            "best_action": "Main braking burn",
+            "why": "Remove most of the speed while there is still room."
+          },
+          {
+            "stage": 2,
+            "cue": "Lower altitude, speed dropping",
+            "best_action": "Fine thruster corrections",
+            "why": "Hold a controlled, slow descent rate."
+          },
+          {
+            "stage": 3,
+            "cue": "Very close to the surface, rate near target",
+            "best_action": "Engines off, let legs absorb",
+            "why": "Shock-absorbing legs handle the final contact."
+          }
+        ],
+        "hint_ladder": [
+          "Check the descent-rate gauge first.",
+          "Early on, speed is the problem. Close to the ground, smoothness is the problem.",
+          "Last step: stop pushing and let the landing legs absorb contact."
+        ]
+      },
+      "behind_the_memory": {
+        "headline": "The first U.S. soft landing on the Moon",
+        "summary": "Surveyor 1 showed that a robotic spacecraft could slow itself and touch down gently on the Moon. It then returned thousands of surface images and engineering data that helped prepare for later landings.",
+        "what_happened": [
+          "Surveyor 1 launched on May 30, 1966, and landed on June 2, 1966, in Oceanus Procellarum.",
+          "Its descent was automatic: onboard sensing and engines worked together to reduce speed before contact.",
+          "After landing, its television camera and instruments sent back thousands of images and engineering measurements."
+        ],
+        "why_it_matters": "Before astronauts could land, engineers needed proof that a spacecraft could land softly and operate on the surface. Surveyor 1 provided early evidence of both.",
+        "key_numbers": [
+          {
+            "label": "Launch",
+            "value": "May 30, 1966",
+            "source_id": "nasa-surveyor1"
+          },
+          {
+            "label": "Landing",
+            "value": "June 2, 1966",
+            "source_id": "nasa-surveyor1"
+          },
+          {
+            "label": "Landing site",
+            "value": "Oceanus Procellarum, Moon near side",
+            "source_id": "nasa-surveyor1"
+          }
+        ],
+        "how_the_game_simplifies": "Surveyor 1 flew itself. In the game, you interpret simplified altitude and speed cues and choose correction steps, instead of flying it by hand. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "descent telemetry",
+            "caption": "Sensors measured height and speed during the fall."
+          },
+          {
+            "step": "successful touchdown",
+            "caption": "Braking and shock absorption brought it down intact."
+          },
+          {
+            "step": "surface images and engineering data",
+            "caption": "The lander returned pictures and measurements from the surface."
+          }
+        ],
+        "source_ids": [
+          "nasa-surveyor1",
+          "nasa-ranger-surveyor"
+        ]
+      },
+      "verify": [
+        "Exact stage order (main braking burn, then thruster control, then engine cutoff) is a simplification of the real sequence; confirm wording against the Surveyor 1 NASA page.",
+        "Confirm 'thousands of images' phrasing; do not state an exact count unless taken from nasa-surveyor1."
+      ],
+      "learning_intent": "Relate sensing, velocity control, and shock absorption to a soft landing.",
+      "player_task": "Interpret simplified altitude and descent-rate cues to select safe automated descent corrections.",
+      "mechanic_family": "navigate-manage",
+      "quick_task": {
+        "task_name": "Soft Landing",
+        "interaction_style": "Hold-and-release micro-task: hold, keep the needle steady, let go.",
+        "control": "One big HOLD button",
+        "seconds": "15-20",
+        "steps": [
+          {
+            "id": "brake",
+            "verb": "hold",
+            "prompt": "Hold BRAKE to slow down",
+            "win_condition": "Descent needle reaches the green zone",
+            "success_text": "Slowing down.",
+            "retry_text": "Too fast. Keep holding."
+          },
+          {
+            "id": "steady",
+            "verb": "hold",
+            "prompt": "Keep the needle in the green",
+            "win_condition": "Needle stays in green while the zone narrows",
+            "success_text": "Nice and steady.",
+            "retry_text": "Ease off a little, then hold again."
+          },
+          {
+            "id": "cut",
+            "verb": "release",
+            "prompt": "Let go at the CUT line",
+            "win_condition": "Button released inside the glowing window",
+            "success_text": "Engines off. Legs take the landing.",
+            "retry_text": "Too early or late. The line glows when it is time."
+          }
+        ],
+        "teaches": "Slow down early, control gently near the ground, then let the shock-absorbing legs finish the job.",
+        "difficulty": {
+          "easy": "Wide green zone, long CUT window",
+          "normal": "Narrower zone"
+        }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended January 7, 1967.",
+        "dataset_status": "silent-location-known"
+      }
+    },
+    {
+      "id": "echo-never-sleeps",
+      "mission_id": "apollo-11-surface",
+      "chapter": "moon",
+      "order": 2,
+      "title": "The Echo That Never Sleeps",
+      "echo_speaker": "Apollo 11 laser retroreflector",
+      "handoff_priority": true,
+      "memory_echo": {
+        "intro": [
+          "I have no battery, no radio, no computer. I only know how to send light back where it came from.",
+          "Earth will fire a pulse. Almost all of it will miss me. Help the few photons that don't."
+        ],
+        "beats": [
+          {
+            "id": "en-aim-1",
+            "trigger": "on_start_aim",
+            "speaker": "echo",
+            "text": "Aim at my landing site, not at the middle of the Moon."
+          },
+          {
+            "id": "en-aim-miss",
+            "trigger": "on_miss",
+            "speaker": "echo",
+            "text": "That pulse lit up bare ground. Nothing sends it back. Adjust and fire again."
+          },
+          {
+            "id": "en-aim-hit",
+            "trigger": "on_hit",
+            "speaker": "echo",
+            "text": "A few photons found me. Now they are heading home."
+          },
+          {
+            "id": "en-noise-1",
+            "trigger": "on_noise",
+            "speaker": "echo",
+            "text": "Not every flash is mine. Sunlight and detector noise arrive at random times."
+          },
+          {
+            "id": "en-noise-2",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Fire again. A real return shows up at the same delay, pulse after pulse."
+          },
+          {
+            "id": "en-timer",
+            "trigger": "on_timing",
+            "speaker": "echo",
+            "text": "Start the clock when the pulse leaves. Stop it when my photon arrives. That is the round trip."
+          },
+          {
+            "id": "en-calc-hint",
+            "trigger": "on_calc_hint",
+            "speaker": "echo",
+            "text": "The light went out to me and back. The distance to the Moon is only half of that trip."
+          },
+          {
+            "id": "en-reveal",
+            "trigger": "on_success",
+            "speaker": "echo",
+            "text": "Round trip: {round_trip_s} seconds. One way, the Moon is {distance_km} km from that observatory right now."
+          },
+          {
+            "id": "en-reveal-2",
+            "trigger": "on_success_followup",
+            "speaker": "echo",
+            "text": "Ask again tomorrow and the answer changes a little. The Moon's path is not a perfect circle."
+          }
+        ],
+        "outcomes": {
+          "success": "Signal locked. A mirror with no power just answered Earth, and the delay gave the distance.",
+          "partial": "You found a return, but the noise made the distance uncertain. More pulses would tighten it.",
+          "fail": "No clear echo yet. Real observatories also need many tries. Realign and fire again."
+        }
+      },
+      "game_support": {
+        "formula": "distance_km = speed_of_light_km_s * round_trip_s / 2",
+        "constants": {
+          "speed_of_light_km_s": 299792.458
+        },
+        "typical_round_trip_s": 2.56,
+        "plausible_round_trip_range_s": [
+          2.38,
+          2.71
+        ],
+        "plausible_distance_range_km": [
+          356400,
+          406700
+        ],
+        "template_tokens": [
+          "{round_trip_s}",
+          "{distance_km}"
+        ],
+        "worked_example": "2.56 s x 299,792 km/s / 2 is about 383,700 km, close to the commonly cited average Earth-Moon distance of 384,400 km.",
+        "design_hint": "Real returns cluster at one delay across repeated pulses; noise spreads randomly. Rewarding repeats teaches the actual method."
+      },
+      "behind_the_memory": {
+        "headline": "A mirror with no power can still answer Earth",
+        "summary": "Apollo 11 astronauts placed a panel of 100 corner-cube reflectors on the Moon in July 1969. Laser pulses from Earth bounce straight back, and the round-trip time reveals the Earth-Moon distance.",
+        "what_happened": [
+          "After Apollo 11's landing in Mare Tranquillitatis, the crew set up the retroreflector panel on the surface.",
+          "Within weeks, observatories at Lick and McDonald detected laser light reflected from it.",
+          "Because the panel is passive, it needs no power. Observatories have ranged to it since 1969 and still do, though its returns are weaker than when it was new."
+        ],
+        "why_it_matters": "Precise timing of returning light measures the Earth-Moon distance very accurately and helps scientists study the Moon's orbit and test theories of gravity.",
+        "key_numbers": [
+          {
+            "label": "Corner-cube reflectors on the Apollo 11 panel",
+            "value": "100",
+            "source_id": "ilrs-apollo11"
+          },
+          {
+            "label": "Typical round-trip light time",
+            "value": "about 2.5 seconds",
+            "source_id": "ilrs-apollo11"
+          },
+          {
+            "label": "Commonly cited average Earth-Moon distance",
+            "value": "about 384,400 km",
+            "source_id": "nasa-moon-missions"
+          },
+          {
+            "label": "Best-case ranging precision at modern stations",
+            "value": "millimeter level",
+            "source_id": "ilrs-apollo11"
+          }
+        ],
+        "how_the_game_simplifies": "Real ranging involves aiming through the atmosphere, correcting for many effects, firing many pulses, and statistical analysis of very few returning photons. The game compresses this into alignment, noise filtering, and one calculation. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "outgoing laser pulse",
+            "caption": "A telescope sends a short laser pulse toward the reflector."
+          },
+          {
+            "step": "returned photons",
+            "caption": "Only a few photons return, so many pulses are needed."
+          },
+          {
+            "step": "light travel time",
+            "caption": "The delay between sending and receiving is about 2.5 seconds."
+          },
+          {
+            "step": "Earth–Moon distance",
+            "caption": "Half the round trip times the speed of light gives the distance."
+          }
+        ],
+        "source_ids": [
+          "ilrs-apollo11",
+          "nssdca-apollo11-lm",
+          "nasa-moon-missions"
+        ]
+      },
+      "verify": [
+        "Optional: also confirm 'still used' on the ILRS Apollo 11 page (ilrs-apollo11) so the primary source in sources.json states it directly.",
+        "Confirm 'millimeter level' precision wording against ILRS or a NASA page before showing it in the UI.",
+        "Range 356,400-406,700 km (perigee to apogee) is standard; cite a NASA page if shown in the UI.",
+        "Do not use NSSDCA id 1969-099C for Apollo 11 (see handoff note: it is the Apollo 12 record)."
+      ],
+      "learning_intent": "Explain how passive retroreflectors support precise lunar ranging without onboard power.",
+      "player_task": "Align laser pulses, separate return signal from noise, and infer distance from round-trip time.",
+      "mechanic_family": "observe-infer",
+      "quick_task": {
+        "task_name": "Ping the Moon",
+        "interaction_style": "Aim-and-spot micro-task: drag to aim, then tap the right signal.",
+        "control": "Drag, then tap",
+        "seconds": "20-25",
+        "steps": [
+          {
+            "id": "aim",
+            "verb": "drag",
+            "prompt": "Drag the crosshair onto the reflector",
+            "win_condition": "Crosshair released within the target ring",
+            "success_text": "Pulse fired.",
+            "retry_text": "Missed. Line up with the glowing marker."
+          },
+          {
+            "id": "find-echo",
+            "verb": "tap",
+            "prompt": "Tap the flash that repeats at the same time",
+            "win_condition": "At least 2 of 3 pulses tapped at the true delay tick",
+            "success_text": "That one keeps coming back. It is real.",
+            "retry_text": "Noise moves around. Look for the one that stays put."
+          },
+          {
+            "id": "halve",
+            "verb": "drag",
+            "prompt": "Drag the marker to the halfway point",
+            "win_condition": "Marker released within the halfway zone",
+            "success_text": "Half the trip is the one-way distance: {distance_km} km.",
+            "retry_text": "The pulse went out and back. Find the middle."
+          }
+        ],
+        "teaches": "A weak return shows up at the same delay every time, and the Moon's distance is half of the round-trip light time.",
+        "difficulty": {
+          "easy": "2 noise flashes, large target",
+          "normal": "4 noise flashes"
+        },
+        "data_note": "Use game_support.formula for the reveal; round_trip_s should land inside plausible_round_trip_range_s."
+      },
+      "status_badge": {
+        "label": "Passive reflector with no power. Observatories still use it.",
+        "dataset_status": "passive-science"
+      },
+      "verified_notes": [
+        "2026-11-14: NASA Goddard briefing (Merkowitz, AGU, Dec 2024) says stations have ranged to the Apollo 11, 14 and 15 reflectors since 1969.",
+        "2026-11-14: JILA article by the reflector's co-designer says the Apollo 11 reflector is still in use but works less well than when new.",
+        "2026-11-14: round trip of about 2.5 s, 100 corner cubes, and 1969 detections at Lick and McDonald confirmed in NASA/NIST and 1970 science papers."
+      ]
+    },
+    {
+      "id": "farther-than-footsteps",
+      "mission_id": "apollo-17-surface",
+      "chapter": "moon",
+      "order": 3,
+      "title": "Farther Than Footsteps",
+      "echo_speaker": "Apollo 17 Lunar Roving Vehicle",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I am a rover left in a valley. I carried two people farther than any boots could reach.",
+          "Plan a route. Every stop costs time, and every kilometer must leave a way home."
+        ],
+        "beats": [
+          {
+            "id": "ft-time",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "The crew has a fixed number of hours outside. Time is the first limit."
+          },
+          {
+            "id": "ft-range",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Stay within a distance the crew could walk back from if I stopped working."
+          },
+          {
+            "id": "ft-value",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Rocks that tell a different story from the last stop are worth more."
+          },
+          {
+            "id": "ft-overrange",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "That loop goes beyond safe walking distance. Shorten it or change direction."
+          },
+          {
+            "id": "ft-overtime",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "Out of time before the last stop. Drop a stop, or pick closer ones."
+          },
+          {
+            "id": "ft-repeat",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "Two similar stops teach less than two different ones."
+          },
+          {
+            "id": "ft-stop-ok",
+            "trigger": "on_correct",
+            "speaker": "echo",
+            "text": "Good stop. Different rock, new clue, still within the safe limit."
+          }
+        ],
+        "outcomes": {
+          "success": "Route complete. Varied samples, safe margin, back at the lander. A landing site became a field laboratory.",
+          "partial": "You got home safely, but the samples were too similar to answer the big questions.",
+          "fail": "The plan broke a safety limit. Real planners rejected routes like this. Try a shorter, smarter loop."
+        }
+      },
+      "game_support": {
+        "constraint_labels": [
+          "Time outside",
+          "Safe-return distance",
+          "Sample value (variety)",
+          "Finish with margin"
+        ],
+        "suggested_stops": [
+          {
+            "label": "Nansen (base of South Massif)",
+            "science_tag": "Material from the massif slope"
+          },
+          {
+            "label": "Shorty crater",
+            "science_tag": "Unusual orange soil"
+          },
+          {
+            "label": "Camelot crater",
+            "science_tag": "Fresh crater ejecta"
+          },
+          {
+            "label": "North Massif",
+            "science_tag": "Large boulders from the highlands"
+          },
+          {
+            "label": "Sculptured Hills",
+            "science_tag": "Different terrain, different rock"
+          }
+        ],
+        "scoring_hint": "Reward variety of science_tag, not number of stops."
+      },
+      "behind_the_memory": {
+        "headline": "A rover that turned a landing site into a field laboratory",
+        "summary": "On Apollo 17, the Lunar Roving Vehicle let the crew explore the Taurus-Littrow valley far beyond walking range, cover more than 30 kilometers, and collect a large, varied set of samples.",
+        "what_happened": [
+          "Apollo 17 landed in the Taurus-Littrow valley in December 1972.",
+          "The crew drove the rover on several long traverses, stopping to observe and sample varied terrain.",
+          "The samples went to laboratories on Earth, where analysis turned field observations into evidence."
+        ],
+        "why_it_matters": "Mobility changed lunar science: instead of sampling around the lander, the crew could compare different landforms and rock types in one mission.",
+        "key_numbers": [
+          {
+            "label": "Total traverse distance",
+            "value": "more than 30 km",
+            "source_id": "nasa-apollo17"
+          },
+          {
+            "label": "Landing area",
+            "value": "Taurus-Littrow valley",
+            "source_id": "nasa-apollo17"
+          }
+        ],
+        "how_the_game_simplifies": "The game condenses three real traverses and many operational limits into one short route-planning activity. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "traverse plan",
+            "caption": "Planners chose stops within time and safety limits."
+          },
+          {
+            "step": "field observations",
+            "caption": "The crew described what they saw at each stop."
+          },
+          {
+            "step": "sample collection",
+            "caption": "Rocks and soil were gathered from varied places."
+          },
+          {
+            "step": "laboratory analysis",
+            "caption": "Back on Earth, scientists studied the samples."
+          }
+        ],
+        "source_ids": [
+          "nasa-apollo17",
+          "nasa-moon-missions",
+          "nssdca-lrv"
+        ]
+      },
+      "verify": [
+        "Station names and their science tags are from memory of the Apollo 17 traverses: confirm each against nasa-apollo17 before displaying names in the UI, or switch to generic labels.",
+        "Apollo 17's rover was LRV-3, not LRV-1. The sources.json entry 'nssdca-lrv' is titled LRV-1 (id 1971-063C), which belongs to the Apollo 15 timeframe. Do not caption it as Apollo 17's rover.",
+        "'Safe walking distance' rule: confirm wording against the Apollo 17 mission details page."
+      ],
+      "learning_intent": "Show how mobility expanded the area and diversity of lunar field geology.",
+      "player_task": "Plan a geology traverse within time, range, sample value, and safe-return constraints.",
+      "mechanic_family": "navigate-manage",
+      "quick_task": {
+        "task_name": "Plan the Drive",
+        "interaction_style": "Route-planning micro-task: tap stops, see the route.",
+        "control": "Tap stops, then DRIVE",
+        "seconds": "20-30",
+        "steps": [
+          {
+            "id": "pick",
+            "verb": "tap",
+            "prompt": "Tap 3 different stops inside the green ring",
+            "win_condition": "3 stops with 3 different science tags, all inside the safe-return ring",
+            "success_text": "Good mix. Safe and varied.",
+            "retry_text": "Two stops teach the same thing, or one is outside the ring."
+          },
+          {
+            "id": "drive",
+            "verb": "tap",
+            "prompt": "Press DRIVE",
+            "win_condition": "Time bar finishes inside the limit",
+            "success_text": "Route complete. Back at the lander.",
+            "retry_text": "Out of time. Swap one stop for a closer one."
+          }
+        ],
+        "teaches": "Real field geology balances time, a safe walking distance back, and variety of samples.",
+        "difficulty": {
+          "easy": "Ring shows green/red automatically",
+          "normal": "Ring only, no color hint"
+        },
+        "data_note": "Use game_support.suggested_stops plus one decoy stop that repeats a science_tag (e.g. a second boulder field). Use generic labels if station names are not verified."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended September 30, 1977.",
+        "dataset_status": "completed-surface"
+      }
+    },
+    {
+      "id": "question-in-the-soil",
+      "mission_id": "viking-1",
+      "chapter": "mars",
+      "order": 4,
+      "title": "A Question in the Soil",
+      "echo_speaker": "Viking 1 lander",
+      "handoff_priority": true,
+      "memory_echo": {
+        "intro": [
+          "I landed in Chryse Planitia on July 20, 1976. My arm scooped up Martian soil and fed it to my laboratory.",
+          "I asked one question four different ways. The answers did not agree. Look at all of them."
+        ],
+        "beats": [
+          {
+            "id": "vk-open",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "Four tests, one soil sample. Open each card, then decide what the evidence supports."
+          },
+          {
+            "id": "vk-card-gex",
+            "trigger": "on_card_open",
+            "card": "gas-exchange",
+            "speaker": "echo",
+            "text": "When my soil got moisture and nutrients, it released oxygen fast. Surprising, and hard to explain as biology."
+          },
+          {
+            "id": "vk-card-lr",
+            "trigger": "on_card_open",
+            "card": "labeled-release",
+            "speaker": "echo",
+            "text": "I added labeled nutrients. A gas came off that looked like something living might release."
+          },
+          {
+            "id": "vk-card-pr",
+            "trigger": "on_card_open",
+            "card": "pyrolytic-release",
+            "speaker": "echo",
+            "text": "This test gave a weak signal. Hard to read, easy to over-read."
+          },
+          {
+            "id": "vk-card-gcms",
+            "trigger": "on_card_open",
+            "card": "organic-test",
+            "speaker": "echo",
+            "text": "I heated the soil and looked for carbon-based molecules. I found none at the levels my instrument could detect."
+          },
+          {
+            "id": "vk-pick-a",
+            "trigger": "on_incorrect",
+            "option": "life-confirmed",
+            "speaker": "echo",
+            "text": "Some tests looked promising. But what did my organic test find? One result is not a conclusion."
+          },
+          {
+            "id": "vk-pick-b",
+            "trigger": "on_incorrect",
+            "option": "no-life-ever",
+            "speaker": "echo",
+            "text": "That says too much. I tested only two small patches of one planet, with tools built in the 1970s."
+          },
+          {
+            "id": "vk-pick-d",
+            "trigger": "on_incorrect",
+            "option": "cherry-pick",
+            "speaker": "echo",
+            "text": "Choosing only the exciting result ignores the rest. A conclusion has to fit every test."
+          },
+          {
+            "id": "vk-pick-c",
+            "trigger": "on_correct",
+            "option": "qualified",
+            "speaker": "echo",
+            "text": "Yes. The results were puzzling, no organics showed up, and chemistry can explain a lot. The question stayed open."
+          }
+        ],
+        "outcomes": {
+          "success": "Careful and honest. Good scientists say what the evidence supports, and no more.",
+          "partial": "Close. Check that your conclusion fits all four results, not just the most exciting ones.",
+          "fail": "Try again: read every card, then choose the statement that all four results can support."
+        }
+      },
+      "game_support": {
+        "evidence_cards": [
+          {
+            "id": "gas-exchange",
+            "label": "Gas Exchange",
+            "what_it_did": "Soil was humidified and fed nutrients while gases were monitored.",
+            "what_it_showed": "Oxygen was released quickly after moisture was added.",
+            "reading": "Surprising and fast, which is more typical of chemistry than slow biology."
+          },
+          {
+            "id": "labeled-release",
+            "label": "Labeled Release",
+            "what_it_did": "Soil received labeled nutrients while a detector watched for released gas.",
+            "what_it_showed": "A gas signal appeared that resembled a metabolic response.",
+            "reading": "Intriguing, but chemistry can mimic it, so on its own it is not proof."
+          },
+          {
+            "id": "pyrolytic-release",
+            "label": "Pyrolytic Release",
+            "what_it_did": "Soil was exposed to labeled gases and then heated to look for incorporated carbon.",
+            "what_it_showed": "A weak, hard-to-interpret signal.",
+            "reading": "Too ambiguous to carry a conclusion."
+          },
+          {
+            "id": "organic-test",
+            "label": "Organic-compound test",
+            "what_it_did": "Soil was heated and the released gases were analyzed for carbon-based molecules.",
+            "what_it_showed": "No organic molecules were detected at the instrument's sensitivity.",
+            "reading": "Argues against a biological explanation, with limits on what it could detect."
+          }
+        ],
+        "options": [
+          {
+            "id": "life-confirmed",
+            "text": "Viking found life on Mars.",
+            "correct": false
+          },
+          {
+            "id": "no-life-ever",
+            "text": "Viking proved there has never been life on Mars.",
+            "correct": false
+          },
+          {
+            "id": "qualified",
+            "text": "The biology-style results were puzzling, but with no organics detected the combined evidence does not show life. Chemistry could explain them, and the question stayed open.",
+            "correct": true
+          },
+          {
+            "id": "cherry-pick",
+            "text": "Only the positive Labeled Release result matters.",
+            "correct": false
+          }
+        ],
+        "shuffle_options": true,
+        "copy_guardrails": {
+          "never_say": [
+            "Viking found life",
+            "Viking proved Mars is dead",
+            "Viking proved there is no life on Mars",
+            "aliens"
+          ],
+          "always_qualify": "State that interpretations remain debated and that later missions changed how scientists read these results."
+        }
+      },
+      "behind_the_memory": {
+        "headline": "The first life-detection experiments on Mars gave answers that did not line up",
+        "summary": "Viking 1 carried a laboratory that tested Martian soil in several ways. Some results looked biology-like, but the organic test found no organic molecules and the findings needed careful, qualified interpretation.",
+        "what_happened": [
+          "Viking 1 landed in Chryse Planitia on July 20, 1976, and operated on the surface until November 1982.",
+          "Its sampler arm delivered soil to experiments that looked for signs of metabolism and for organic molecules.",
+          "The experiments did not produce one simple answer, and scientists have debated the interpretation ever since."
+        ],
+        "why_it_matters": "Viking showed how to weigh conflicting evidence. Later missions added context: Phoenix detected perchlorate salts in Martian soil, and Curiosity has detected organic molecules in Martian rocks, so researchers have revisited how the Viking instruments may have behaved.",
+        "key_numbers": [
+          {
+            "label": "Viking 1 landing",
+            "value": "July 20, 1976",
+            "source_id": "nasa-viking"
+          },
+          {
+            "label": "Last contact / mission end",
+            "value": "November 11, 1982",
+            "source_id": "nasa-viking"
+          },
+          {
+            "label": "Landing region",
+            "value": "Chryse Planitia",
+            "source_id": "nasa-viking"
+          }
+        ],
+        "how_the_game_simplifies": "The game does not reproduce laboratory protocols. It summarizes four experiments and asks which conclusion the combined evidence supports. It does not claim Viking proved or disproved all Martian life. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "collected soil",
+            "caption": "A robotic arm scooped Martian soil into the lander."
+          },
+          {
+            "step": "biology-experiment responses",
+            "caption": "Several tests showed unexpected gas responses."
+          },
+          {
+            "step": "organic-compound test",
+            "caption": "No organic molecules were detected at the instrument's sensitivity."
+          },
+          {
+            "step": "qualified interpretation",
+            "caption": "Combined evidence does not show life, and the question remained open."
+          }
+        ],
+        "source_ids": [
+          "nasa-viking",
+          "nasa-phoenix",
+          "nasa-curiosity"
+        ]
+      },
+      "verify": [
+        "Check each experiment description (Gas Exchange, Labeled Release, Pyrolytic Release, organic test) against the nasa-viking page; local snapshot science.nasa.gov-mission-viking.md exists and should be the reference.",
+        "Confirm the Phoenix perchlorate and Curiosity organics sentences against the nasa-phoenix and nasa-curiosity snapshots; soften if the snapshots do not support them.",
+        "Keep 'no organic molecules detected at the instrument's sensitivity' exactly qualified; never shorten to 'no organics'."
+      ],
+      "learning_intent": "Practice scientific caution when different tests do not produce one simple answer.",
+      "player_task": "Compare soil-experiment results and choose only the conclusion supported by the combined evidence.",
+      "mechanic_family": "observe-infer",
+      "quick_task": {
+        "task_name": "Read the Results",
+        "interaction_style": "Inspect-and-decide micro-task: flip each card, then confirm.",
+        "control": "Tap cards, then tap an answer",
+        "seconds": "25-35",
+        "steps": [
+          {
+            "id": "flip",
+            "verb": "tap",
+            "prompt": "Tap each of the 4 test cards",
+            "win_condition": "All four evidence cards flipped",
+            "success_text": "All four results read.",
+            "retry_text": "Flip every card before you decide."
+          },
+          {
+            "id": "conclude",
+            "verb": "tap",
+            "prompt": "Tap the statement all 4 results support",
+            "win_condition": "Qualified statement selected",
+            "success_text": "Honest answer. The question stayed open.",
+            "retry_text": "One result is not the whole story. Reread the cards."
+          }
+        ],
+        "options": [
+          {
+            "id": "life-confirmed",
+            "text": "Viking found life on Mars.",
+            "correct": false
+          },
+          {
+            "id": "no-life-ever",
+            "text": "Viking proved Mars never had life.",
+            "correct": false
+          },
+          {
+            "id": "qualified",
+            "text": "The results were puzzling and no organics were detected, so life is not shown. The question stayed open.",
+            "correct": true
+          }
+        ],
+        "teaches": "Scientific caution: weigh every result, not just the exciting one.",
+        "difficulty": {
+          "easy": "Cards color-coded by reading",
+          "normal": "No color"
+        },
+        "data_note": "Cherry-pick option from game_support is dropped here to keep three choices; its feedback line may be reused if the player taps a card summary instead."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended November 11, 1982.",
+        "dataset_status": "completed-surface"
+      }
+    },
+    {
+      "id": "clues-beneath-the-wheel",
+      "mission_id": "spirit",
+      "chapter": "mars",
+      "order": 5,
+      "title": "Clues Beneath the Wheel",
+      "echo_speaker": "Spirit rover",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I am a rover in Gusev Crater. One wheel stopped working, so I drag it. The dragging digs things up.",
+          "Choose where I go. Check what the ground is made of. Then decide what it says about water."
+        ],
+        "beats": [
+          {
+            "id": "sp-route",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "Pick a path. Bright, disturbed soil stands out from the dusty plain."
+          },
+          {
+            "id": "sp-cam",
+            "trigger": "on_inspect_camera",
+            "speaker": "echo",
+            "text": "My cameras see pale, light-toned soil where my wheel churned the surface."
+          },
+          {
+            "id": "sp-chem",
+            "trigger": "on_inspect_chemistry",
+            "speaker": "echo",
+            "text": "My chemistry instruments read very high silica. That is unusual for ordinary Martian dust."
+          },
+          {
+            "id": "sp-pick-dust",
+            "trigger": "on_incorrect",
+            "option": "dry-dust",
+            "speaker": "echo",
+            "text": "Ordinary dust does not read this way. Compare the chemistry again."
+          },
+          {
+            "id": "sp-pick-life",
+            "trigger": "on_incorrect",
+            "option": "life-proof",
+            "speaker": "echo",
+            "text": "Too big a leap. Silica tells me about water and heat, not about living things."
+          },
+          {
+            "id": "sp-pick-ok",
+            "trigger": "on_correct",
+            "option": "past-water",
+            "speaker": "echo",
+            "text": "Yes. This kind of silica forms where water, possibly hot, once interacted with rock."
+          }
+        ],
+        "outcomes": {
+          "success": "Evidence matched to a sound conclusion. A stuck wheel became a clue to wetter times on Mars.",
+          "partial": "Right instruments, but the conclusion went a step too far or too little.",
+          "fail": "Try again: look at the color, then the chemistry, then pick the conclusion both support."
+        }
+      },
+      "game_support": {
+        "evidence": [
+          {
+            "instrument": "Panoramic Camera",
+            "reading": "Bright, light-toned soil exposed by the dragging wheel."
+          },
+          {
+            "instrument": "Chemistry and mineral instruments",
+            "reading": "Very silica-rich material."
+          }
+        ],
+        "options": [
+          {
+            "id": "dry-dust",
+            "text": "Ordinary wind-blown dust.",
+            "correct": false
+          },
+          {
+            "id": "past-water",
+            "text": "Evidence that water, possibly hot, once interacted with this ground.",
+            "correct": true
+          },
+          {
+            "id": "life-proof",
+            "text": "Proof that ancient life existed here.",
+            "correct": false
+          }
+        ],
+        "shuffle_options": true
+      },
+      "behind_the_memory": {
+        "headline": "A stuck wheel opened a new scientific clue",
+        "summary": "Spirit's disabled wheel churned up bright, silica-rich soil. Instrument readings supported an interpretation that parts of ancient Mars were wetter, and in some places possibly hot and wet.",
+        "what_happened": [
+          "Spirit landed in Gusev Crater on January 4, 2004, and worked far beyond its planned lifetime.",
+          "After one wheel stopped working, the rover dragged it, exposing material beneath the surface.",
+          "Cameras and chemistry instruments showed silica-rich material, a strong clue to past water."
+        ],
+        "why_it_matters": "Mars is cold and dry today. Finding materials shaped by water helps scientists reconstruct where the planet was once more habitable, without claiming anything about life.",
+        "key_numbers": [
+          {
+            "label": "Landing",
+            "value": "January 4, 2004",
+            "source_id": "nasa-spirit"
+          },
+          {
+            "label": "Mission end declared",
+            "value": "May 25, 2011",
+            "source_id": "nasa-spirit"
+          },
+          {
+            "label": "Final location",
+            "value": "near 'Troy', Gusev Crater",
+            "source_id": "nasa-spirit"
+          }
+        ],
+        "how_the_game_simplifies": "Spirit made many different discoveries. The game focuses on one evidence story: disturbed soil, silica, and a past-water interpretation. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "disturbed soil",
+            "caption": "A dragged wheel exposed bright material."
+          },
+          {
+            "step": "silica-rich material",
+            "caption": "Chemistry showed unusually high silica."
+          },
+          {
+            "step": "instrument readings",
+            "caption": "Camera and chemistry data were combined."
+          },
+          {
+            "step": "past-water interpretation",
+            "caption": "The material points to water interacting with rock."
+          }
+        ],
+        "source_ids": [
+          "nasa-spirit"
+        ]
+      },
+      "verify": [
+        "nasa-spirit has no local snapshot. Confirm the 'dragged wheel exposed silica-rich soil' story and its year on the NASA page before release.",
+        "Keep 'possibly hot' qualified; confirm the hydrothermal wording on the NASA page.",
+        "Do not add a planned-lifetime number (about 90 Martian days) unless confirmed against NASA."
+      ],
+      "learning_intent": "Connect rover movement and instrument measurements to geological evidence.",
+      "player_task": "Choose a route, inspect exposed material, and match instrument evidence to a past-water interpretation.",
+      "mechanic_family": "navigate-manage-observe",
+      "quick_task": {
+        "task_name": "Dig and Match",
+        "interaction_style": "Swipe-and-match micro-task: swipe to reveal, then connect the clue.",
+        "control": "Swipe, tap, drag a line",
+        "seconds": "25-30",
+        "steps": [
+          {
+            "id": "scrape",
+            "verb": "swipe",
+            "prompt": "Swipe to scrape the dusty patch",
+            "win_condition": "Most of the patch revealed",
+            "success_text": "Bright soil exposed.",
+            "retry_text": "Keep swiping across the patch."
+          },
+          {
+            "id": "scan",
+            "verb": "tap",
+            "prompt": "Tap the camera, then the chemistry scanner",
+            "win_condition": "Both scanners used on the bright patch",
+            "success_text": "Bright color, very high silica.",
+            "retry_text": "Use both scanners to see the full picture."
+          },
+          {
+            "id": "match",
+            "verb": "drag",
+            "prompt": "Drag the clue to its meaning",
+            "win_condition": "Line connected to the past-water option",
+            "success_text": "Silica points to water interacting with rock.",
+            "retry_text": "Check what silica forms from. It says nothing about life."
+          }
+        ],
+        "options": [
+          {
+            "id": "dry-dust",
+            "text": "Ordinary wind-blown dust",
+            "correct": false
+          },
+          {
+            "id": "past-water",
+            "text": "Water, possibly hot, once touched this ground",
+            "correct": true
+          },
+          {
+            "id": "life-proof",
+            "text": "Proof of ancient life",
+            "correct": false
+          }
+        ],
+        "teaches": "Rover movement exposes material, instruments measure it, and the evidence supports a past-water interpretation.",
+        "difficulty": {
+          "easy": "Correct option glows after 2 misses",
+          "normal": "No glow"
+        }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended May 25, 2011.",
+        "dataset_status": "silent-location-known"
+      }
+    },
+    {
+      "id": "air-thin-as-a-whisper",
+      "mission_id": "ingenuity",
+      "chapter": "mars",
+      "order": 6,
+      "title": "Air Thin as a Whisper",
+      "echo_speaker": "Ingenuity helicopter",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I am a helicopter on a planet with almost no air. Lift is hard to find here.",
+          "Set my rotors, my energy, my height, and my landing ground. Then I fly myself."
+        ],
+        "beats": [
+          {
+            "id": "ig-air",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "Mars air is far thinner than Earth's. My blades must spin much faster to push on it."
+          },
+          {
+            "id": "ig-rotor-low",
+            "trigger": "on_incorrect",
+            "parameter": "rotor",
+            "speaker": "echo",
+            "text": "Rotors too slow. The thin air gives me no lift."
+          },
+          {
+            "id": "ig-rotor-high",
+            "trigger": "on_incorrect",
+            "parameter": "rotor_high",
+            "speaker": "echo",
+            "text": "Faster than needed wastes energy I cannot spare."
+          },
+          {
+            "id": "ig-energy",
+            "trigger": "on_incorrect",
+            "parameter": "energy",
+            "speaker": "echo",
+            "text": "My battery is small. A longer or higher flight needs more energy than I have."
+          },
+          {
+            "id": "ig-terrain",
+            "trigger": "on_incorrect",
+            "parameter": "terrain",
+            "speaker": "echo",
+            "text": "I steer by looking at the ground. Flat terrain with visible features is safest."
+          },
+          {
+            "id": "ig-auto",
+            "trigger": "on_launch",
+            "speaker": "echo",
+            "text": "Earth cannot steer me live. Signals take minutes. Once I lift off, my onboard software flies the plan."
+          },
+          {
+            "id": "ig-ok",
+            "trigger": "on_success",
+            "speaker": "echo",
+            "text": "Flight complete. Another plan survived the thin air."
+          }
+        ],
+        "outcomes": {
+          "success": "Lift, energy, and terrain all balanced. Mars air carried a helicopter again.",
+          "partial": "Airborne, but with little margin. One setting was pushing the limits.",
+          "fail": "Grounded. Check lift first, then energy, then the landing area."
+        }
+      },
+      "game_support": {
+        "parameters": [
+          "Rotor speed",
+          "Energy use",
+          "Flight altitude",
+          "Terrain"
+        ],
+        "rule_summary": {
+          "rotor_speed": "Needs to be high enough for lift in thin air, but not wastefully high.",
+          "energy": "Longer and higher flights use more of a limited battery.",
+          "altitude": "Higher costs energy; very low risks obstacles.",
+          "terrain": "Flat with visible surface features is easiest for navigation."
+        }
+      },
+      "behind_the_memory": {
+        "headline": "Five planned flights became seventy-two",
+        "summary": "Ingenuity was designed as a technology demonstration and proved powered, controlled flight is possible on Mars. It flew 72 times after being designed for five.",
+        "what_happened": [
+          "Ingenuity arrived at Jezero Crater with the Perseverance rover in February 2021.",
+          "It flew autonomously, using onboard navigation to follow the plan sent from Earth.",
+          "It completed 72 flights before its mission ended in January 2024."
+        ],
+        "why_it_matters": "Flying on Mars proved aerial scouting is possible and influenced thinking about future missions.",
+        "key_numbers": [
+          {
+            "label": "Flights planned",
+            "value": "5",
+            "source_id": "nasa-ingenuity"
+          },
+          {
+            "label": "Flights completed",
+            "value": "72",
+            "source_id": "nasa-ingenuity"
+          },
+          {
+            "label": "Mission end",
+            "value": "January 25, 2024",
+            "source_id": "nasa-ingenuity"
+          }
+        ],
+        "how_the_game_simplifies": "You plan high-level constraints only. Ingenuity controlled its own flight, not through real-time piloting from Earth. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "flight plan",
+            "caption": "Engineers set the goal and limits for a flight."
+          },
+          {
+            "step": "rotor lift",
+            "caption": "Fast-spinning blades generated lift in thin air."
+          },
+          {
+            "step": "navigation images",
+            "caption": "Onboard images helped the helicopter track its position."
+          },
+          {
+            "step": "completed flight data",
+            "caption": "Each flight returned data that shaped the next one."
+          }
+        ],
+        "source_ids": [
+          "nasa-ingenuity",
+          "nasa-perseverance"
+        ]
+      },
+      "verify": [
+        "nasa-ingenuity has no local snapshot. Verify 72 flights, 5 planned, and the end-of-mission date directly on the NASA page.",
+        "Any air-pressure comparison, rotor rpm, or mass figure must be sourced before it is added to the UI; the copy above intentionally avoids exact values.",
+        "Mars-Earth signal delay is described as 'minutes'; confirm if a specific range is displayed."
+      ],
+      "learning_intent": "Relate thin atmosphere, lightweight design, rotor speed, autonomy, and energy limits.",
+      "player_task": "Choose rotor, energy, altitude, and terrain parameters for a short autonomous flight.",
+      "mechanic_family": "navigate-manage",
+      "quick_task": {
+        "task_name": "Pre-flight Check",
+        "interaction_style": "Slider-calibration micro-task: slide each setting into the green zone.",
+        "control": "Two sliders and a tap",
+        "seconds": "15-25",
+        "steps": [
+          {
+            "id": "rotor",
+            "verb": "slide",
+            "prompt": "Slide ROTOR SPEED into the green",
+            "win_condition": "Slider released inside the green zone",
+            "success_text": "Blades fast enough for thin air.",
+            "retry_text": "Too slow gives no lift. Too fast wastes energy."
+          },
+          {
+            "id": "altitude",
+            "verb": "slide",
+            "prompt": "Slide ALTITUDE into the green",
+            "win_condition": "Slider released inside the green zone; battery bar stays safe",
+            "success_text": "Low enough to save energy.",
+            "retry_text": "Higher costs more of a small battery."
+          },
+          {
+            "id": "land",
+            "verb": "tap",
+            "prompt": "Tap the safest landing patch",
+            "win_condition": "Flat patch with visible features chosen",
+            "success_text": "Flat, with features to navigate by.",
+            "retry_text": "The camera needs features to track. Pick a flat, visible patch."
+          }
+        ],
+        "teaches": "Thin air needs fast rotors, a small battery limits height and length, and autonomous navigation needs good terrain.",
+        "difficulty": {
+          "easy": "Wide green zones",
+          "normal": "Narrow zones"
+        },
+        "data_note": "Press LAUNCH only after all three steps pass; the flight itself is a short animation with the on_launch beat."
+      },
+      "status_badge": {
+        "label": "Mission complete. Ended January 25, 2024.",
+        "dataset_status": "completed-surface"
+      }
+    },
+    {
+      "id": "landing-not-planned",
+      "mission_id": "near-shoemaker",
+      "chapter": "elsewhere",
+      "order": 7,
+      "title": "Landing Where No Landing Was Planned",
+      "echo_speaker": "NEAR Shoemaker spacecraft",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I was built to orbit. Nobody built me to land.",
+          "Use my maps of Eros to plan a slow descent, and save my last measurements for the surface."
+        ],
+        "beats": [
+          {
+            "id": "nr-map",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "Eros is not round. Its shape and weak gravity decide how I fall."
+          },
+          {
+            "id": "nr-gravity",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Gravity here is very weak. I drift down slowly, so small corrections matter a lot."
+          },
+          {
+            "id": "nr-shape-bad",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "That target sits near rough ground. Check the shape map for a safer approach."
+          },
+          {
+            "id": "nr-data-bad",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "Mind the final minutes. If measurements are not prioritized, they may never be sent."
+          },
+          {
+            "id": "nr-descend",
+            "trigger": "on_launch",
+            "speaker": "echo",
+            "text": "Beginning descent. Pictures and ranging are guiding every step."
+          },
+          {
+            "id": "nr-ok",
+            "trigger": "on_success",
+            "speaker": "echo",
+            "text": "Touchdown. The records show I kept sending measurements from the surface."
+          }
+        ],
+        "outcomes": {
+          "success": "A spacecraft that was never designed to land touched down gently and kept sending data.",
+          "partial": "You landed, but some final measurements were lost. Priorities matter when time runs short.",
+          "fail": "The approach was off. Study the shape and gravity maps and try again."
+        }
+      },
+      "game_support": {
+        "inputs": [
+          "Orbital images",
+          "Ranging data",
+          "Shape model",
+          "Gravity model"
+        ],
+        "choices": [
+          "Pick a safer landing area",
+          "Time the descent corrections",
+          "Rank final instruments"
+        ],
+        "tone_note": "Celebrate adaptation, not luck. The team used what the spacecraft already carried."
+      },
+      "behind_the_memory": {
+        "headline": "An orbiter survived a landing it was never built to make",
+        "summary": "NEAR Shoemaker was the first spacecraft to orbit and land on an asteroid. After its main mission mapping Eros, engineers guided it to a controlled descent, and it returned data from the surface.",
+        "what_happened": [
+          "NEAR launched in 1996 and entered orbit around asteroid 433 Eros on February 14, 2000.",
+          "Orbital mapping produced composition, shape, density, and surface data.",
+          "In February 2001, the team guided the spacecraft to a controlled landing on Eros."
+        ],
+        "why_it_matters": "NEAR showed how mission teams adapt. Detailed maps and gravity models turned a finished orbital mission into a landing, and the spacecraft gave an up-close look at an asteroid's surface.",
+        "key_numbers": [
+          {
+            "label": "Launch",
+            "value": "February 17, 1996",
+            "source_id": "nasa-near"
+          },
+          {
+            "label": "Entered orbit at Eros",
+            "value": "February 14, 2000",
+            "source_id": "nasa-near"
+          },
+          {
+            "label": "Mission end",
+            "value": "February 28, 2001",
+            "source_id": "nasa-near"
+          }
+        ],
+        "how_the_game_simplifies": "The real descent involved detailed navigation and engineering operations. The spacecraft was not designed as a lander, and the game omits most of those operations. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "orbital images and ranging",
+            "caption": "Months of mapping revealed Eros's shape and surface."
+          },
+          {
+            "step": "shape and gravity model",
+            "caption": "Models predicted how the spacecraft would move near the surface."
+          },
+          {
+            "step": "descent",
+            "caption": "A controlled descent brought the spacecraft down."
+          },
+          {
+            "step": "surface measurements",
+            "caption": "Data continued from the surface after touchdown."
+          }
+        ],
+        "source_ids": [
+          "nasa-near"
+        ]
+      },
+      "verify": [
+        "Local snapshot science.nasa.gov-mission-near-shoemaker.md exists: confirm the landing date (February 2001) and 'continued to send data from the surface' wording against it.",
+        "No landing speed or Eros size is stated in this copy on purpose; add only if sourced."
+      ],
+      "learning_intent": "Connect orbital mapping, weak gravity, adaptive engineering, and asteroid composition.",
+      "player_task": "Use mapping observations to refine a controlled descent and preserve final measurements.",
+      "mechanic_family": "observe-infer-navigate",
+      "quick_task": {
+        "task_name": "Slow Descent",
+        "interaction_style": "Pick-and-time micro-task: choose a spot, then tap on the beat.",
+        "control": "Tap three times, then drag",
+        "seconds": "20-30",
+        "steps": [
+          {
+            "id": "zone",
+            "verb": "tap",
+            "prompt": "Tap the smooth landing zone on the map",
+            "win_condition": "Smooth zone chosen (2 of 3 zones are rough)",
+            "success_text": "Smooth ground. Good choice.",
+            "retry_text": "That area is rough. Check the shape map."
+          },
+          {
+            "id": "correct",
+            "verb": "tap",
+            "prompt": "Tap when the marker hits each glowing tick",
+            "win_condition": "3 taps inside their windows (slow, generous timing)",
+            "success_text": "Small steady corrections.",
+            "retry_text": "Weak gravity means slow motion. Wait for the tick."
+          },
+          {
+            "id": "save",
+            "verb": "drag",
+            "prompt": "Drag SURFACE DATA to the first send slot",
+            "win_condition": "Icon dropped in slot 1 of 3",
+            "success_text": "Final measurements saved first.",
+            "retry_text": "Put the most valuable data first in the queue."
+          }
+        ],
+        "teaches": "Maps and gravity models guide a gentle landing, and priorities decide what data survives.",
+        "difficulty": {
+          "easy": "Large tick windows",
+          "normal": "Smaller windows"
+        }
+      },
+      "status_badge": {
+        "label": "Silent today. Mission ended February 28, 2001.",
+        "dataset_status": "silent-location-known"
+      }
+    },
+    {
+      "id": "power-for-the-unknown",
+      "mission_id": "voyager-1",
+      "chapter": "elsewhere",
+      "order": 8,
+      "title": "Power for the Unknown",
+      "echo_speaker": "Voyager 1 spacecraft",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I left Earth in 1977. My power source fades a little every year.",
+          "Choose which instruments stay on. Every watt you save buys more time."
+        ],
+        "beats": [
+          {
+            "id": "vg-budget",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "My power budget shrinks over time. I cannot run everything at once."
+          },
+          {
+            "id": "vg-priority",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Keep the instruments that measure the space around me. That is what only I can do now."
+          },
+          {
+            "id": "vg-overdraw",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "Too much power requested. I would have to shut something off on my own."
+          },
+          {
+            "id": "vg-bandwidth",
+            "trigger": "on_incorrect",
+            "speaker": "echo",
+            "text": "My signal is very faint and slow. Send only your highest-value measurements."
+          },
+          {
+            "id": "vg-delay",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "A message to me and my reply both take a very long time. Plan ahead."
+          },
+          {
+            "id": "vg-ok",
+            "trigger": "on_success",
+            "speaker": "echo",
+            "text": "Signal sent. Huge antennas on Earth listen for my faint signal."
+          }
+        ],
+        "outcomes": {
+          "success": "Power balanced, best data sent. That is how a 1970s probe keeps exploring.",
+          "partial": "You kept it running, but a valuable measurement was dropped. Priorities decide what Earth learns.",
+          "fail": "Out of power budget. Switch off lower-priority instruments first, then try again."
+        }
+      },
+      "game_support": {
+        "mechanic_rules": {
+          "power": "Total available power declines each round.",
+          "priority": "Instruments that measure the interstellar environment have the highest science value.",
+          "downlink": "Only a small amount of data fits in each transmission."
+        },
+        "no_live_status_rule": "Do not show the current on/off state of real instruments. Use generic labels (Instrument A, B, C) or verified names from nasa-voyager1 only."
+      },
+      "behind_the_memory": {
+        "headline": "A planetary explorer became an interstellar weather station",
+        "summary": "Voyager 1 revolutionized knowledge of Jupiter and Saturn and was the first spacecraft to enter interstellar space. Its remaining science instruments still study interstellar space, while declining power forces engineers to make hard choices.",
+        "what_happened": [
+          "Voyager 1 launched on September 5, 1977, and flew past Jupiter in March 1979.",
+          "It later crossed the heliopause, the edge of the Sun's influence, into interstellar space.",
+          "Its power source weakens by about 4 watts a year, so engineers have turned off some instruments and devices. In September 2026, a power-saving swap of three devices extended the life of its remaining instruments.",
+          "Contact briefly dropped on October 18 and 19, 2026, and returned on October 20 before engineers sent commands. NASA's Deep Space Network, large antennas around the world, receives its faint signal."
+        ],
+        "why_it_matters": "Voyager 1 is a direct measurement of the space between stars. It also shows how distance, power, and bandwidth shape what a mission can do. On November 18, 2026 it reaches one light-day from Earth, so a radio message takes about 24 hours each way.",
+        "key_numbers": [
+          {
+            "label": "Launch",
+            "value": "September 5, 1977",
+            "source_id": "nasa-voyager1"
+          },
+          {
+            "label": "Jupiter encounter",
+            "value": "March 1979",
+            "source_id": "nasa-voyager1"
+          },
+          {
+            "label": "Power lost each year",
+            "value": "about 4 watts",
+            "source_id": "nasa-voyager1",
+            "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
+          },
+          {
+            "label": "One light-day from Earth",
+            "value": "November 18, 2026 (about 25.89 billion km); radio takes 24 hours each way",
+            "source_id": "nasa-voyager1",
+            "citation_url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/"
+          }
+        ],
+        "how_the_game_simplifies": "Instrument availability and power decisions change over time, so the game uses a simplified, abstract budget. Real operations are decided by the mission team. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "instrument power",
+            "caption": "Limited power decides which instruments run."
+          },
+          {
+            "step": "fields-and-particles measurement",
+            "caption": "Remaining instruments sample the interstellar environment."
+          },
+          {
+            "step": "encoded signal",
+            "caption": "Data is packed into a very small, slow signal."
+          },
+          {
+            "step": "Deep Space Network reception",
+            "caption": "Large ground antennas pick up the faint signal."
+          }
+        ],
+        "source_ids": [
+          "nasa-voyager1",
+          "nasa-nssdca"
+        ]
+      },
+      "verify": [
+        "Release-day recheck: look for newer JPL news on Voyager 1 status before showing 'still study interstellar space'.",
+        "Before naming any instrument, read NASA's 'Where Are Voyager 1 and 2 Now?' page. Secondary reports say only the magnetometer and plasma-wave subsystem remain on, so the dataset's 'fields-and-particles' phrase may be out of date.",
+        "Ask Member 6 to add the JPL release (URL in citation_url) to sources.json, then switch the two citation_url key numbers to that source id.",
+        "Keep the one-light-day line evergreen: it is dated November 18, 2026, which is after the November 15 submission deadline."
+      ],
+      "learning_intent": "Explain how power, distance, bandwidth, and ground antennas shape an extended mission.",
+      "player_task": "Allocate declining power among instruments and prioritize a small interstellar data stream.",
+      "mechanic_family": "communicate-preserve",
+      "quick_task": {
+        "task_name": "Divert Power",
+        "interaction_style": "Switch-balancing micro-task: flip switches to match the meter.",
+        "control": "Switches, then one drag",
+        "seconds": "20-30",
+        "steps": [
+          {
+            "id": "switches",
+            "verb": "toggle",
+            "prompt": "Flip switches to stay under the power line",
+            "win_condition": "Total power under the line with both high-value instruments ON, in 2 rounds as the line drops",
+            "success_text": "Power balanced.",
+            "retry_text": "Over the line. Turn off the low-value one first."
+          },
+          {
+            "id": "send",
+            "verb": "drag",
+            "prompt": "Drag the best data into the signal window",
+            "win_condition": "Highest-value packet placed in the small window",
+            "success_text": "Faint but valuable.",
+            "retry_text": "The signal is tiny. Send what matters most."
+          }
+        ],
+        "teaches": "Power declines, bandwidth is tiny, and priorities decide what a distant probe keeps doing.",
+        "difficulty": {
+          "easy": "High-value switches marked with a star",
+          "normal": "No star"
+        },
+        "data_note": "Use generic names (Instrument A-D) with a 'measures space between stars' tag. Do not show real on/off status (see no_live_status_rule)."
+      },
+      "status_badge": {
+        "label": "Mission continues. Status can change.",
+        "dataset_status": "active-extended"
+      },
+      "verified_notes": [
+        "2026-11-14: NASA JPL release 2026-078 (Oct 29, 2026) confirms: about 4 W/yr power loss, September 2026 three-device swap, contact loss Oct 18-19 resolved Oct 20, and one light-day (25.89 billion km) on Nov 18, 2026.",
+        "The JPL release does not name which instruments remain on, so this copy names none."
+      ]
+    },
+    {
+      "id": "one-chance-at-pluto",
+      "mission_id": "new-horizons",
+      "chapter": "elsewhere",
+      "order": 9,
+      "title": "One Chance at Pluto",
+      "echo_speaker": "New Horizons spacecraft",
+      "handoff_priority": false,
+      "memory_echo": {
+        "intro": [
+          "I will pass Pluto once. There is no second lap and no brake.",
+          "Choose what I look at, in what order. I can't look and call home at the same time."
+        ],
+        "beats": [
+          {
+            "id": "nh-open",
+            "trigger": "on_start",
+            "speaker": "echo",
+            "text": "The flyby is short. Years of preparation come down to a few busy hours."
+          },
+          {
+            "id": "nh-point",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "When I turn my instruments toward Pluto, my antenna is not aimed at Earth."
+          },
+          {
+            "id": "nh-storage",
+            "trigger": "on_incorrect",
+            "parameter": "storage",
+            "speaker": "echo",
+            "text": "My storage is filling up. Prioritize, or something will not be kept."
+          },
+          {
+            "id": "nh-downlink",
+            "trigger": "on_hint",
+            "speaker": "echo",
+            "text": "Everything I record must be sent later, slowly. The data trickles home for months."
+          },
+          {
+            "id": "nh-plan",
+            "trigger": "on_launch",
+            "speaker": "echo",
+            "text": "Sequence loaded. I run it on my own. No one on Earth can steer me live."
+          },
+          {
+            "id": "nh-ok",
+            "trigger": "on_success",
+            "speaker": "echo",
+            "text": "Flyby complete. The measurements are safe. Now the long wait for the data to arrive."
+          }
+        ],
+        "outcomes": {
+          "success": "A well-planned sequence captured the key observations and kept room to send them home.",
+          "partial": "Good observations, but some data would take too long to downlink. Balance looking with sending.",
+          "fail": "The plan ran out of pointing time or storage. Try fewer, higher-value observations."
+        }
+      },
+      "game_support": {
+        "constraints": [
+          "Pointing time",
+          "Onboard storage",
+          "Downlink capacity"
+        ],
+        "pacing_note": "After the flyby, play a short 'data trickles home' animation to show why return takes so long."
+      },
+      "behind_the_memory": {
+        "headline": "Years of planning for a few fast hours beside Pluto",
+        "summary": "New Horizons flew past Pluto on July 14, 2015. Because the encounter was brief and the spacecraft far away, it ran a preplanned observation sequence, then sent the data home slowly over a long period.",
+        "what_happened": [
+          "New Horizons launched on January 19, 2006, and passed Pluto on July 14, 2015.",
+          "It revealed unexpectedly complex geology across the Pluto system.",
+          "After Pluto, it continued into the Kuiper Belt and returned the first close observations of Arrokoth."
+        ],
+        "why_it_matters": "A flyby is a one-time chance. The mission shows how preparation, limited downlink capacity, and patience let a small spacecraft explore a distant world.",
+        "key_numbers": [
+          {
+            "label": "Launch",
+            "value": "January 19, 2006",
+            "source_id": "nasa-new-horizons"
+          },
+          {
+            "label": "Pluto flyby",
+            "value": "July 14, 2015",
+            "source_id": "nasa-new-horizons"
+          }
+        ],
+        "how_the_game_simplifies": "The game compresses a complex preprogrammed observation campaign and a lengthy data return into a short sequence. The game also turns this into a quick tap-and-drag task.",
+        "evidence_chain": [
+          {
+            "step": "observation sequence",
+            "caption": "Engineers planned the flyby years ahead."
+          },
+          {
+            "step": "stored measurements",
+            "caption": "Data was recorded onboard during the encounter."
+          },
+          {
+            "step": "delayed downlink",
+            "caption": "Sending it all to Earth took a long time."
+          },
+          {
+            "step": "Pluto-system interpretation",
+            "caption": "Scientists studied the data to understand Pluto and its moons."
+          }
+        ],
+        "source_ids": [
+          "nasa-new-horizons"
+        ]
+      },
+      "verify": [
+        "Dataset flags status_review_required_before_release=true: recheck the 'continues outward through the Kuiper Belt' status on the NASA page.",
+        "Local snapshot exists (science.nasa.gov-mission-new-horizons.md): if the UI adds closest-approach distance, speed, or how long data return took, source those numbers from it first."
+      ],
+      "learning_intent": "Show why years of preparation were required for a brief encounter and long data return.",
+      "player_task": "Schedule observations during a fast flyby with limited pointing time, storage, and downlink.",
+      "mechanic_family": "communicate-preserve",
+      "quick_task": {
+        "task_name": "Plan the Flyby",
+        "interaction_style": "Drag-to-schedule micro-task: drag cards into slots.",
+        "control": "Drag cards into 3 slots, then RUN",
+        "seconds": "20-30",
+        "steps": [
+          {
+            "id": "schedule",
+            "verb": "drag",
+            "prompt": "Drag 3 observations into the timeline",
+            "win_condition": "3 high-value cards placed; storage bar under the line",
+            "success_text": "Schedule set.",
+            "retry_text": "Storage is full. Swap one for a smaller observation."
+          },
+          {
+            "id": "run",
+            "verb": "tap",
+            "prompt": "Press RUN",
+            "win_condition": "Sequence plays; data trickles home",
+            "success_text": "Flyby complete. The data will take a long time to arrive.",
+            "retry_text": "Not ready: fill all three slots."
+          }
+        ],
+        "cards": [
+          {
+            "label": "Surface map",
+            "value": "high"
+          },
+          {
+            "label": "Largest moon",
+            "value": "high"
+          },
+          {
+            "label": "Atmosphere",
+            "value": "high"
+          },
+          {
+            "label": "Particles and dust",
+            "value": "medium"
+          },
+          {
+            "label": "Repeat photo of same spot",
+            "value": "low"
+          }
+        ],
+        "teaches": "A flyby is one chance, so observations are limited by pointing time, storage, and a slow downlink.",
+        "difficulty": {
+          "easy": "Low-value card is greyed after one swap",
+          "normal": "No grey"
+        },
+        "data_note": "Show an 'antenna not pointed at Earth' icon on filled slots. Card names are generic: verify against nasa-new-horizons before naming specific instruments."
+      },
+      "status_badge": {
+        "label": "Mission continues. Status can change.",
+        "dataset_status": "active-extended"
+      }
+    }
+  ],
+  "task_standard": {
+    "inspiration": "Interaction style only: quick, tactile, one-gesture micro-tasks. Use original art, names, and sounds, and never copy another game's assets or names.",
+    "rules": [
+      "One verb per step: tap, drag, hold, swipe, slide, or toggle.",
+      "1 to 3 steps, 15-35 seconds total, no reading beyond one short prompt.",
+      "Instant feedback in color AND icon/sound, never color alone.",
+      "No fail state: wrong moves show retry_text and the player can try again immediately.",
+      "Large touch targets (at least 48 px) so it works on phones.",
+      "Hint button always visible. Using a hint, or 3+ retries, ends in 'partial' instead of 'success'.",
+      "After success, show a short Echo line, then the Behind the Memory button."
+    ],
+    "result_mapping": {
+      "success": "Finished with no hint and fewer than 3 retries",
+      "partial": "Used a hint or needed 3+ retries",
+      "fail": "Not used as an ending: use outcomes.fail text as the retry message"
+    },
+    "progress": "Each completed encounter fills a task bar on the observatory screen."
+  },
+  "references_consulted": [
+    {
+      "title": "NASA's Voyager 1 Conserves Power, Resolves Brief Communications Pause (release 2026-078)",
+      "org": "NASA JPL",
+      "url": "https://www.jpl.nasa.gov/news/nasas-voyager-1-conserves-power-resolves-brief-communications-pause/",
+      "used_for": "power-for-the-unknown"
+    },
+    {
+      "title": "To the Moon and Back ... in 2.5 Seconds",
+      "org": "NIST",
+      "url": "https://www.nist.gov/history/moon-and-back-25-seconds",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Apollo 11 Laser Ranging Retro-Reflector: Initial Measurements from the McDonald Observatory (Science, 1970)",
+      "org": "Alley et al.",
+      "url": "https://ieeemilestones.ethw.org/w/images/4/47/Ref3-Science-Magazine-1970.pdf",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Lunar Laser Ranging in the Artemis Era (AGU 2024 briefing)",
+      "org": "NASA Goddard (Merkowitz)",
+      "url": "https://ntrs.nasa.gov/api/citations/20240015373/downloads/Lunar%20Laser%20Ranging%20Artemis%20Era%20presentation.pdf",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "Apollo 11's last working experiment on the Moon",
+      "org": "JILA, University of Colorado",
+      "url": "https://jila-pfc.colorado.edu/news-events/news/apollo-11s-last-working-experiment-moon",
+      "used_for": "echo-never-sleeps"
+    },
+    {
+      "title": "NSSDCA Master Catalog (Apollo 12 spacecraft ID check)",
+      "org": "NASA Goddard / NSSDCA",
+      "url": "https://nssdc.gsfc.nasa.gov/",
+      "used_for": "handoff note"
+    }
+  ]
+}

@@ -34,3 +34,10 @@ npm run validate:entries  # Verify all 23 echoes, coordinates, sources, and stor
 npm run references        # Regenerate docs/submission-references.md from src/data/
 npm run build             # Production build to dist/
 ```
+
+## NASA Official Super Intelligence (SI) & AI Disclosure
+
+- **Code, Procedural Art & Audio:** Parts of the codebase, procedural pixel-art generators, Web Audio API synthesizer routines, and dataset normalization were developed with the assistance of AI coding tools (Claude by Anthropic and Gemini / Antigravity by Google DeepMind).
+- **Human Verification:** All generated code was reviewed by a human team member, and every historical date, coordinate, status, and scientific claim was verified by a human team member against official NASA, JPL, NSSDCA, ILRS, and PDS primary sources (see [docs/submission-references.md](docs/submission-references.md)).
+- **Visual Watermarking & No NASA Branding:** Authentic mission photographs are official public-domain NASA imagery credited with their NASA ID. Any team/SI-generated illustration or schematic map is visibly watermarked (`SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH`) and contains zero NASA logos, insignias, or mission patches.
+
