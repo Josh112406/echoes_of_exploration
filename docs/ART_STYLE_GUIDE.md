@@ -149,4 +149,3 @@ To comply with NASA SpaceApps competition rules and our narrative integrity:
 The original visual reference build, images, and interactive palette swatches are preserved in the repository at:
 - **`docs/art-reference/index.html`** (Live interactive reference page)
 - **`public/assets/sprites/`** (Extracted 16-bit sprites: `robot.png`, `surveyor.png`, `lm.png`, `curiosity.png`, `rocket.png`, `earth.png`, `panel.png`)
-

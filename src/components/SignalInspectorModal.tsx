@@ -1,180 +1,326 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { telemetryAudio } from '../audio/telemetryAudio';
+import { CLAIM_LEDGER } from '../data/ledgers';
+import { MISSION_DETAILS, STATUS_LABELS } from '../data/missionDetails';
+import missionsData from '../data/missions.json';
+import sourcesData from '../data/sources.json';
 
-export interface MissionRecord {
-  id: string;
-  name: string;
-  chapter: string;
-  featured: boolean;
-  agencies: string[];
-  hardware_types: string[];
-  destination: string;
-  launch_date: string;
-  arrival_date?: string;
-  mission_end_date?: string | null;
-  status: string;
-  location_summary: string;
-  objective: string;
-  science_summary: string;
-  story_hook: string;
-  source_ids: string[];
-  media_page_url: string;
-}
+export type MissionRecord = (typeof missionsData.records)[number];
 
 interface SignalInspectorModalProps {
-  mission: MissionRecord | null;
+  mission: MissionRecord;
+  isBookmarked: boolean;
+  isEncounterCompleted: boolean;
+  onToggleBookmark: (missionId: string) => void;
+  onSelectMission: (mission: MissionRecord) => void;
   onClose: () => void;
+  onLaunchEncounter?: (missionId: string, encounterId: string) => void;
 }
 
-export function SignalInspectorModal({ mission, onClose }: SignalInspectorModalProps) {
+type DetailLayer = 1 | 2 | 3 | 4;
+
+export function SignalInspectorModal({
+  mission,
+  isBookmarked,
+  isEncounterCompleted,
+  onToggleBookmark,
+  onSelectMission,
+  onClose,
+  onLaunchEncounter,
+}: SignalInspectorModalProps) {
+  const [layer, setLayer] = useState<DetailLayer>(1);
+  const detail = MISSION_DETAILS[mission.id];
+  const statusInfo = STATUS_LABELS[mission.status] ?? {
+    label: mission.status,
+    tone: 'muted' as const,
+  };
+  const resolvedSources = sourcesData.sources.filter((s) =>
+    mission.source_ids.includes(s.id)
+  );
+  const relatedClaims = CLAIM_LEDGER.filter((c) => c.missionId === mission.id);
+  const relatedMissions = (detail?.relatedIds ?? [])
+    .map((id) => missionsData.records.find((m) => m.id === id))
+    .filter((m): m is MissionRecord => Boolean(m));
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        telemetryAudio.playChirp(700, 0.03);
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-
-  if (!mission) return null;
-
-  // Determine sprite based on hardware or destination
-  let spriteSrc = '/assets/sprites/rocket.png';
-  if (mission.id.includes('surveyor')) spriteSrc = '/assets/sprites/surveyor.png';
-  else if (mission.id.includes('apollo') || mission.hardware_types.includes('descent stage')) spriteSrc = '/assets/sprites/lm.png';
-  else if (mission.chapter === 'mars' && (mission.hardware_types.includes('rover') || mission.id.includes('curiosity') || mission.id.includes('opportunity'))) spriteSrc = '/assets/sprites/curiosity.png';
-  else if (mission.chapter === 'moon') spriteSrc = '/assets/sprites/surveyor.png';
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(5, 7, 15, 0.85)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}
-      onClick={() => {
-        telemetryAudio.playChirp(700, 0.03);
-        onClose();
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-mission-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="hud-panel voice-story"
-        style={{
-          width: '100%',
-          maxWidth: '720px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          background: 'var(--panel)',
-          padding: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-          position: 'relative',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--line)', paddingBottom: '14px' }}>
-          <div>
-            <div className="eyebrow" style={{ color: mission.chapter === 'mars' ? 'var(--rust)' : 'var(--cyan)' }}>
-              {mission.chapter.toUpperCase()} CHAPTER // BEACON ID: {mission.id}
+      <div className="modal-panel panel notch-corner">
+        <div className="modal-header">
+          <div className="modal-title-group">
+            <img
+              src={detail?.sprite ?? '/assets/generated/sprites/voyager.png'}
+              alt={`${mission.name} spacecraft illustration`}
+              className="modal-sprite pixel-art"
+            />
+            <div>
+              <div className="modal-badges">
+                <span className="pill-tag">{mission.chapter.toUpperCase()}</span>
+                <span className={`status-pill status-${statusInfo.tone}`}>
+                  {statusInfo.label}
+                </span>
+                {mission.featured && (
+                  <span className="pill-tag pill-cyan">
+                    {isEncounterCompleted ? '★ FEATURED · UNLOCKED' : '★ FEATURED ENCOUNTER'}
+                  </span>
+                )}
+              </div>
+              <h2 id="modal-mission-title">{mission.name}</h2>
+              <p className="modal-meta">
+                {mission.destination} · Launched {mission.launch_date} ·{' '}
+                {mission.agencies.join(' / ')}
+              </p>
             </div>
-            <h2 style={{ fontSize: '24px', color: 'var(--ink)', marginTop: '4px' }}>{mission.name}</h2>
           </div>
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              telemetryAudio.playChirp(700, 0.03);
-              onClose();
-            }}
-            style={{ padding: '4px 10px', fontSize: '11px' }}
-          >
-            [ ESC // CLOSE ✕ ]
-          </button>
+          <div className="modal-header-actions">
+            <button
+              type="button"
+              className={`btn ${isBookmarked ? 'btn-amber' : ''}`}
+              aria-pressed={isBookmarked}
+              onClick={() => {
+                telemetryAudio.playChirp(
+                  680,
+                  0.05,
+                  isBookmarked ? 'Bookmark removed' : 'Mission bookmarked'
+                );
+                onToggleBookmark(mission.id);
+              }}
+            >
+              {isBookmarked ? '★ BOOKMARKED' : '☆ BOOKMARK'}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={onClose}
+              aria-label="Close mission dossier"
+            >
+              ✕ CLOSE
+            </button>
+          </div>
         </div>
 
-        {/* Visual Sprite & Telemetry Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '24px', alignItems: 'center' }}>
-          <div
-            style={{
-              width: '100px',
-              height: '100px',
-              border: '1px solid var(--line)',
-              background: 'var(--void)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '10px',
-            }}
-          >
-            <img src={spriteSrc} alt={mission.name} className="pixelated" style={{ maxWidth: '100%', maxHeight: '100%' }} />
-          </div>
+        {/* 4-Layer Progressive Detail Tabs */}
+        <div className="layer-tabs" role="tablist" aria-label="Mission detail depth layers">
+          {(
+            [
+              { id: 1, label: '1. Memory Echo (Story)' },
+              { id: 2, label: '2. Mission Console (Record)' },
+              { id: 3, label: '3. Deep Dive & Links' },
+              { id: 4, label: '4. Sources & Claims' },
+            ] as Array<{ id: DetailLayer; label: string }>
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={layer === tab.id}
+              className={`stage-chip ${layer === tab.id ? 'active' : ''}`}
+              onClick={() => {
+                telemetryAudio.playChirp(580, 0.04);
+                setLayer(tab.id);
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', fontFamily: 'var(--f-mono)', fontSize: '12px' }}>
-            <div style={{ background: 'var(--void)', padding: '8px', border: '1px solid var(--line)' }}>
-              <span className="muted" style={{ display: 'block', fontSize: '10px' }}>DESTINATION</span>
-              <b>{mission.destination}</b>
+        <div className="modal-body">
+          {layer === 1 && (
+            <div className="voice-echo modal-section">
+              <div className="voice-header">
+                <span className="pill-tag pill-cyan">
+                  MEMORY ECHO · DRAMATIZED PERSPECTIVE
+                </span>
+                <span className="pill-tag">SI-GENERATED ILLUSTRATION · CC0</span>
+              </div>
+              <blockquote className="echo-quote">“{mission.story_hook}”</blockquote>
+              {detail?.memoryEcho && <p className="record-paragraph">{detail.memoryEcho}</p>}
+              <p className="muted-caption">
+                Attribution note: The voice above is a fictionalized memory echo inspired by the
+                mission’s historical engineering role. Switch to Layers 2–4 for strictly verified
+                NASA mission data and primary records.
+              </p>
             </div>
-            <div style={{ background: 'var(--void)', padding: '8px', border: '1px solid var(--line)' }}>
-              <span className="muted" style={{ display: 'block', fontSize: '10px' }}>LAUNCH DATE</span>
-              <b>{mission.launch_date}</b>
-            </div>
-            <div style={{ background: 'var(--void)', padding: '8px', border: '1px solid var(--line)' }}>
-              <span className="muted" style={{ display: 'block', fontSize: '10px' }}>CURRENT STATUS</span>
-              <span className={`status-badge ${mission.status.includes('impact') ? 'impacted' : mission.status === 'operational' ? 'active' : 'dormant'}`} style={{ display: 'inline-block', marginTop: '2px' }}>
-                {mission.status}
+          )}
+
+          {layer === 2 && (
+            <div className="voice-record modal-section">
+              <span className="pill-tag pill-amber">
+                VERIFIED ARCHIVE RECORD · {detail?.decade ?? mission.launch_date.slice(0, 4)}
               </span>
+              <p className="record-paragraph">
+                {detail?.archivistNote ?? mission.objective}
+              </p>
+              <div className="telemetry-kv">
+                <div>
+                  <span className="kv-label">DESTINATION / LOCATION</span>
+                  <span className="kv-val">{mission.location_summary}</span>
+                </div>
+                <div>
+                  <span className="kv-label">PRIMARY OBJECTIVE</span>
+                  <span className="kv-val">{mission.objective}</span>
+                </div>
+                <div>
+                  <span className="kv-label">TIMELINE (LAUNCH → ARRIVAL → END)</span>
+                  <span className="kv-val">
+                    {mission.launch_date} → {mission.arrival_date ?? 'N/A'} →{' '}
+                    {mission.mission_end_date ?? 'Active / Ongoing'}
+                  </span>
+                </div>
+                <div>
+                  <span className="kv-label">HARDWARE / INSTRUMENTS</span>
+                  <span className="kv-val">
+                    {(detail?.instruments ?? mission.hardware_types).join(' · ')}
+                  </span>
+                </div>
+                {detail?.constraint && (
+                  <div>
+                    <span className="kv-label">KEY ENGINEERING CONSTRAINT</span>
+                    <span className="kv-val">{detail.constraint}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {layer === 3 && (
+            <div className="modal-section">
+              <span className="pill-tag pill-amber">
+                SCIENCE MEASUREMENTS, UNCERTAINTY & CONNECTIONS
+              </span>
+              <div className="telemetry-kv">
+                <div>
+                  <span className="kv-label">SCIENCE SUMMARY</span>
+                  <span className="kv-val">{mission.science_summary}</span>
+                </div>
+                {detail?.measurements && (
+                  <div>
+                    <span className="kv-label">NOTABLE MEASUREMENTS</span>
+                    <span className="kv-val">{detail.measurements}</span>
+                  </div>
+                )}
+                {detail?.uncertaintyNote && (
+                  <div>
+                    <span className="kv-label">SCIENTIFIC UNCERTAINTY / CONTEXT</span>
+                    <span className="kv-val">{detail.uncertaintyNote}</span>
+                  </div>
+                )}
+              </div>
+
+              {relatedMissions.length > 0 && (
+                <div className="related-missions-box">
+                  <span className="kv-label">CONNECTED ARCHIVE MISSIONS</span>
+                  <div className="related-pills">
+                    {relatedMissions.map((rel) => (
+                      <button
+                        key={rel.id}
+                        type="button"
+                        className="btn"
+                        onClick={() => onSelectMission(rel)}
+                      >
+                        OPEN: {rel.name.toUpperCase()} →
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {layer === 4 && (
+            <div className="modal-section">
+              <span className="pill-tag pill-amber">
+                CITATIONS, NASA MEDIA & CLAIM PROVENANCE
+              </span>
+              <div className="telemetry-kv">
+                <div>
+                  <span className="kv-label">IMAGE & VISUAL DISCLOSURE</span>
+                  <span className="kv-val">
+                    {detail?.authenticLabel ??
+                      'Official NASA mission record (Pixel illustration in-game)'}{' '}
+                    —{' '}
+                    <a
+                      href={mission.media_page_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="citation-link"
+                    >
+                      Official {mission.name} NASA Media Gallery ↗
+                    </a>
+                  </span>
+                </div>
+              </div>
+
+              <div className="sources-list">
+                <h4>Primary Authoritative Sources</h4>
+                {resolvedSources.map((src) => (
+                  <div key={src.id} className="source-row">
+                    <span className="pill-tag">{src.tier}</span>
+                    <a
+                      href={src.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="citation-link"
+                    >
+                      [{src.organization}] {src.title} ↗
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              {relatedClaims.length > 0 && (
+                <div className="claims-box">
+                  <h4>In-Game Claim Ledger</h4>
+                  {relatedClaims.map((cl) => (
+                    <div key={cl.claimId} className="claim-item">
+                      <strong>{cl.publishedWording}</strong>
+                      <p>
+                        {cl.confidenceNote} ({cl.reviewer})
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Story Voice (Cyan) */}
-        <div className="voice-story" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span className="tag-story">Memory Echo (Narrative Voice)</span>
-          <p style={{ fontStyle: 'italic', color: 'var(--ink)', fontSize: '15px' }}>
-            "{mission.story_hook}"
-          </p>
-          <div className="muted" style={{ fontSize: '12px' }}>
-            Dramatized memory hook representing the silent explorer's vantage point.
+        <div className="modal-footer">
+          <span className="muted-caption">
+            Catalog ID: <code>{mission.id}</code>
+          </span>
+          <div className="modal-header-actions">
+            {mission.featured_encounter_id && onLaunchEncounter && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  const encId = mission.featured_encounter_id;
+                  if (encId) onLaunchEncounter(mission.id, encId);
+                }}
+              >
+                {isEncounterCompleted ? 'REPLAY ENCOUNTER →' : 'LAUNCH ENCOUNTER →'}
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Science Voice (Amber) */}
-        <div className="voice-record" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span className="tag-record">Verified Record (NASA Primary Data)</span>
-          <p style={{ color: 'var(--ink)', fontSize: '14px', lineHeight: '1.5' }}>
-            {mission.science_summary || mission.objective}
-          </p>
-          <div style={{ fontFamily: 'var(--f-mono)', fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
-            📍 <b>Resting Coordinates:</b> {mission.location_summary}
-          </div>
-        </div>
-
-        {/* Footer Links */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingTop: '10px', borderTop: '1px solid var(--line)' }}>
-          <div className="muted" style={{ fontFamily: 'var(--f-mono)', fontSize: '11px' }}>
-            AGENCIES: {mission.agencies.join(', ')} // TYPE: {mission.hardware_types.join(', ')}
-          </div>
-          <a
-            href={mission.media_page_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-observatory"
-            style={{ fontSize: '11px', padding: '6px 12px' }}
-          >
-            VIEW ON NASA SCIENCE ↗
-          </a>
         </div>
       </div>
     </div>
