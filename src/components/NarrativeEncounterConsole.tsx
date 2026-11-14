@@ -7,6 +7,15 @@ import type {
   QuickTaskOption,
   SourceRecord,
 } from '../data/types';
+import {
+  buildEarthSheet,
+  drawNineSliceFrame,
+  EARTH_FRAMES,
+  EARTH_SIZE,
+  getEncounterSpriteCanvas,
+  getWorldBackdrop,
+  type PixelWorld,
+} from '../systems/stillOutThereArt';
 import { BehindTheMemoryPanel } from './BehindTheMemoryPanel';
 
 interface NarrativeEncounterConsoleProps {
@@ -60,87 +69,35 @@ interface VisualTelemetry {
   plutoSlots: string[];
 }
 
-const STAGE_BAYER_4X4 = [
-  [0, 8, 2, 10],
-  [12, 4, 14, 6],
-  [3, 11, 1, 9],
-  [15, 7, 13, 5],
-];
-
 function drawHorizonBackdrop(
   ctx: CanvasRenderingContext2D,
   chapter: string,
+  encounterId: string,
   title: string,
   stepIdx: number,
   stepsTotal: number,
-  outcome: 'active' | 'success' | 'partial'
+  outcome: 'active' | 'success' | 'partial',
+  phase: number
 ) {
-  const isMars = chapter === 'mars';
-  const isMoon = chapter === 'moon';
+  const world: PixelWorld = chapter === 'mars' ? 'mars' : chapter === 'moon' ? 'moon' : 'elsewhere';
+  const backdrop = getWorldBackdrop(world);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(backdrop.sky, 0, 0, 640, 360);
 
-  // Deep sky field (img/07.jpg & img/08.jpg)
-  ctx.fillStyle = '#05070f';
-  ctx.fillRect(0, 0, 640, 360);
-  ctx.fillStyle = '#0b0f1d';
-  ctx.fillRect(0, 72, 640, 180);
-
-  // Ordered Bayer-dithered Martian atmospheric dust haze (img/08.jpg)
-  if (isMars) {
-    const hazeRamp = ['#0b0f1d', '#2b140e', '#522116', '#7d331c'];
-    for (let y = 104; y < 224; y += 2) {
-      const t = (y - 104) / 120;
-      const scaled = t * (hazeRamp.length - 1);
-      const idx = Math.floor(scaled);
-      const frac = scaled - idx;
-      for (let x = 0; x < 640; x += 4) {
-        const th = (STAGE_BAYER_4X4[(y >> 1) & 3][(x >> 2) & 3] + 0.5) / 16;
-        const shade = frac > th && idx + 1 < hazeRamp.length ? hazeRamp[idx + 1] : hazeRamp[idx];
-        ctx.fillStyle = shade;
-        ctx.fillRect(x, y, 4, 2);
-      }
-    }
-  }
-
-  // Deterministic starfield
-  for (let i = 0; i < 64; i += 1) {
-    const sx = (i * 151 + 17) % 640;
-    const sy = (i * 73 + 9) % 192;
-    ctx.fillStyle = i % 9 === 0 ? '#7ef1ff' : i % 3 === 0 ? '#b2b8d4' : '#8389a8';
-    ctx.fillRect(sx, sy, 1, 1);
-  }
-
-  // Hero light: Pixel Earth on Moon (img/07.jpg) or Pale Cyan Dot on Mars/Deep Space
-  if (isMoon) {
-    const ex = 516;
-    const ey = 86;
-    const er = 32;
-    for (let y = -er; y <= er; y += 2) {
-      for (let x = -er; x <= er; x += 2) {
-        if (x * x + y * y > er * er) continue;
-        const tx = (x - 4) / er;
-        const n = Math.sin(x * 0.14 + y * 0.11) + Math.cos(y * 0.24 - x * 0.08);
-        const th = (STAGE_BAYER_4X4[(y + er) & 3][(x + er) & 3] - 7.5) / 36;
-        if (tx + th > 0.25) {
-          ctx.fillStyle = '#05070f';
-        } else if (n > 0.72) {
-          ctx.fillStyle = '#0ec3dc';
-        } else if (y < -18 && (x + y) % 8 < 3) {
-          ctx.fillStyle = '#e2e6fa';
-        } else {
-          ctx.fillStyle = n > 0.15 ? '#087d99' : '#064b5c';
-        }
-        ctx.fillRect(ex + x, ey + y, 2, 2);
-      }
-    }
-    ctx.strokeStyle = '#7ef1ff';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(ex, ey, er + 1, Math.PI * 0.6, Math.PI * 1.65);
-    ctx.stroke();
-    ctx.strokeStyle = '#0ec3dc';
-    ctx.beginPath();
-    ctx.arc(ex, ey, er + 3, 0, Math.PI * 2);
-    ctx.stroke();
+  if (world === 'moon') {
+    const earthSheet = buildEarthSheet();
+    const frameIdx = Math.floor(phase * 3) % EARTH_FRAMES;
+    ctx.drawImage(
+      earthSheet,
+      frameIdx * EARTH_SIZE,
+      0,
+      EARTH_SIZE,
+      EARTH_SIZE,
+      496,
+      54,
+      EARTH_SIZE,
+      EARTH_SIZE
+    );
   } else {
     ctx.fillStyle = '#0ec3dc';
     ctx.fillRect(524, 64, 3, 3);
@@ -148,86 +105,15 @@ function drawHorizonBackdrop(
     ctx.fillRect(525, 65, 1, 1);
   }
 
-  // 4-Layer Parallax Horizon Ridges + Foreground Surface (img/07.jpg & img/08.jpg)
-  const layers = isMars
-    ? [
-        { baseY: 194, amp: 12, freq: 0.017, phase: 0.4, color: '#2b140e', rim: '#522116' },
-        { baseY: 214, amp: 10, freq: 0.024, phase: 1.9, color: '#522116', rim: '#7d331c' },
-        { baseY: 234, amp: 8, freq: 0.031, phase: 3.1, color: '#7d331c', rim: '#ab4f2c' },
-        { baseY: 254, amp: 9, freq: 0.015, phase: 0.9, color: '#ab4f2c', rim: '#e89e7d' },
-      ]
-    : isMoon
-    ? [
-        { baseY: 192, amp: 11, freq: 0.018, phase: 0.2, color: '#131a2e', rim: '#27293d' },
-        { baseY: 214, amp: 10, freq: 0.024, phase: 1.4, color: '#27293d', rim: '#3b3e59' },
-        { baseY: 234, amp: 7, freq: 0.032, phase: 2.7, color: '#3b3e59', rim: '#595e7d' },
-        { baseY: 252, amp: 10, freq: 0.014, phase: 0.7, color: '#595e7d', rim: '#b2b8d4' },
-      ]
-    : [
-        { baseY: 198, amp: 9, freq: 0.015, phase: 0.5, color: '#0b0f1d', rim: '#131a2e' },
-        { baseY: 220, amp: 8, freq: 0.022, phase: 1.8, color: '#131a2e', rim: '#1d263f' },
-        { baseY: 242, amp: 6, freq: 0.028, phase: 2.4, color: '#1d263f', rim: '#27293d' },
-        { baseY: 262, amp: 7, freq: 0.013, phase: 1.1, color: '#27293d', rim: '#595e7d' },
-      ];
+  if (backdrop.far) ctx.drawImage(backdrop.far.canvas, 0, 0);
+  if (backdrop.mid) ctx.drawImage(backdrop.mid.canvas, 0, 0);
+  if (backdrop.near) ctx.drawImage(backdrop.near.canvas, 0, 0);
 
-  for (const layer of layers) {
-    ctx.fillStyle = layer.color;
-    ctx.beginPath();
-    ctx.moveTo(0, 360);
-    for (let x = 0; x <= 640; x += 8) {
-      const y = layer.baseY + Math.round(Math.sin(x * layer.freq + layer.phase) * layer.amp);
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(640, 360);
-    ctx.closePath();
-    ctx.fill();
+  // Authentic 32x32 procedural spacecraft sprite sitting on the stage horizon
+  const hwSprite = getEncounterSpriteCanvas(encounterId);
+  ctx.drawImage(hwSprite, 48, 226, 48, 48);
 
-    // 1px sunlit ridge rim highlight
-    ctx.strokeStyle = layer.rim;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x <= 640; x += 8) {
-      const y = layer.baseY + Math.round(Math.sin(x * layer.freq + layer.phase) * layer.amp);
-      if (x === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-
-  // Bayer-dithered foreground slope band + small craters (img/07.jpg & img/08.jpg)
-  const foreTop = isMars ? '#cf724a' : isMoon ? '#8389a8' : '#3b3e59';
-  const foreDeep = isMars ? '#7d331c' : isMoon ? '#27293d' : '#131a2e';
-  for (let y = 268; y < 360; y += 3) {
-    const t = (y - 268) / 92;
-    for (let x = 0; x < 640; x += 3) {
-      const th = (STAGE_BAYER_4X4[(y >> 1) & 3][(x >> 1) & 3] + 0.5) / 16;
-      if (t * 0.85 > th) {
-        ctx.fillStyle = foreDeep;
-        ctx.fillRect(x, y, 2, 2);
-      } else if ((x + y) % 19 === 0) {
-        ctx.fillStyle = foreTop;
-        ctx.fillRect(x, y, 2, 1);
-      }
-    }
-  }
-  const craterRim = isMars ? '#e89e7d' : '#b2b8d4';
-  const craterBowl = isMars ? '#2b140e' : '#131a2e';
-  for (const c of [
-    { x: 108, y: 308, rx: 22, ry: 7 },
-    { x: 526, y: 292, rx: 16, ry: 5 },
-    { x: 356, y: 326, rx: 26, ry: 8 },
-  ]) {
-    ctx.fillStyle = craterBowl;
-    ctx.beginPath();
-    ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = craterRim;
-    ctx.beginPath();
-    ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, Math.PI, Math.PI * 1.75);
-    ctx.stroke();
-  }
-
-  // Glowing cyan telemetry deck / landing bar under experiment stage (img/07.jpg)
+  // Glowing cyan telemetry deck / landing bar under experiment stage
   ctx.fillStyle = '#0b0f1d';
   ctx.fillRect(216, 250, 208, 6);
   ctx.fillStyle = '#0ec3dc';
@@ -235,11 +121,8 @@ function drawHorizonBackdrop(
   ctx.fillStyle = '#7ef1ff';
   ctx.fillRect(224, 248, 192, 1);
 
-  // Top-center Cyan Telemetry HUD Plate (img/07.jpg & img/08.jpg)
-  ctx.fillStyle = '#0b0f1d';
-  ctx.fillRect(148, 10, 344, 34);
-  ctx.strokeStyle = '#0ec3dc';
-  ctx.strokeRect(148.5, 10.5, 343, 33);
+  // Top-center Cyan Telemetry HUD Plate (NineSliceHUD style)
+  drawNineSliceFrame(ctx, 148, 10, 344, 34, '#0ec3dc', 'rgba(11, 15, 29, 0.90)');
   ctx.font = 'bold 10px "IBM Plex Mono", monospace';
   ctx.fillStyle = '#0ec3dc';
   ctx.fillText(`• ${title.toUpperCase()}`, 158, 23);
@@ -256,7 +139,9 @@ function drawHorizonBackdrop(
   const segCount = Math.max(stepsTotal, 1);
   const completedSegs = outcome === 'active' ? stepIdx : segCount;
   for (let s = 0; s < 10; s += 1) {
-    const filled = s < Math.round((completedSegs / segCount) * 10) || (outcome === 'active' && s === Math.round((stepIdx / segCount) * 10));
+    const filled =
+      s < Math.round((completedSegs / segCount) * 10) ||
+      (outcome === 'active' && s === Math.round((stepIdx / segCount) * 10));
     ctx.fillStyle = outcome !== 'active' ? '#f59e0b' : filled ? '#0ec3dc' : '#1d263f';
     ctx.fillRect(194 + s * 11, 29, 9, 8);
   }
@@ -294,7 +179,7 @@ function EncounterVisualStage({
       const phase = motionQuery.matches || paused || outcome !== 'active' ? 0 : time / 1000;
       ctx.imageSmoothingEnabled = false;
 
-      drawHorizonBackdrop(ctx, chapter, encounter.title, stepIdx, stepsTotal, outcome);
+      drawHorizonBackdrop(ctx, chapter, encounterId, encounter.title, stepIdx, stepsTotal, outcome, phase);
 
       ctx.font = 'bold 10px "IBM Plex Mono", monospace';
       const label = (text: string, x = 28, y = 342) => {
@@ -382,23 +267,23 @@ function EncounterVisualStage({
         label(`TRAVERSE // ${telemetry.selectedStops.length}/3 STOPS · SAFE RETURN LOOP`);
       } else if (encounterId === 'question-in-the-soil') {
         const cards = (encounter.game_support.evidence_cards as EvidenceCard[]) ?? [];
-        cards.slice(0, 3).forEach((card, i) => {
-          const x = 66 + i * 176;
+        cards.slice(0, 4).forEach((card, i) => {
+          const x = 44 + i * 138;
           const inspected = telemetry.flippedCards.includes(card.id);
           ctx.fillStyle = '#0b0f1d';
-          ctx.fillRect(x, 126, 152, 92);
+          ctx.fillRect(x, 126, 126, 92);
           ctx.strokeStyle = inspected ? '#0ec3dc' : '#595e7d';
-          ctx.strokeRect(x + 0.5, 126.5, 151, 91);
+          ctx.strokeRect(x + 0.5, 126.5, 125, 91);
           ctx.fillStyle = inspected ? '#087d99' : '#522116';
-          ctx.fillRect(x + 8, inspected ? 154 : 196, 136, inspected ? 56 : 12);
+          ctx.fillRect(x + 8, inspected ? 154 : 196, 110, inspected ? 56 : 12);
           if (inspected) {
             ctx.fillStyle = '#7ef1ff';
-            for (let b = 0; b < 5; b += 1) {
-              ctx.fillRect(x + 20 + b * 26, Math.round(198 - ((phase * 10 + b * 9) % 38)), 3, 3);
+            for (let b = 0; b < 4; b += 1) {
+              ctx.fillRect(x + 16 + b * 24, Math.round(198 - ((phase * 10 + b * 9) % 38)), 3, 3);
             }
           }
           ctx.fillStyle = inspected ? '#7ef1ff' : '#e2e6fa';
-          ctx.fillText(card.label.slice(0, 20), x + 8, 144);
+          ctx.fillText(card.label.slice(0, 16), x + 8, 144);
         });
         label(`ASSAYS // ${telemetry.flippedCards.length}/${cards.length} RECORDS INSPECTED · COMPARE, THEN INFER`);
       } else if (encounterId === 'clues-beneath-the-wheel') {
@@ -556,7 +441,13 @@ function EncounterVisualStage({
         className="encounter-visual-stage pixelated"
         aria-hidden="true"
       />
-      <button type="button" className="btn-secondary btn-sm" aria-pressed={paused} onClick={() => setPaused(!paused)}>
+      <button
+        type="button"
+        className="btn-secondary btn-sm"
+        disabled={outcome !== 'active'}
+        aria-pressed={paused}
+        onClick={() => setPaused(!paused)}
+      >
         {paused ? 'RESUME TELEMETRY ANIMATION' : 'PAUSE TELEMETRY ANIMATION'}
       </button>
     </div>

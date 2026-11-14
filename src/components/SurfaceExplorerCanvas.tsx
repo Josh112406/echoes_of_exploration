@@ -2,6 +2,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { telemetryAudio } from '../audio/telemetryAudio';
 import { getStatusBadgeInfo, type MissionRecord, type NarrativeEncounter } from '../data/types';
+import {
+  buildCraterCanvas,
+  buildRockCanvas,
+  drawNineSliceFrame,
+  getMissionSpriteCanvas,
+  getRobotDriveSheet,
+  getSurfaceTerrainTile,
+  SOT_PALETTE,
+} from '../systems/stillOutThereArt';
 
 export type SectorId = 'moon' | 'mars' | 'elsewhere';
 
@@ -19,233 +28,116 @@ interface WaypointLayout {
   x: number;
   y: number;
   siteLabel: string;
-  spriteKey: 'surveyor' | 'lm' | 'curiosity' | 'rocket';
 }
 
 const WAYPOINT_COORDS: Record<string, WaypointLayout> = {
   // Chapter I — Moon (spread across 3/4 top-down surface map)
-  'gentle-touch': { x: 148, y: 162, siteLabel: 'Oceanus Procellarum', spriteKey: 'surveyor' },
-  'echo-never-sleeps': { x: 332, y: 122, siteLabel: 'Mare Tranquillitatis', spriteKey: 'lm' },
-  'farther-than-footsteps': { x: 506, y: 248, siteLabel: 'Taurus-Littrow', spriteKey: 'rocket' },
+  'gentle-touch': { x: 148, y: 162, siteLabel: 'Oceanus Procellarum' },
+  'echo-never-sleeps': { x: 332, y: 122, siteLabel: 'Mare Tranquillitatis' },
+  'farther-than-footsteps': { x: 506, y: 248, siteLabel: 'Taurus-Littrow' },
   // Chapter II — Mars
-  'question-in-the-soil': { x: 146, y: 172, siteLabel: 'Chryse Planitia', spriteKey: 'surveyor' },
-  'clues-beneath-the-wheel': { x: 336, y: 256, siteLabel: 'Gusev / Home Plate', spriteKey: 'curiosity' },
-  'air-thin-as-a-whisper': { x: 508, y: 138, siteLabel: 'Jezero Crater', spriteKey: 'rocket' },
+  'question-in-the-soil': { x: 146, y: 172, siteLabel: 'Chryse Planitia' },
+  'clues-beneath-the-wheel': { x: 336, y: 256, siteLabel: 'Gusev / Home Plate' },
+  'air-thin-as-a-whisper': { x: 508, y: 138, siteLabel: 'Jezero Crater' },
   // Chapter III — Elsewhere
-  'landing-not-planned': { x: 142, y: 184, siteLabel: '433 Eros · Himeros', spriteKey: 'surveyor' },
-  'power-for-the-unknown': { x: 332, y: 126, siteLabel: 'Interstellar Space', spriteKey: 'lm' },
-  'one-chance-at-pluto': { x: 506, y: 246, siteLabel: 'Pluto Flyby Corridor', spriteKey: 'rocket' },
+  'landing-not-planned': { x: 142, y: 184, siteLabel: '433 Eros · Himeros' },
+  'power-for-the-unknown': { x: 332, y: 126, siteLabel: 'Interstellar Space' },
+  'one-chance-at-pluto': { x: 506, y: 246, siteLabel: 'Pluto Flyby Corridor' },
 };
 
-const CRATERS: Record<SectorId, Array<{ x: number; y: number; rx: number; ry: number }>> = {
-  moon: [
-    { x: 112, y: 288, rx: 46, ry: 22 },
-    { x: 254, y: 118, rx: 22, ry: 11 },
-    { x: 432, y: 232, rx: 30, ry: 15 },
-    { x: 562, y: 274, rx: 38, ry: 18 },
-    { x: 538, y: 92, rx: 16, ry: 8 },
-  ],
-  mars: [
-    { x: 102, y: 286, rx: 40, ry: 18 },
-    { x: 258, y: 116, rx: 24, ry: 12 },
-    { x: 426, y: 228, rx: 28, ry: 14 },
-    { x: 566, y: 268, rx: 34, ry: 16 },
-    { x: 528, y: 86, rx: 16, ry: 8 },
-  ],
-  elsewhere: [
-    { x: 108, y: 284, rx: 32, ry: 15 },
-    { x: 248, y: 112, rx: 20, ry: 10 },
-    { x: 432, y: 234, rx: 26, ry: 13 },
-    { x: 558, y: 270, rx: 28, ry: 14 },
-  ],
-};
-
-// Strict ART_STYLE_GUIDE.md 24-color palette
 const PALETTE = {
-  void: '#05070f',
-  indigo: '#0b0f1d',
-  navy: '#131a2e',
-  dusk: '#1d263f',
-  basalt: '#27293d',
-  regolithDeep: '#3b3e59',
-  regolithMid: '#595e7d',
-  dustLight: '#8389a8',
-  crustCream: '#b2b8d4',
-  highlightRim: '#e2e6fa',
-  shadowUmber: '#2b140e',
-  deepRust: '#522116',
-  ochre: '#7d331c',
-  terracotta: '#ab4f2c',
-  dustTan: '#cf724a',
-  hazePeach: '#e89e7d',
-  cyanVoid: '#032630',
-  cyanShadow: '#064b5c',
-  cyanDeep: '#087d99',
-  cyan: '#0ec3dc',
-  laserCore: '#7ef1ff',
-  emberShadow: '#4a1805',
-  thruster: '#e65100',
-  amber: '#f59e0b',
+  void: SOT_PALETTE.spaceBlack,
+  indigo: SOT_PALETTE.deepIndigo,
+  navy: SOT_PALETTE.shadowNavy,
+  dusk: SOT_PALETTE.atmosphericDusk,
+  basalt: SOT_PALETTE.lunarBasaltDark,
+  regolithDeep: SOT_PALETTE.lunarRegolithDeep,
+  regolithMid: SOT_PALETTE.lunarRegolithMid,
+  dustLight: SOT_PALETTE.lunarDustLight,
+  crustCream: SOT_PALETTE.lunarCrustCream,
+  highlightRim: SOT_PALETTE.lunarHighlight,
+  shadowUmber: SOT_PALETTE.marsShadowUmber,
+  deepRust: SOT_PALETTE.marsDeepRust,
+  ochre: SOT_PALETTE.marsOchreCore,
+  terracotta: SOT_PALETTE.marsTerracotta,
+  dustTan: SOT_PALETTE.marsDustTan,
+  hazePeach: SOT_PALETTE.marsHazePeach,
+  cyanVoid: SOT_PALETTE.cyanVoid,
+  cyanShadow: SOT_PALETTE.cyanShadow,
+  cyanDeep: SOT_PALETTE.cyanDeep,
+  cyan: SOT_PALETTE.cyanGlow,
+  laserCore: SOT_PALETTE.cyanLaser,
+  emberShadow: SOT_PALETTE.emberShadow,
+  thruster: SOT_PALETTE.thrusterOrange,
+  amber: SOT_PALETTE.beaconGold,
 };
 
-const BAYER_4X4 = [
-  [0, 8, 2, 10],
-  [12, 4, 14, 6],
-  [3, 11, 1, 9],
-  [15, 7, 13, 5],
-];
-
-function hash2D(x: number, y: number, seed: number): number {
-  const n = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
-  return n - Math.floor(n);
-}
-
-function valueNoise(x: number, y: number, seed: number): number {
-  const ix = Math.floor(x);
-  const iy = Math.floor(y);
-  const fx = x - ix;
-  const fy = y - iy;
-  const ux = fx * fx * (3 - 2 * fx);
-  const uy = fy * fy * (3 - 2 * fy);
-  const a = hash2D(ix, iy, seed);
-  const b = hash2D(ix + 1, iy, seed);
-  const c = hash2D(ix, iy + 1, seed);
-  const d = hash2D(ix + 1, iy + 1, seed);
-  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
-}
-
-function buildTopDownTerrainCanvas(sector: SectorId): HTMLCanvasElement {
-  // Pre-render at 320x180 and scale 2x nearest-neighbor for authentic crisp Bayer pixel dithering (img/05.jpg).
-  const w = 320;
-  const h = 180;
+function buildSectorBackdrop(sector: SectorId): HTMLCanvasElement {
+  const w = 640;
+  const h = 360;
   const off = document.createElement('canvas');
   off.width = w;
   off.height = h;
   const ctx = off.getContext('2d');
   if (!ctx) return off;
 
-  const moonRamp = [PALETTE.indigo, PALETTE.basalt, PALETTE.regolithDeep, PALETTE.regolithMid, PALETTE.dustLight];
-  const marsRamp = [PALETTE.shadowUmber, PALETTE.deepRust, PALETTE.ochre, PALETTE.terracotta, PALETTE.dustTan];
-  const spaceRamp = [PALETTE.void, PALETTE.indigo, PALETTE.navy, PALETTE.dusk, PALETTE.basalt];
-  const ramp = sector === 'mars' ? marsRamp : sector === 'elsewhere' ? spaceRamp : moonRamp;
-  const seed = sector === 'mars' ? 19 : sector === 'elsewhere' ? 43 : 7;
-
-  // Ordered Bayer-dithered surface value-noise heightfield
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      // Vignette framing toward edges & top horizon strip matches Still Out There img/05.jpg
-      const ex = (x - w * 0.5) / (w * 0.5);
-      const ey = (y - h * 0.52) / (h * 0.5);
-      const edgeFade = Math.max(0, Math.min(1, 1 - (ex * ex * 0.42 + ey * ey * 0.36)));
-
-      const n1 = valueNoise(x * 0.045, y * 0.055, seed);
-      const n2 = valueNoise(x * 0.14, y * 0.16, seed + 11) * 0.35;
-      const heightVal = sector === 'elsewhere'
-        ? (n1 * 0.5 + n2 * 0.4) * (0.35 + edgeFade * 0.5)
-        : (n1 * 0.68 + n2 * 0.32) * (0.45 + edgeFade * 0.72);
-
-      const scaled = Math.max(0, Math.min(ramp.length - 1.001, heightVal * (ramp.length - 0.85)));
-      const idx = Math.floor(scaled);
-      const frac = scaled - idx;
-      const threshold = (BAYER_4X4[y & 3][x & 3] + 0.5) / 16;
-      const shadeIdx = frac > threshold && idx + 1 < ramp.length ? idx + 1 : idx;
-
-      ctx.fillStyle = y < 14 && sector !== 'elsewhere' ? PALETTE.void : ramp[shadeIdx];
-      ctx.fillRect(x, y, 1, 1);
-    }
+  ctx.imageSmoothingEnabled = false;
+  const tile = getSurfaceTerrainTile(sector);
+  const pattern = ctx.createPattern(tile, 'repeat');
+  if (pattern) {
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, w, h);
   }
 
-  // Deep-space trajectory arcs & faint star speckle in Elsewhere, or crater bowls on Moon/Mars
   if (sector === 'elsewhere') {
-    for (let i = 0; i < 48; i += 1) {
-      const sx = Math.floor(hash2D(i, 3, 91) * w);
-      const sy = Math.floor(hash2D(i, 7, 91) * h);
+    for (let i = 0; i < 64; i += 1) {
+      const sx = (i * 157 + 19) % w;
+      const sy = (i * 83 + 11) % h;
       ctx.fillStyle = i % 6 === 0 ? PALETTE.laserCore : i % 3 === 0 ? PALETTE.crustCream : PALETTE.dustLight;
-      ctx.fillRect(sx, sy, 1, 1);
+      ctx.fillRect(sx, sy, i % 9 === 0 ? 2 : 1, i % 9 === 0 ? 2 : 1);
     }
     ctx.strokeStyle = PALETTE.cyanShadow;
     ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
+    ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.ellipse(w * 0.5, h * 0.55, 130, 64, -0.1, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.5, h * 0.55, 250, 120, -0.08, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
+  } else {
+    const world = sector;
+    const craters =
+      world === 'mars'
+        ? [
+            { x: 102, y: 286, r: 22, seed: 31 },
+            { x: 258, y: 116, r: 14, seed: 37 },
+            { x: 426, y: 228, r: 18, seed: 41 },
+            { x: 566, y: 268, r: 20, seed: 43 },
+          ]
+        : [
+            { x: 112, y: 288, r: 24, seed: 11 },
+            { x: 254, y: 118, r: 14, seed: 17 },
+            { x: 432, y: 232, r: 19, seed: 23 },
+            { x: 562, y: 274, r: 22, seed: 29 },
+          ];
+    for (const c of craters) {
+      const crater = buildCraterCanvas(c.r, world, c.seed);
+      ctx.drawImage(
+        crater,
+        Math.round(c.x - crater.width),
+        Math.round(c.y - crater.height),
+        crater.width * 2,
+        crater.height * 2
+      );
+    }
+    for (let i = 0; i < 16; i += 1) {
+      const rock = buildRockCanvas(5 + (i % 4), world, i + 7);
+      const rx = 28 + ((i * 173 + 29) % (w - 56));
+      const ry = 54 + ((i * 97 + 41) % (h - 90));
+      ctx.drawImage(rock, rx, ry, rock.width * 2, rock.height * 2);
+    }
   }
-
-  // Top-down / 3/4 craters: light top-left rim, Bayer inner wall, deep shadow bowl (img/05.jpg)
-  const rimLit = sector === 'mars' ? PALETTE.hazePeach : PALETTE.crustCream;
-  const bowlShadow = sector === 'mars' ? PALETTE.shadowUmber : PALETTE.void;
-  const wallMid = sector === 'mars' ? PALETTE.deepRust : PALETTE.basalt;
-  for (const cr of CRATERS[sector]) {
-    const cx = cr.x * 0.5;
-    const cy = cr.y * 0.5;
-    const rx = cr.rx * 0.5;
-    const ry = cr.ry * 0.5;
-
-    ctx.fillStyle = wallMid;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = bowlShadow;
-    ctx.beginPath();
-    ctx.ellipse(cx - rx * 0.08, cy - ry * 0.05, Math.max(3, rx * 0.78), Math.max(2, ry * 0.72), 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Bright outer rim top-left + subtle inner bottom-right catchlight
-    ctx.strokeStyle = rimLit;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI * 0.9, Math.PI * 1.72);
-    ctx.stroke();
-  }
-
-  // Surface boulders (1px highlight top-left + 1px shadow bottom-right, img/05.jpg)
-  const rockLit = sector === 'mars' ? PALETTE.dustTan : PALETTE.crustCream;
-  const rockBody = sector === 'mars' ? PALETTE.ochre : PALETTE.regolithMid;
-  const rockShad = sector === 'mars' ? PALETTE.shadowUmber : PALETTE.indigo;
-  for (let i = 0; i < 34; i += 1) {
-    const rx = Math.round(14 + hash2D(i, 1, seed + 5) * (w - 28));
-    const ry = Math.round(24 + hash2D(i, 2, seed + 5) * (h - 34));
-    const rw = i % 7 === 0 ? 4 : 2;
-    const rh = i % 7 === 0 ? 3 : 2;
-    ctx.fillStyle = rockShad;
-    ctx.fillRect(rx + 1, ry + 1, rw, rh);
-    ctx.fillStyle = rockBody;
-    ctx.fillRect(rx, ry, rw, rh);
-    ctx.fillStyle = rockLit;
-    ctx.fillRect(rx, ry, rw - 1, 1);
-  }
-
-  // Subtle dark outer edge vignette on the 320x180 map
-  const vTop = ctx.createLinearGradient(0, 0, 0, 26);
-  vTop.addColorStop(0, 'rgba(5, 7, 15, 0.85)');
-  vTop.addColorStop(1, 'rgba(5, 7, 15, 0)');
-  ctx.fillStyle = vTop;
-  ctx.fillRect(0, 0, w, 26);
 
   return off;
-}
-
-function drawScoutFallback(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number) {
-  ctx.fillStyle = PALETTE.indigo;
-  ctx.fillRect(Math.round(x - 7), Math.round(y + 1), 14, 4);
-  ctx.fillStyle = PALETTE.basalt;
-  ctx.fillRect(Math.round(x - 6), Math.round(y - 14), 12, 13);
-  ctx.fillStyle = PALETTE.crustCream;
-  ctx.fillRect(Math.round(x - 5), Math.round(y - 14), 10, 1);
-  ctx.fillRect(Math.round(x - 5), Math.round(y - 13), 8, 5);
-  // Cyan visor
-  ctx.fillStyle = PALETTE.cyan;
-  ctx.fillRect(Math.round(x + (facing > 0 ? 0 : -4)), Math.round(y - 12), 5, 3);
-  ctx.fillStyle = PALETTE.laserCore;
-  ctx.fillRect(Math.round(x + (facing > 0 ? 1 : -3)), Math.round(y - 12), 2, 1);
-  // Wheels / treads
-  ctx.fillStyle = PALETTE.dusk;
-  ctx.fillRect(Math.round(x - 6), Math.round(y - 2), 4, 3);
-  ctx.fillRect(Math.round(x + 2), Math.round(y - 2), 4, 3);
-  ctx.fillStyle = PALETTE.amber;
-  ctx.fillRect(Math.round(x - 1), Math.round(y - 17), 2, 3);
 }
 
 export function SurfaceExplorerCanvas({
@@ -302,7 +194,6 @@ export function SurfaceExplorerCanvas({
     lastTrackY: 248,
     keys: new Set<string>(),
     pulse: 0,
-    sprites: {} as Record<string, HTMLImageElement>,
   });
 
   // Reset rover trail cleanly when changing chapter
@@ -316,17 +207,6 @@ export function SurfaceExplorerCanvas({
     stateRef.current.targetX = null;
     stateRef.current.targetY = null;
   }, [sector]);
-
-  // Load 16-bit sprites from /assets/sprites/ once
-  useEffect(() => {
-    const names = ['robot', 'surveyor', 'lm', 'curiosity', 'rocket'];
-    for (const name of names) {
-      if (stateRef.current.sprites[name]) continue;
-      const img = new Image();
-      img.src = `/assets/sprites/${name}.png`;
-      stateRef.current.sprites[name] = img;
-    }
-  }, []);
 
   // Only the focused canvas owns drive keys; native controls keep their keyboard behavior.
   useEffect(() => {
@@ -377,23 +257,29 @@ export function SurfaceExplorerCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const terrainBg = buildTopDownTerrainCanvas(sector);
+    const terrainBg = buildSectorBackdrop(sector);
+    const robotSheet = getRobotDriveSheet();
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let rafId = 0;
     let frame = 0;
     let lastTime = 0;
+    let hasPaintedIdle = false;
+    let lastNearest = '';
+    let lastCoordsKey = '';
 
     const tick = (time: number) => {
       const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
       lastTime = time;
       const reducedMotion = motionQuery.matches;
-      frame += 1;
       const s = stateRef.current;
-      if (document.hidden || !document.hasFocus()) {
+      const unfocused = document.hidden || !document.hasFocus();
+      if (unfocused && hasPaintedIdle) {
         if (!paused) rafId = window.requestAnimationFrame(tick);
         return;
       }
-      s.pulse = reducedMotion || paused ? 0 : (s.pulse + dt * 2.7) % (Math.PI * 2);
+      hasPaintedIdle = true;
+      frame += 1;
+      s.pulse = reducedMotion || paused || unfocused ? 0 : (s.pulse + dt * 2.7) % (Math.PI * 2);
       const oldX = s.roverX;
       const oldY = s.roverY;
 
@@ -463,8 +349,17 @@ export function SurfaceExplorerCanvas({
         }
       }
       if (frame % 8 === 0) {
-        setNearestEncounterId(closestId);
-        setCoordsReadout({ x: Math.round(s.roverX), y: Math.round(s.roverY) });
+        if (closestId !== lastNearest) {
+          lastNearest = closestId;
+          setNearestEncounterId(closestId);
+        }
+        const rx = Math.round(s.roverX);
+        const ry = Math.round(s.roverY);
+        const key = `${rx},${ry}`;
+        if (key !== lastCoordsKey) {
+          lastCoordsKey = key;
+          setCoordsReadout({ x: rx, y: ry });
+        }
       }
 
       // --- DRAW 640x360 FRAME ---
@@ -521,17 +416,13 @@ export function SurfaceExplorerCanvas({
         ctx.stroke();
         ctx.restore();
 
-        // Hardware sprite on surface
-        const hwImg = s.sprites[wp.spriteKey];
-        if (hwImg && hwImg.complete && hwImg.naturalWidth > 0) {
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.drawImage(hwImg, Math.round(wp.x - 16), Math.round(wp.y - 24), 32, 24);
-          ctx.restore();
-        } else {
-          ctx.fillStyle = PALETTE.crustCream;
-          ctx.fillRect(Math.round(wp.x - 8), Math.round(wp.y - 16), 16, 14);
-        }
+        // Procedural 32x32 NASA hardware sprite from stillOutThereArt
+        const hwSprite = getMissionSpriteCanvas(enc.mission_id);
+        ctx.fillStyle = 'rgba(5, 7, 15, 0.55)';
+        ctx.beginPath();
+        ctx.ellipse(wp.x, wp.y + 3, 14, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.drawImage(hwSprite, Math.round(wp.x - 16), Math.round(wp.y - 24), 32, 32);
 
         // Subtle status beacon pixel above hardware
         ctx.fillStyle = done ? PALETTE.amber : PALETTE.cyan;
@@ -544,10 +435,7 @@ export function SurfaceExplorerCanvas({
         const boxW = Math.ceil(tw + 14);
         const bx = Math.round(Math.max(8, Math.min(632 - boxW, wp.x - boxW / 2)));
         const by = Math.round(wp.y + 18);
-        ctx.fillStyle = PALETTE.indigo;
-        ctx.fillRect(bx, by, boxW, 16);
-        ctx.strokeStyle = isNear ? ringColor : PALETTE.cyanDeep;
-        ctx.strokeRect(bx + 0.5, by + 0.5, boxW - 1, 15);
+        drawNineSliceFrame(ctx, bx, by, boxW, 16, isNear ? ringColor : PALETTE.cyanDeep, PALETTE.indigo);
         ctx.fillStyle = done ? PALETTE.amber : isNear ? PALETTE.laserCore : PALETTE.highlightRim;
         ctx.fillText(label, bx + 7, by + 11);
       }
@@ -558,57 +446,54 @@ export function SurfaceExplorerCanvas({
         ctx.strokeRect(Math.round(s.targetX - 4), Math.round(s.targetY - 4), 8, 8);
       }
 
-      // Player Field Scout / Robot
-      const robotImg = s.sprites.robot;
-      if (robotImg && robotImg.complete && robotImg.naturalWidth > 0) {
-        ctx.fillStyle = PALETTE.void;
-        ctx.beginPath();
-        ctx.ellipse(Math.round(s.roverX), Math.round(s.roverY + 3), 11, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        if (s.facing < 0) {
-          ctx.translate(Math.round(s.roverX + 12), Math.round(s.roverY - 21 + bounce));
-          ctx.scale(-1, 1);
-          ctx.drawImage(robotImg, 0, 0, 24, 24);
-        } else {
-          ctx.drawImage(robotImg, Math.round(s.roverX - 12), Math.round(s.roverY - 21 + bounce), 24, 24);
-        }
-        ctx.restore();
+      // Player Field Scout / UNIT-7 (2-frame tread animation from stillOutThereArt)
+      const driveFrame = moving && !reducedMotion && Math.floor(frame / 6) % 2 === 1 ? 24 : 0;
+      ctx.fillStyle = 'rgba(5, 7, 15, 0.65)';
+      ctx.beginPath();
+      ctx.ellipse(Math.round(s.roverX), Math.round(s.roverY + 3), 12, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      if (s.facing < 0) {
+        ctx.translate(Math.round(s.roverX + 14), Math.round(s.roverY - 22 + bounce));
+        ctx.scale(-1, 1);
+        ctx.drawImage(robotSheet, driveFrame, 0, 24, 24, 0, 0, 28, 28);
       } else {
-        drawScoutFallback(ctx, s.roverX, s.roverY + bounce, s.facing);
+        ctx.drawImage(
+          robotSheet,
+          driveFrame,
+          0,
+          24,
+          24,
+          Math.round(s.roverX - 14),
+          Math.round(s.roverY - 22 + bounce),
+          28,
+          28
+        );
       }
+      ctx.restore();
 
       // Top-left HUD Plate (img/05.jpg: ECHO: SITE · DISTM)
       const activeNear = sectorEncounters.find((e) => e.id === closestId);
-      const leftText = activeNear
+      const rawLeftText = activeNear
         ? closestDist < 62
           ? `ECHO: ${activeNear.title.toUpperCase()} · [E] TUNE`
           : `ECHO: ${activeNear.title.toUpperCase()} · ${Math.round(closestDist)}M`
         : `SECTOR: ${sector.toUpperCase()} · DRIVE WITH WASD`;
-      ctx.fillStyle = PALETTE.indigo;
-      ctx.fillRect(10, 10, 296, 26);
-      ctx.strokeStyle = PALETTE.cyan;
-      ctx.strokeRect(10.5, 10.5, 295, 25);
+      const leftText = rawLeftText.length > 44 ? `${rawLeftText.slice(0, 41)}...` : rawLeftText;
+      drawNineSliceFrame(ctx, 10, 10, 336, 26, PALETTE.cyan, 'rgba(11, 15, 29, 0.90)');
       ctx.font = 'bold 10px "IBM Plex Mono", monospace';
       ctx.fillStyle = closestDist < 62 ? PALETTE.laserCore : PALETTE.cyan;
       ctx.fillText(leftText, 18, 27);
 
       // Top-right HUD Plate (img/05.jpg: • MOON // 0/3 FOUND)
       const rightText = `• ${sector.toUpperCase()} // ${doneInSector}/${sectorEncounters.length} FOUND`;
-      ctx.fillStyle = PALETTE.indigo;
-      ctx.fillRect(434, 10, 196, 26);
-      ctx.strokeStyle = PALETTE.cyan;
-      ctx.strokeRect(434.5, 10.5, 195, 25);
+      drawNineSliceFrame(ctx, 434, 10, 196, 26, PALETTE.cyan, 'rgba(11, 15, 29, 0.90)');
       ctx.fillStyle = doneInSector === sectorEncounters.length ? PALETTE.amber : PALETTE.highlightRim;
       ctx.fillText(rightText, 444, 27);
 
       // Compass bar pointing to next unfinished site
       const nextWaypoint = WAYPOINT_COORDS[nextId];
-      ctx.fillStyle = PALETTE.indigo;
-      ctx.fillRect(10, 328, 264, 22);
-      ctx.strokeStyle = PALETTE.dusk;
-      ctx.strokeRect(10.5, 328.5, 263, 21);
+      drawNineSliceFrame(ctx, 10, 328, 264, 22, PALETTE.dusk, 'rgba(11, 15, 29, 0.90)');
       ctx.fillStyle = nextWaypoint ? PALETTE.cyan : PALETTE.amber;
       ctx.fillText(
         nextWaypoint ? `COMPASS // ${Math.round(nextDist)}M TO UNARCHIVED SIGNAL` : 'SECTOR ARCHIVED // ALL SIGNALS LINKED',
