@@ -23,42 +23,44 @@ interface WaypointLayout {
 }
 
 const WAYPOINT_COORDS: Record<string, WaypointLayout> = {
-  // Chapter I — Moon
-  'gentle-touch': { x: 132, y: 238, siteLabel: 'Oceanus Procellarum', spriteKey: 'surveyor' },
-  'echo-never-sleeps': { x: 320, y: 196, siteLabel: 'Mare Tranquillitatis', spriteKey: 'lm' },
-  'farther-than-footsteps': { x: 506, y: 266, siteLabel: 'Taurus-Littrow', spriteKey: 'rocket' },
+  // Chapter I — Moon (spread across 3/4 top-down surface map)
+  'gentle-touch': { x: 148, y: 162, siteLabel: 'Oceanus Procellarum', spriteKey: 'surveyor' },
+  'echo-never-sleeps': { x: 332, y: 122, siteLabel: 'Mare Tranquillitatis', spriteKey: 'lm' },
+  'farther-than-footsteps': { x: 506, y: 248, siteLabel: 'Taurus-Littrow', spriteKey: 'rocket' },
   // Chapter II — Mars
-  'question-in-the-soil': { x: 136, y: 244, siteLabel: 'Chryse Planitia', spriteKey: 'surveyor' },
-  'clues-beneath-the-wheel': { x: 322, y: 262, siteLabel: 'Gusev / Home Plate', spriteKey: 'curiosity' },
-  'air-thin-as-a-whisper': { x: 502, y: 204, siteLabel: 'Jezero Crater', spriteKey: 'rocket' },
+  'question-in-the-soil': { x: 146, y: 172, siteLabel: 'Chryse Planitia', spriteKey: 'surveyor' },
+  'clues-beneath-the-wheel': { x: 336, y: 256, siteLabel: 'Gusev / Home Plate', spriteKey: 'curiosity' },
+  'air-thin-as-a-whisper': { x: 508, y: 138, siteLabel: 'Jezero Crater', spriteKey: 'rocket' },
   // Chapter III — Elsewhere
-  'landing-not-planned': { x: 136, y: 246, siteLabel: '433 Eros · Himeros', spriteKey: 'surveyor' },
-  'power-for-the-unknown': { x: 324, y: 196, siteLabel: 'Interstellar Space', spriteKey: 'lm' },
-  'one-chance-at-pluto': { x: 504, y: 256, siteLabel: 'Pluto Flyby Corridor', spriteKey: 'rocket' },
+  'landing-not-planned': { x: 142, y: 184, siteLabel: '433 Eros · Himeros', spriteKey: 'surveyor' },
+  'power-for-the-unknown': { x: 332, y: 126, siteLabel: 'Interstellar Space', spriteKey: 'lm' },
+  'one-chance-at-pluto': { x: 506, y: 246, siteLabel: 'Pluto Flyby Corridor', spriteKey: 'rocket' },
 };
 
 const CRATERS: Record<SectorId, Array<{ x: number; y: number; rx: number; ry: number }>> = {
   moon: [
-    { x: 96, y: 294, rx: 32, ry: 12 },
-    { x: 244, y: 224, rx: 22, ry: 9 },
-    { x: 422, y: 296, rx: 38, ry: 14 },
-    { x: 560, y: 214, rx: 20, ry: 8 },
+    { x: 112, y: 288, rx: 46, ry: 22 },
+    { x: 254, y: 118, rx: 22, ry: 11 },
+    { x: 432, y: 232, rx: 30, ry: 15 },
+    { x: 562, y: 274, rx: 38, ry: 18 },
+    { x: 538, y: 92, rx: 16, ry: 8 },
   ],
   mars: [
-    { x: 88, y: 288, rx: 28, ry: 10 },
-    { x: 252, y: 214, rx: 26, ry: 9 },
-    { x: 416, y: 292, rx: 34, ry: 12 },
-    { x: 572, y: 274, rx: 18, ry: 7 },
+    { x: 102, y: 286, rx: 40, ry: 18 },
+    { x: 258, y: 116, rx: 24, ry: 12 },
+    { x: 426, y: 228, rx: 28, ry: 14 },
+    { x: 566, y: 268, rx: 34, ry: 16 },
+    { x: 528, y: 86, rx: 16, ry: 8 },
   ],
   elsewhere: [
-    { x: 104, y: 292, rx: 30, ry: 11 },
-    { x: 240, y: 238, rx: 20, ry: 8 },
-    { x: 432, y: 286, rx: 32, ry: 11 },
-    { x: 556, y: 212, rx: 18, ry: 7 },
+    { x: 108, y: 284, rx: 32, ry: 15 },
+    { x: 248, y: 112, rx: 20, ry: 10 },
+    { x: 432, y: 234, rx: 26, ry: 13 },
+    { x: 558, y: 270, rx: 28, ry: 14 },
   ],
 };
 
-// Strict ART_STYLE_GUIDE.md 24-color palette ramps
+// Strict ART_STYLE_GUIDE.md 24-color palette
 const PALETTE = {
   void: '#05070f',
   indigo: '#0b0f1d',
@@ -85,6 +87,145 @@ const PALETTE = {
   thruster: '#e65100',
   amber: '#f59e0b',
 };
+
+const BAYER_4X4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+];
+
+function hash2D(x: number, y: number, seed: number): number {
+  const n = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+function valueNoise(x: number, y: number, seed: number): number {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = x - ix;
+  const fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const a = hash2D(ix, iy, seed);
+  const b = hash2D(ix + 1, iy, seed);
+  const c = hash2D(ix, iy + 1, seed);
+  const d = hash2D(ix + 1, iy + 1, seed);
+  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+}
+
+function buildTopDownTerrainCanvas(sector: SectorId): HTMLCanvasElement {
+  // Pre-render at 320x180 and scale 2x nearest-neighbor for authentic crisp Bayer pixel dithering (img/05.jpg).
+  const w = 320;
+  const h = 180;
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const ctx = off.getContext('2d');
+  if (!ctx) return off;
+
+  const moonRamp = [PALETTE.indigo, PALETTE.basalt, PALETTE.regolithDeep, PALETTE.regolithMid, PALETTE.dustLight];
+  const marsRamp = [PALETTE.shadowUmber, PALETTE.deepRust, PALETTE.ochre, PALETTE.terracotta, PALETTE.dustTan];
+  const spaceRamp = [PALETTE.void, PALETTE.indigo, PALETTE.navy, PALETTE.dusk, PALETTE.basalt];
+  const ramp = sector === 'mars' ? marsRamp : sector === 'elsewhere' ? spaceRamp : moonRamp;
+  const seed = sector === 'mars' ? 19 : sector === 'elsewhere' ? 43 : 7;
+
+  // Ordered Bayer-dithered surface value-noise heightfield
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      // Vignette framing toward edges & top horizon strip matches Still Out There img/05.jpg
+      const ex = (x - w * 0.5) / (w * 0.5);
+      const ey = (y - h * 0.52) / (h * 0.5);
+      const edgeFade = Math.max(0, Math.min(1, 1 - (ex * ex * 0.42 + ey * ey * 0.36)));
+
+      const n1 = valueNoise(x * 0.045, y * 0.055, seed);
+      const n2 = valueNoise(x * 0.14, y * 0.16, seed + 11) * 0.35;
+      const heightVal = sector === 'elsewhere'
+        ? (n1 * 0.5 + n2 * 0.4) * (0.35 + edgeFade * 0.5)
+        : (n1 * 0.68 + n2 * 0.32) * (0.45 + edgeFade * 0.72);
+
+      const scaled = Math.max(0, Math.min(ramp.length - 1.001, heightVal * (ramp.length - 0.85)));
+      const idx = Math.floor(scaled);
+      const frac = scaled - idx;
+      const threshold = (BAYER_4X4[y & 3][x & 3] + 0.5) / 16;
+      const shadeIdx = frac > threshold && idx + 1 < ramp.length ? idx + 1 : idx;
+
+      ctx.fillStyle = y < 14 && sector !== 'elsewhere' ? PALETTE.void : ramp[shadeIdx];
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  // Deep-space trajectory arcs & faint star speckle in Elsewhere, or crater bowls on Moon/Mars
+  if (sector === 'elsewhere') {
+    for (let i = 0; i < 48; i += 1) {
+      const sx = Math.floor(hash2D(i, 3, 91) * w);
+      const sy = Math.floor(hash2D(i, 7, 91) * h);
+      ctx.fillStyle = i % 6 === 0 ? PALETTE.laserCore : i % 3 === 0 ? PALETTE.crustCream : PALETTE.dustLight;
+      ctx.fillRect(sx, sy, 1, 1);
+    }
+    ctx.strokeStyle = PALETTE.cyanShadow;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.ellipse(w * 0.5, h * 0.55, 130, 64, -0.1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Top-down / 3/4 craters: light top-left rim, Bayer inner wall, deep shadow bowl (img/05.jpg)
+  const rimLit = sector === 'mars' ? PALETTE.hazePeach : PALETTE.crustCream;
+  const bowlShadow = sector === 'mars' ? PALETTE.shadowUmber : PALETTE.void;
+  const wallMid = sector === 'mars' ? PALETTE.deepRust : PALETTE.basalt;
+  for (const cr of CRATERS[sector]) {
+    const cx = cr.x * 0.5;
+    const cy = cr.y * 0.5;
+    const rx = cr.rx * 0.5;
+    const ry = cr.ry * 0.5;
+
+    ctx.fillStyle = wallMid;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = bowlShadow;
+    ctx.beginPath();
+    ctx.ellipse(cx - rx * 0.08, cy - ry * 0.05, Math.max(3, rx * 0.78), Math.max(2, ry * 0.72), 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright outer rim top-left + subtle inner bottom-right catchlight
+    ctx.strokeStyle = rimLit;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI * 0.9, Math.PI * 1.72);
+    ctx.stroke();
+  }
+
+  // Surface boulders (1px highlight top-left + 1px shadow bottom-right, img/05.jpg)
+  const rockLit = sector === 'mars' ? PALETTE.dustTan : PALETTE.crustCream;
+  const rockBody = sector === 'mars' ? PALETTE.ochre : PALETTE.regolithMid;
+  const rockShad = sector === 'mars' ? PALETTE.shadowUmber : PALETTE.indigo;
+  for (let i = 0; i < 34; i += 1) {
+    const rx = Math.round(14 + hash2D(i, 1, seed + 5) * (w - 28));
+    const ry = Math.round(24 + hash2D(i, 2, seed + 5) * (h - 34));
+    const rw = i % 7 === 0 ? 4 : 2;
+    const rh = i % 7 === 0 ? 3 : 2;
+    ctx.fillStyle = rockShad;
+    ctx.fillRect(rx + 1, ry + 1, rw, rh);
+    ctx.fillStyle = rockBody;
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.fillStyle = rockLit;
+    ctx.fillRect(rx, ry, rw - 1, 1);
+  }
+
+  // Subtle dark outer edge vignette on the 320x180 map
+  const vTop = ctx.createLinearGradient(0, 0, 0, 26);
+  vTop.addColorStop(0, 'rgba(5, 7, 15, 0.85)');
+  vTop.addColorStop(1, 'rgba(5, 7, 15, 0)');
+  ctx.fillStyle = vTop;
+  ctx.fillRect(0, 0, w, 26);
+
+  return off;
+}
 
 function drawScoutFallback(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number) {
   ctx.fillStyle = PALETTE.indigo;
@@ -125,7 +266,7 @@ export function SurfaceExplorerCanvas({
   const [nearestEncounterId, setNearestEncounterId] = useState<string>(
     () => sectorEncounters[0]?.id ?? activeEncounterId
   );
-  const [coordsReadout, setCoordsReadout] = useState<{ x: number; y: number }>({ x: 64, y: 268 });
+  const [coordsReadout, setCoordsReadout] = useState<{ x: number; y: number }>({ x: 84, y: 248 });
   const [paused, setPaused] = useState(false);
   const isCompleted = useCallback(
     (id: string) =>
@@ -149,20 +290,32 @@ export function SurfaceExplorerCanvas({
     || nearestEncounter?.memory_echo.intro[0];
 
   const stateRef = useRef({
-    roverX: 64,
-    roverY: 268,
+    roverX: 84,
+    roverY: 248,
     targetX: null as number | null,
     targetY: null as number | null,
     pendingLaunchId: null as string | null,
     facing: 1,
     tracks: [] as Array<{ x: number; y: number }>,
     dust: [] as Array<{ x: number; y: number; age: number }>,
-    lastTrackX: 64,
-    lastTrackY: 268,
+    lastTrackX: 84,
+    lastTrackY: 248,
     keys: new Set<string>(),
     pulse: 0,
     sprites: {} as Record<string, HTMLImageElement>,
   });
+
+  // Reset rover trail cleanly when changing chapter
+  useEffect(() => {
+    stateRef.current.roverX = 84;
+    stateRef.current.roverY = 248;
+    stateRef.current.lastTrackX = 84;
+    stateRef.current.lastTrackY = 248;
+    stateRef.current.tracks = [];
+    stateRef.current.dust = [];
+    stateRef.current.targetX = null;
+    stateRef.current.targetY = null;
+  }, [sector]);
 
   // Load 16-bit sprites from /assets/sprites/ once
   useEffect(() => {
@@ -217,18 +370,19 @@ export function SurfaceExplorerCanvas({
     };
   }, [nearestEncounterId, onLaunchEncounter, paused]);
 
-  // 640x360 pixel-art render loop
+  // 640x360 top-down pixel-art render loop (docs/art-reference/img/05.jpg)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const terrainBg = buildTopDownTerrainCanvas(sector);
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let rafId = 0;
     let frame = 0;
-
     let lastTime = 0;
+
     const tick = (time: number) => {
       const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
       lastTime = time;
@@ -243,7 +397,7 @@ export function SurfaceExplorerCanvas({
       const oldX = s.roverX;
       const oldY = s.roverY;
 
-      // Update rover kinematics (keyboard or pointer autopilot)
+      // Update rover kinematics across full 2D top-down terrain (y = 54..332)
       let dx = 0;
       let dy = 0;
       if (s.keys.has('arrowleft') || s.keys.has('a')) dx -= 1;
@@ -251,11 +405,11 @@ export function SurfaceExplorerCanvas({
       if (s.keys.has('arrowup') || s.keys.has('w')) dy -= 1;
       if (s.keys.has('arrowdown') || s.keys.has('s')) dy += 1;
 
-      const speed = paused ? 0 : 138 * dt;
+      const speed = paused ? 0 : 142 * dt;
       if (dx !== 0 || dy !== 0) {
         const len = Math.hypot(dx, dy);
-        s.roverX = Math.max(24, Math.min(616, s.roverX + (dx / len) * speed));
-        s.roverY = Math.max(158, Math.min(338, s.roverY + (dy / len) * speed));
+        s.roverX = Math.max(28, Math.min(612, s.roverX + (dx / len) * speed));
+        s.roverY = Math.max(58, Math.min(334, s.roverY + (dy / len) * speed));
         if (dx !== 0) s.facing = dx > 0 ? 1 : -1;
       } else if (s.targetX !== null && s.targetY !== null) {
         const tx = s.targetX - s.roverX;
@@ -279,17 +433,17 @@ export function SurfaceExplorerCanvas({
       const moving = Math.hypot(s.roverX - oldX, s.roverY - oldY) > 0.01;
       const bounce = moving && !reducedMotion ? Math.round(Math.sin(s.pulse * 6)) : 0;
 
-      // Drop regolith tire tracks
-      if (Math.hypot(s.roverX - s.lastTrackX, s.roverY - s.lastTrackY) >= 8) {
+      // Drop crisp parallel tread tracks behind rover (img/05.jpg)
+      if (Math.hypot(s.roverX - s.lastTrackX, s.roverY - s.lastTrackY) >= 6) {
         s.tracks.push({ x: Math.round(s.roverX), y: Math.round(s.roverY) });
-        if (s.tracks.length > 72) s.tracks.shift();
+        if (s.tracks.length > 90) s.tracks.shift();
         s.lastTrackX = s.roverX;
         s.lastTrackY = s.roverY;
         if (!reducedMotion) s.dust.push({ x: s.roverX - s.facing * 8, y: s.roverY, age: 0 });
       }
-      s.dust = reducedMotion ? [] : s.dust.filter((puff) => (puff.age += dt) < 0.65);
+      s.dust = reducedMotion ? [] : s.dust.filter((puff) => (puff.age += dt) < 0.6);
 
-      // Determine nearest encounter
+      // Nearest + next unfinished encounter calculation
       let closestId = sectorEncounters[0]?.id ?? activeEncounterId;
       let closestDist = Infinity;
       let nextId = '';
@@ -308,7 +462,6 @@ export function SurfaceExplorerCanvas({
           closestId = enc.id;
         }
       }
-      // Nearby sites remain replayable; the compass independently points to unfinished work.
       if (frame % 8 === 0) {
         setNearestEncounterId(closestId);
         setCoordsReadout({ x: Math.round(s.roverX), y: Math.round(s.roverY) });
@@ -316,162 +469,31 @@ export function SurfaceExplorerCanvas({
 
       // --- DRAW 640x360 FRAME ---
       ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(terrainBg, 0, 0, 640, 360);
 
-      // Layer 1: Sky
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, 152);
-      skyGrad.addColorStop(0, PALETTE.void);
-      skyGrad.addColorStop(0.68, PALETTE.indigo);
-      if (sector === 'mars') {
-        skyGrad.addColorStop(1, PALETTE.deepRust);
-      } else {
-        skyGrad.addColorStop(1, PALETTE.navy);
-      }
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, 640, 152);
-
-      // Stars (deterministic positions)
-      for (let i = 0; i < 64; i += 1) {
-        const sx = (i * 137 + 29) % 640;
-        const sy = (i * 73 + 11) % 124;
-        const bright = i % 9 === 0;
-        if (bright && !reducedMotion && Math.sin(s.pulse + i) > 0.55) {
-          ctx.fillStyle = PALETTE.laserCore;
-          ctx.fillRect(sx, sy, 2, 2);
-        } else {
-          ctx.fillStyle = bright ? PALETTE.highlightRim : i % 3 === 0 ? PALETTE.crustCream : PALETTE.dustLight;
-          ctx.fillRect(sx, sy, 1, 1);
-        }
-      }
-
-      // Hero Light: Earth on Moon, pale cyan dot on Mars / Elsewhere
-      if (sector === 'moon') {
-        // Pixel-lit disk and suggested continents, kept inside the palette.
-        for (let y = -30; y <= 30; y += 1) {
-          for (let x = -30; x <= 30; x += 1) {
-            if (x * x + y * y > 900) continue;
-            const night = x > 9 + Math.sin(y / 22) * 8;
-            const land = Math.sin(x * 0.17 + y * 0.12) + Math.cos(y * 0.3 - x * 0.08) > 0.8;
-            ctx.fillStyle = night ? PALETTE.navy : land ? PALETTE.cyanShadow : PALETTE.cyanDeep;
-            if (!night && y < -19 && (x + y) % 7 < 2) ctx.fillStyle = PALETTE.crustCream;
-            ctx.fillRect(556 + x, 58 + y, 1, 1);
-          }
-        }
-        ctx.lineWidth = 1;
-        for (let radius = 31; radius <= 34; radius += 1) {
-          ctx.strokeStyle = radius === 31 ? PALETTE.laserCore : radius === 32 ? PALETTE.cyan : PALETTE.cyanShadow;
-          ctx.beginPath();
-          ctx.arc(556, 58, radius, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-        ctx.strokeStyle = PALETTE.cyanShadow;
-        ctx.beginPath();
-        ctx.ellipse(565, 58, 9, 29, -0.2, Math.PI / 2, Math.PI * 1.5);
-        ctx.stroke();
-      } else {
-        // Earth as pale cyan dot
-        ctx.fillStyle = PALETTE.cyan;
-        ctx.fillRect(560, 42, 3, 3);
-        ctx.fillStyle = PALETTE.laserCore;
-        ctx.fillRect(561, 43, 1, 1);
-        if (sector === 'mars') {
-          ctx.fillStyle = 'rgba(232, 158, 125, 0.14)';
-          ctx.fillRect(0, 126, 640, 26);
-        } else {
-          ctx.strokeStyle = PALETTE.cyanShadow;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(320, 40, 190, 0.25 * Math.PI, 0.75 * Math.PI);
-          ctx.stroke();
-        }
-      }
-
-      // Layer 2 & 3: Far & Mid Ridges
-      const ridgeColors =
+      // Parallel rover tire tracks matching img/05.jpg
+      ctx.fillStyle =
         sector === 'mars'
-          ? { far: PALETTE.shadowUmber, mid: PALETTE.deepRust, base: PALETTE.ochre, top: PALETTE.terracotta, lit: PALETTE.dustTan, shadow: PALETTE.shadowUmber }
+          ? PALETTE.shadowUmber
           : sector === 'elsewhere'
-          ? { far: PALETTE.navy, mid: PALETTE.dusk, base: PALETTE.basalt, top: PALETTE.regolithDeep, lit: PALETTE.dustLight, shadow: PALETTE.indigo }
-          : { far: PALETTE.navy, mid: PALETTE.basalt, base: PALETTE.regolithDeep, top: PALETTE.regolithMid, lit: PALETTE.crustCream, shadow: PALETTE.indigo };
-
-      ctx.fillStyle = ridgeColors.far;
-      ctx.beginPath();
-      ctx.moveTo(0, 152);
-      for (let x = 0; x <= 640; x += 24) {
-        const y = 124 + Math.sin(x * 0.018 + (sector === 'mars' ? 1 : 0)) * 12;
-        ctx.lineTo(x, Math.round(y));
-      }
-      ctx.lineTo(640, 152);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = ridgeColors.mid;
-      ctx.beginPath();
-      ctx.moveTo(0, 158);
-      for (let x = 0; x <= 640; x += 16) {
-        const y = 138 + Math.cos(x * 0.025 + 2) * 8;
-        ctx.lineTo(x, Math.round(y));
-      }
-      ctx.lineTo(640, 158);
-      ctx.closePath();
-      ctx.fill();
-
-      // Layer 4: Foreground Regolith Floor (ordered pixel texture + craters)
-      ctx.fillStyle = ridgeColors.base;
-      ctx.fillRect(0, 150, 640, 210);
-      ctx.fillStyle = ridgeColors.top;
-      for (let py = 152; py < 360; py += 6) {
-        for (let px = (py % 12 === 0 ? 0 : 3); px < 640; px += 12) {
-          ctx.fillRect(px, py, 4, 2);
-        }
-      }
-      ctx.fillStyle = ridgeColors.lit;
-      ctx.fillRect(0, 150, 640, 1);
-
-      // Craters with top-left highlight rim and deep indigo/umber shadow bowl
-      for (const cr of CRATERS[sector]) {
-        ctx.fillStyle = ridgeColors.mid;
-        ctx.beginPath();
-        ctx.ellipse(cr.x, cr.y, cr.rx, cr.ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = ridgeColors.shadow;
-        ctx.beginPath();
-        ctx.ellipse(cr.x + 3, cr.y + 2, cr.rx - 4, Math.max(3, cr.ry - 3), 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = ridgeColors.lit;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(cr.x, cr.y, cr.rx, cr.ry, 0, Math.PI, Math.PI * 1.65);
-        ctx.stroke();
-      }
-
-      // Rover regolith tracks
-      ctx.fillStyle = ridgeColors.shadow;
+          ? PALETTE.cyanShadow
+          : PALETTE.indigo;
       for (const t of s.tracks) {
-        ctx.fillRect(t.x - 3, t.y + 1, 2, 2);
-        ctx.fillRect(t.x + 2, t.y + 2, 2, 2);
-      }
-      if (sector === 'elsewhere') {
-        for (let i = 0; i < 28; i += 1) {
-          const x = (i * 113 + 39) % 630;
-          const y = 164 + (i * 53) % 176;
-          ctx.fillStyle = PALETTE.indigo;
-          ctx.fillRect(x, y + 3, 9, 3);
-          ctx.fillStyle = PALETTE.regolithMid;
-          ctx.fillRect(x, y, 6, 4);
-          ctx.fillStyle = PALETTE.crustCream;
-          ctx.fillRect(x, y, 4, 1);
-        }
-      }
-      for (const puff of s.dust) {
-        ctx.fillStyle = puff.age < 0.3 ? ridgeColors.lit : ridgeColors.top;
-        const drift = Math.round(puff.age * 12);
-        ctx.fillRect(Math.round(puff.x) - drift, Math.round(puff.y) - drift / 2, 2, 2);
-        ctx.fillRect(Math.round(puff.x) + drift, Math.round(puff.y) - drift, 2, 1);
+        ctx.fillRect(t.x - 4, t.y - 2, 2, 1);
+        ctx.fillRect(t.x - 4, t.y + 2, 2, 1);
       }
 
-      // Sector Encounter Waypoints
+      // Dust kick-up
+      const dustLit = sector === 'mars' ? PALETTE.dustTan : PALETTE.crustCream;
+      const dustMid = sector === 'mars' ? PALETTE.terracotta : PALETTE.regolithMid;
+      for (const puff of s.dust) {
+        ctx.fillStyle = puff.age < 0.3 ? dustLit : dustMid;
+        const drift = Math.round(puff.age * 10);
+        ctx.fillRect(Math.round(puff.x) - drift, Math.round(puff.y) - Math.round(drift / 2), 2, 2);
+      }
+
+      // Encounter waypoints with concentric dashed rings & notched label plates (img/05.jpg)
+      const doneInSector = sectorEncounters.filter((e) => isCompleted(e.id)).length;
       for (const enc of sectorEncounters) {
         const wp = WAYPOINT_COORDS[enc.id];
         if (!wp) continue;
@@ -479,27 +501,27 @@ export function SurfaceExplorerCanvas({
         const isNear = Math.hypot(wp.x - s.roverX, wp.y - s.roverY) < 62;
         const ringColor = done ? PALETTE.amber : isNear ? PALETTE.laserCore : PALETTE.cyan;
 
-        // Soft pulsing radar ring when near
+        // Outer subtle glow ring when near
         if (isNear && !reducedMotion) {
-          const rad = 22 + Math.sin(s.pulse) * 6;
-          ctx.strokeStyle = 'rgba(14, 195, 220, 0.35)';
+          const rad = 28 + Math.sin(s.pulse) * 5;
+          ctx.strokeStyle = PALETTE.cyanDeep;
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(wp.x, wp.y, rad, 0, Math.PI * 2);
+          ctx.ellipse(wp.x, wp.y + 4, rad, Math.round(rad * 0.48), 0, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        // Dashed ring on ground
+        // Dashed primary ellipse ring around site hardware
         ctx.save();
         ctx.setLineDash([4, 3]);
         ctx.strokeStyle = ringColor;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.ellipse(wp.x, wp.y + 2, 24, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(wp.x, wp.y + 3, 26, 12, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
 
-        // Hardware sprite on site
+        // Hardware sprite on surface
         const hwImg = s.sprites[wp.spriteKey];
         if (hwImg && hwImg.complete && hwImg.naturalWidth > 0) {
           ctx.save();
@@ -511,22 +533,26 @@ export function SurfaceExplorerCanvas({
           ctx.fillRect(Math.round(wp.x - 8), Math.round(wp.y - 16), 16, 14);
         }
 
-        // Notched Plate Label
-        const label = `${done ? '✓ ' : ''}${enc.title.toUpperCase()}`;
+        // Subtle status beacon pixel above hardware
+        ctx.fillStyle = done ? PALETTE.amber : PALETTE.cyan;
+        ctx.fillRect(wp.x - 1, wp.y - 28, 3, 3);
+
+        // Notched Pixel Label below ring (matching img/05.jpg)
+        const label = `${done ? '✓ ' : '• '}${enc.title.toUpperCase()} · ECHO`;
         ctx.font = 'bold 9px "IBM Plex Mono", monospace';
         const tw = ctx.measureText(label).width;
         const boxW = Math.ceil(tw + 14);
         const bx = Math.round(Math.max(8, Math.min(632 - boxW, wp.x - boxW / 2)));
-        const by = Math.round(wp.y - 44);
-        ctx.fillStyle = 'rgba(11, 15, 29, 0.9)';
+        const by = Math.round(wp.y + 18);
+        ctx.fillStyle = PALETTE.indigo;
         ctx.fillRect(bx, by, boxW, 16);
-        ctx.strokeStyle = isNear ? ringColor : PALETTE.dusk;
+        ctx.strokeStyle = isNear ? ringColor : PALETTE.cyanDeep;
         ctx.strokeRect(bx + 0.5, by + 0.5, boxW - 1, 15);
         ctx.fillStyle = done ? PALETTE.amber : isNear ? PALETTE.laserCore : PALETTE.highlightRim;
         ctx.fillText(label, bx + 7, by + 11);
       }
 
-      // Draw Target Marker if driving by click
+      // Click target waypoint crosshair
       if (s.targetX !== null && s.targetY !== null) {
         ctx.strokeStyle = PALETTE.cyan;
         ctx.strokeRect(Math.round(s.targetX - 4), Math.round(s.targetY - 4), 8, 8);
@@ -535,63 +561,79 @@ export function SurfaceExplorerCanvas({
       // Player Field Scout / Robot
       const robotImg = s.sprites.robot;
       if (robotImg && robotImg.complete && robotImg.naturalWidth > 0) {
-        ctx.fillStyle = 'rgba(11, 15, 29, 0.72)';
+        ctx.fillStyle = PALETTE.void;
         ctx.beginPath();
-        ctx.ellipse(Math.round(s.roverX), Math.round(s.roverY + 2), 11, 4, 0, 0, Math.PI * 2);
+        ctx.ellipse(Math.round(s.roverX), Math.round(s.roverY + 3), 11, 4, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         if (s.facing < 0) {
-          ctx.translate(Math.round(s.roverX + 12), Math.round(s.roverY - 22 + bounce));
+          ctx.translate(Math.round(s.roverX + 12), Math.round(s.roverY - 21 + bounce));
           ctx.scale(-1, 1);
           ctx.drawImage(robotImg, 0, 0, 24, 24);
         } else {
-          ctx.drawImage(robotImg, Math.round(s.roverX - 12), Math.round(s.roverY - 22 + bounce), 24, 24);
+          ctx.drawImage(robotImg, Math.round(s.roverX - 12), Math.round(s.roverY - 21 + bounce), 24, 24);
         }
         ctx.restore();
       } else {
         drawScoutFallback(ctx, s.roverX, s.roverY + bounce, s.facing);
       }
 
-      // Top-left Canvas HUD Overlay
-      ctx.fillStyle = 'rgba(11, 15, 29, 0.85)';
-      ctx.fillRect(10, 10, 268, 34);
-      ctx.strokeStyle = PALETTE.cyanDeep;
-      ctx.strokeRect(10.5, 10.5, 267, 33);
-      ctx.font = 'bold 10px "IBM Plex Mono", monospace';
-      ctx.fillStyle = PALETTE.cyan;
-      ctx.fillText(`SECTOR: ${sector.toUpperCase()} // POS ${Math.round(s.roverX)},${Math.round(s.roverY)}`, 18, 24);
+      // Top-left HUD Plate (img/05.jpg: ECHO: SITE · DISTM)
       const activeNear = sectorEncounters.find((e) => e.id === closestId);
-      ctx.fillStyle = closestDist < 62 ? PALETTE.laserCore : PALETTE.dustLight;
-      ctx.fillText(
-        closestDist < 62 && activeNear
-          ? `LOCKED: ${activeNear.title.toUpperCase()} [E]`
-          : 'WASD / CLICK TO DRIVE TO SITE',
-        18,
-        37
-      );
+      const leftText = activeNear
+        ? closestDist < 62
+          ? `ECHO: ${activeNear.title.toUpperCase()} · [E] TUNE`
+          : `ECHO: ${activeNear.title.toUpperCase()} · ${Math.round(closestDist)}M`
+        : `SECTOR: ${sector.toUpperCase()} · DRIVE WITH WASD`;
+      ctx.fillStyle = PALETTE.indigo;
+      ctx.fillRect(10, 10, 296, 26);
+      ctx.strokeStyle = PALETTE.cyan;
+      ctx.strokeRect(10.5, 10.5, 295, 25);
+      ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+      ctx.fillStyle = closestDist < 62 ? PALETTE.laserCore : PALETTE.cyan;
+      ctx.fillText(leftText, 18, 27);
+
+      // Top-right HUD Plate (img/05.jpg: • MOON // 0/3 FOUND)
+      const rightText = `• ${sector.toUpperCase()} // ${doneInSector}/${sectorEncounters.length} FOUND`;
+      ctx.fillStyle = PALETTE.indigo;
+      ctx.fillRect(434, 10, 196, 26);
+      ctx.strokeStyle = PALETTE.cyan;
+      ctx.strokeRect(434.5, 10.5, 195, 25);
+      ctx.fillStyle = doneInSector === sectorEncounters.length ? PALETTE.amber : PALETTE.highlightRim;
+      ctx.fillText(rightText, 444, 27);
+
+      // Compass bar pointing to next unfinished site
       const nextWaypoint = WAYPOINT_COORDS[nextId];
       ctx.fillStyle = PALETTE.indigo;
-      ctx.fillRect(10, 48, 300, 22);
-      ctx.fillStyle = PALETTE.cyan;
-      ctx.fillText(nextWaypoint ? `NEXT SIGNAL // ${Math.round(nextDist)} px` : 'SECTOR ARCHIVED // REPLAY ANY SIGNAL', 38, 63);
+      ctx.fillRect(10, 328, 264, 22);
+      ctx.strokeStyle = PALETTE.dusk;
+      ctx.strokeRect(10.5, 328.5, 263, 21);
+      ctx.fillStyle = nextWaypoint ? PALETTE.cyan : PALETTE.amber;
+      ctx.fillText(
+        nextWaypoint ? `COMPASS // ${Math.round(nextDist)}M TO UNARCHIVED SIGNAL` : 'SECTOR ARCHIVED // ALL SIGNALS LINKED',
+        34,
+        343
+      );
       if (nextWaypoint) {
         ctx.save();
-        ctx.translate(24, 59);
+        ctx.translate(21, 339);
         ctx.rotate(Math.atan2(nextWaypoint.y - s.roverY, nextWaypoint.x - s.roverX));
         ctx.strokeStyle = PALETTE.cyan;
         ctx.beginPath();
-        ctx.moveTo(-4, -5);
+        ctx.moveTo(-4, -4);
         ctx.lineTo(4, 0);
-        ctx.lineTo(-4, 5);
+        ctx.lineTo(-4, 4);
         ctx.stroke();
         ctx.restore();
       }
+
+      // Mandatory SI-Generated Illustration disclosure label
       ctx.font = '10px "IBM Plex Mono", monospace';
       ctx.fillStyle = PALETTE.indigo;
-      ctx.fillRect(464, 344, 176, 16);
+      ctx.fillRect(462, 338, 168, 16);
       ctx.fillStyle = PALETTE.dustLight;
-      ctx.fillText('SI-Generated Illustration', 470, 355);
+      ctx.fillText('SI-Generated Illustration', 468, 349);
 
       if (!paused) rafId = window.requestAnimationFrame(tick);
     };
@@ -608,11 +650,10 @@ export function SurfaceExplorerCanvas({
     const rect = canvas.getBoundingClientRect();
     const scaleX = 640 / rect.width;
     const scaleY = 360 / rect.height;
-    const cx = Math.max(24, Math.min(616, (e.clientX - rect.left) * scaleX));
-    const cy = Math.max(158, Math.min(338, (e.clientY - rect.top) * scaleY));
+    const cx = Math.max(28, Math.min(612, (e.clientX - rect.left) * scaleX));
+    const cy = Math.max(58, Math.min(334, (e.clientY - rect.top) * scaleY));
 
     const s = stateRef.current;
-    // Check if user clicked an encounter marker directly
     for (const enc of sectorEncounters) {
       const wp = WAYPOINT_COORDS[enc.id];
       if (!wp) continue;
@@ -640,7 +681,7 @@ export function SurfaceExplorerCanvas({
     <div className="surface-stage-wrap" role="region" aria-label="Surface Signal Explorer">
       <div className="surface-hud-bar">
         <span>
-          <strong style={{ color: 'var(--cyan)' }}>SCOUT TELEMETRY (640×360):</strong> Focus the map, then drive with{' '}
+          <strong style={{ color: 'var(--cyan)' }}>SCOUT TELEMETRY (640×360 SURFACE MAP):</strong> Focus the map, drive with{' '}
           <code>WASD</code> / <code>Arrows</code> or click terrain; press <code>E</code> near a signal ring to tune.
         </span>
         <span className="mono" style={{ color: 'var(--muted)' }}>
@@ -661,7 +702,7 @@ export function SurfaceExplorerCanvas({
           stateRef.current.pendingLaunchId = null;
         }}
         className="surface-canvas pixelated"
-        aria-label={`Interactive ${sector} sector surface explorer map showing ${sectorEncounters.length} signal encounters`}
+        aria-label={`Interactive ${sector} sector 3/4 top-down surface explorer map showing ${sectorEncounters.length} signal encounters`}
       />
       <p className="mono" aria-live="polite">{nextEncounter ? `NEXT SIGNAL // ${nextEncounter.title}` : 'SECTOR ARCHIVED // Replay any signal'}</p>
       <button type="button" className="btn-secondary btn-sm" aria-pressed={paused}

@@ -60,6 +60,208 @@ interface VisualTelemetry {
   plutoSlots: string[];
 }
 
+const STAGE_BAYER_4X4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+];
+
+function drawHorizonBackdrop(
+  ctx: CanvasRenderingContext2D,
+  chapter: string,
+  title: string,
+  stepIdx: number,
+  stepsTotal: number,
+  outcome: 'active' | 'success' | 'partial'
+) {
+  const isMars = chapter === 'mars';
+  const isMoon = chapter === 'moon';
+
+  // Deep sky field (img/07.jpg & img/08.jpg)
+  ctx.fillStyle = '#05070f';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#0b0f1d';
+  ctx.fillRect(0, 72, 640, 180);
+
+  // Ordered Bayer-dithered Martian atmospheric dust haze (img/08.jpg)
+  if (isMars) {
+    const hazeRamp = ['#0b0f1d', '#2b140e', '#522116', '#7d331c'];
+    for (let y = 104; y < 224; y += 2) {
+      const t = (y - 104) / 120;
+      const scaled = t * (hazeRamp.length - 1);
+      const idx = Math.floor(scaled);
+      const frac = scaled - idx;
+      for (let x = 0; x < 640; x += 4) {
+        const th = (STAGE_BAYER_4X4[(y >> 1) & 3][(x >> 2) & 3] + 0.5) / 16;
+        const shade = frac > th && idx + 1 < hazeRamp.length ? hazeRamp[idx + 1] : hazeRamp[idx];
+        ctx.fillStyle = shade;
+        ctx.fillRect(x, y, 4, 2);
+      }
+    }
+  }
+
+  // Deterministic starfield
+  for (let i = 0; i < 64; i += 1) {
+    const sx = (i * 151 + 17) % 640;
+    const sy = (i * 73 + 9) % 192;
+    ctx.fillStyle = i % 9 === 0 ? '#7ef1ff' : i % 3 === 0 ? '#b2b8d4' : '#8389a8';
+    ctx.fillRect(sx, sy, 1, 1);
+  }
+
+  // Hero light: Pixel Earth on Moon (img/07.jpg) or Pale Cyan Dot on Mars/Deep Space
+  if (isMoon) {
+    const ex = 516;
+    const ey = 86;
+    const er = 32;
+    for (let y = -er; y <= er; y += 2) {
+      for (let x = -er; x <= er; x += 2) {
+        if (x * x + y * y > er * er) continue;
+        const tx = (x - 4) / er;
+        const n = Math.sin(x * 0.14 + y * 0.11) + Math.cos(y * 0.24 - x * 0.08);
+        const th = (STAGE_BAYER_4X4[(y + er) & 3][(x + er) & 3] - 7.5) / 36;
+        if (tx + th > 0.25) {
+          ctx.fillStyle = '#05070f';
+        } else if (n > 0.72) {
+          ctx.fillStyle = '#0ec3dc';
+        } else if (y < -18 && (x + y) % 8 < 3) {
+          ctx.fillStyle = '#e2e6fa';
+        } else {
+          ctx.fillStyle = n > 0.15 ? '#087d99' : '#064b5c';
+        }
+        ctx.fillRect(ex + x, ey + y, 2, 2);
+      }
+    }
+    ctx.strokeStyle = '#7ef1ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(ex, ey, er + 1, Math.PI * 0.6, Math.PI * 1.65);
+    ctx.stroke();
+    ctx.strokeStyle = '#0ec3dc';
+    ctx.beginPath();
+    ctx.arc(ex, ey, er + 3, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#0ec3dc';
+    ctx.fillRect(524, 64, 3, 3);
+    ctx.fillStyle = '#7ef1ff';
+    ctx.fillRect(525, 65, 1, 1);
+  }
+
+  // 4-Layer Parallax Horizon Ridges + Foreground Surface (img/07.jpg & img/08.jpg)
+  const layers = isMars
+    ? [
+        { baseY: 194, amp: 12, freq: 0.017, phase: 0.4, color: '#2b140e', rim: '#522116' },
+        { baseY: 214, amp: 10, freq: 0.024, phase: 1.9, color: '#522116', rim: '#7d331c' },
+        { baseY: 234, amp: 8, freq: 0.031, phase: 3.1, color: '#7d331c', rim: '#ab4f2c' },
+        { baseY: 254, amp: 9, freq: 0.015, phase: 0.9, color: '#ab4f2c', rim: '#e89e7d' },
+      ]
+    : isMoon
+    ? [
+        { baseY: 192, amp: 11, freq: 0.018, phase: 0.2, color: '#131a2e', rim: '#27293d' },
+        { baseY: 214, amp: 10, freq: 0.024, phase: 1.4, color: '#27293d', rim: '#3b3e59' },
+        { baseY: 234, amp: 7, freq: 0.032, phase: 2.7, color: '#3b3e59', rim: '#595e7d' },
+        { baseY: 252, amp: 10, freq: 0.014, phase: 0.7, color: '#595e7d', rim: '#b2b8d4' },
+      ]
+    : [
+        { baseY: 198, amp: 9, freq: 0.015, phase: 0.5, color: '#0b0f1d', rim: '#131a2e' },
+        { baseY: 220, amp: 8, freq: 0.022, phase: 1.8, color: '#131a2e', rim: '#1d263f' },
+        { baseY: 242, amp: 6, freq: 0.028, phase: 2.4, color: '#1d263f', rim: '#27293d' },
+        { baseY: 262, amp: 7, freq: 0.013, phase: 1.1, color: '#27293d', rim: '#595e7d' },
+      ];
+
+  for (const layer of layers) {
+    ctx.fillStyle = layer.color;
+    ctx.beginPath();
+    ctx.moveTo(0, 360);
+    for (let x = 0; x <= 640; x += 8) {
+      const y = layer.baseY + Math.round(Math.sin(x * layer.freq + layer.phase) * layer.amp);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(640, 360);
+    ctx.closePath();
+    ctx.fill();
+
+    // 1px sunlit ridge rim highlight
+    ctx.strokeStyle = layer.rim;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= 640; x += 8) {
+      const y = layer.baseY + Math.round(Math.sin(x * layer.freq + layer.phase) * layer.amp);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Bayer-dithered foreground slope band + small craters (img/07.jpg & img/08.jpg)
+  const foreTop = isMars ? '#cf724a' : isMoon ? '#8389a8' : '#3b3e59';
+  const foreDeep = isMars ? '#7d331c' : isMoon ? '#27293d' : '#131a2e';
+  for (let y = 268; y < 360; y += 3) {
+    const t = (y - 268) / 92;
+    for (let x = 0; x < 640; x += 3) {
+      const th = (STAGE_BAYER_4X4[(y >> 1) & 3][(x >> 1) & 3] + 0.5) / 16;
+      if (t * 0.85 > th) {
+        ctx.fillStyle = foreDeep;
+        ctx.fillRect(x, y, 2, 2);
+      } else if ((x + y) % 19 === 0) {
+        ctx.fillStyle = foreTop;
+        ctx.fillRect(x, y, 2, 1);
+      }
+    }
+  }
+  const craterRim = isMars ? '#e89e7d' : '#b2b8d4';
+  const craterBowl = isMars ? '#2b140e' : '#131a2e';
+  for (const c of [
+    { x: 108, y: 308, rx: 22, ry: 7 },
+    { x: 526, y: 292, rx: 16, ry: 5 },
+    { x: 356, y: 326, rx: 26, ry: 8 },
+  ]) {
+    ctx.fillStyle = craterBowl;
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = craterRim;
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, Math.PI, Math.PI * 1.75);
+    ctx.stroke();
+  }
+
+  // Glowing cyan telemetry deck / landing bar under experiment stage (img/07.jpg)
+  ctx.fillStyle = '#0b0f1d';
+  ctx.fillRect(216, 250, 208, 6);
+  ctx.fillStyle = '#0ec3dc';
+  ctx.fillRect(216, 248, 208, 3);
+  ctx.fillStyle = '#7ef1ff';
+  ctx.fillRect(224, 248, 192, 1);
+
+  // Top-center Cyan Telemetry HUD Plate (img/07.jpg & img/08.jpg)
+  ctx.fillStyle = '#0b0f1d';
+  ctx.fillRect(148, 10, 344, 34);
+  ctx.strokeStyle = '#0ec3dc';
+  ctx.strokeRect(148.5, 10.5, 343, 33);
+  ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+  ctx.fillStyle = '#0ec3dc';
+  ctx.fillText(`• ${title.toUpperCase()}`, 158, 23);
+  ctx.fillStyle = outcome === 'active' ? '#b2b8d4' : '#f59e0b';
+  ctx.fillText(
+    outcome === 'active'
+      ? `STAGE ${Math.min(stepIdx + 1, stepsTotal)}/${stepsTotal}`
+      : 'VERIFIED ✓',
+    414,
+    23
+  );
+  ctx.fillStyle = '#8389a8';
+  ctx.fillText('LOCK', 158, 37);
+  const segCount = Math.max(stepsTotal, 1);
+  const completedSegs = outcome === 'active' ? stepIdx : segCount;
+  for (let s = 0; s < 10; s += 1) {
+    const filled = s < Math.round((completedSegs / segCount) * 10) || (outcome === 'active' && s === Math.round((stepIdx / segCount) * 10));
+    ctx.fillStyle = outcome !== 'active' ? '#f59e0b' : filled ? '#0ec3dc' : '#1d263f';
+    ctx.fillRect(194 + s * 11, 29, 9, 8);
+  }
+}
+
 function EncounterVisualStage({
   encounterId,
   chapter,
@@ -92,253 +294,243 @@ function EncounterVisualStage({
       const phase = motionQuery.matches || paused || outcome !== 'active' ? 0 : time / 1000;
       ctx.imageSmoothingEnabled = false;
 
-      // Strict 24-color sky + horizon layers
-      const isMars = chapter === 'mars';
-      const isMoon = chapter === 'moon';
-      const sky = ctx.createLinearGradient(0, 0, 0, 128);
-      sky.addColorStop(0, '#05070f');
-      sky.addColorStop(0.75, '#0b0f1d');
-      sky.addColorStop(1, isMars ? '#522116' : '#131a2e');
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, 640, 128);
+      drawHorizonBackdrop(ctx, chapter, encounter.title, stepIdx, stepsTotal, outcome);
 
-      // Stars
-      for (let i = 0; i < 42; i += 1) {
-        const sx = (i * 151 + 17) % 640;
-        const sy = (i * 59 + 9) % 102;
-        ctx.fillStyle = i % 7 === 0 ? '#7ef1ff' : i % 3 === 0 ? '#b2b8d4' : '#8389a8';
-        ctx.fillRect(sx, sy, 1, 1);
-      }
-
-      // Hero light
-      if (isMoon) {
-        ctx.fillStyle = '#087d99';
-        ctx.beginPath();
-        ctx.arc(560, 44, 22, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#7ef1ff';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.strokeStyle = '#0ec3dc';
-        ctx.beginPath();
-        ctx.arc(560, 44, 24, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = '#131a2e';
-        ctx.beginPath();
-        ctx.ellipse(568, 44, 12, 21, 0, -Math.PI / 2, Math.PI / 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = '#7ef1ff';
-        ctx.fillRect(560, 34, 3, 3);
-      }
-
-      // Horizon terrain
-      ctx.fillStyle = isMars ? '#7d331c' : isMoon ? '#3b3e59' : '#27293d';
-      ctx.fillRect(0, 128, 640, 52);
-      ctx.fillStyle = isMars ? '#cf724a' : isMoon ? '#b2b8d4' : '#8389a8';
-      ctx.fillRect(0, 128, 640, 1);
-      ctx.font = '10px "IBM Plex Mono", monospace';
-      const label = (text: string, x = 40, y = 157) => {
+      ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+      const label = (text: string, x = 28, y = 342) => {
+        ctx.fillStyle = '#0b0f1d';
+        const tw = ctx.measureText(text).width;
+        ctx.fillRect(x - 6, y - 11, Math.ceil(tw + 12), 16);
+        ctx.strokeStyle = '#087d99';
+        ctx.strokeRect(x - 5.5, y - 10.5, Math.ceil(tw + 11), 15);
         ctx.fillStyle = '#e2e6fa';
         ctx.fillText(text, x, y);
       };
 
-      // Encounter-specific pixel visualization
+      // Encounter-specific 640x360 pixel telemetry overlay on the horizon deck
       if (encounterId === 'echo-never-sleeps') {
-        // Earth -> Moon retroreflector laser beam
+        // Retroreflector array on cyan platform + photon beam from Earth
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(302, 236, 36, 12);
         ctx.fillStyle = '#e2e6fa';
-        ctx.fillRect(390, 118, 28, 10);
+        ctx.fillRect(306, 239, 8, 6);
+        ctx.fillRect(316, 239, 8, 6);
+        ctx.fillRect(326, 239, 8, 6);
+
         ctx.strokeStyle = '#0ec3dc';
         ctx.setLineDash([4, 3]);
         ctx.beginPath();
-        ctx.moveTo(548, 56);
-        const targetX = telemetry.aimTarget === 'tranquility' ? 404 : telemetry.aimTarget === 'tycho' ? 460 : 350;
-        ctx.lineTo(targetX, 118);
+        ctx.moveTo(504, 102);
+        const targetX =
+          telemetry.aimTarget === 'tranquility' ? 320 : telemetry.aimTarget === 'tycho' ? 410 : 230;
+        ctx.lineTo(targetX, 236);
         ctx.stroke();
         ctx.setLineDash([]);
+
         const travel = (phase % 4) / 4;
-        const pulse = telemetry.aimTarget === 'tranquility'
-          ? (travel < 0.5 ? travel * 2 : (1 - travel) * 2) : travel;
+        const pulse =
+          telemetry.aimTarget === 'tranquility'
+            ? travel < 0.5
+              ? travel * 2
+              : (1 - travel) * 2
+            : travel;
         ctx.fillStyle = '#7ef1ff';
-        ctx.fillRect(Math.round(548 + (targetX - 548) * pulse), Math.round(56 + 62 * pulse), 3, 2);
-        // Repeated returns at one detector bin; scattered low noise elsewhere.
-        for (let i = 0; i < 32; i += 1) {
-          const peak = i === 16 && telemetry.aimTarget === 'tranquility';
-          const height = peak ? 12 + telemetry.echoHits * 8 : 2 + (i * 7) % 5;
+        ctx.fillRect(Math.round(504 + (targetX - 504) * pulse), Math.round(102 + 134 * pulse), 4, 3);
+
+        // Detector histogram plate
+        ctx.fillStyle = '#0b0f1d';
+        ctx.fillRect(34, 134, 240, 74);
+        ctx.strokeStyle = '#087d99';
+        ctx.strokeRect(34.5, 134.5, 239, 73);
+        for (let i = 0; i < 30; i += 1) {
+          const peak = i === 15 && telemetry.aimTarget === 'tranquility';
+          const height = peak ? 22 + telemetry.echoHits * 14 : 4 + ((i * 7) % 10);
           ctx.fillStyle = peak ? '#7ef1ff' : '#595e7d';
-          ctx.fillRect(44 + i * 7, 113 - height, 2, height);
+          ctx.fillRect(46 + i * 7, 198 - height, 3, height);
         }
         label(`PHOTON DETECTOR // ${telemetry.echoHits}/2 REPEATED RETURNS`);
       } else if (encounterId === 'farther-than-footsteps') {
         const stops = (encounter.game_support.suggested_stops as SuggestedStop[]) ?? [];
         ctx.strokeStyle = '#087d99';
         ctx.beginPath();
-        ctx.ellipse(300, 106, 220, 32, 0, 0, Math.PI * 2);
+        ctx.ellipse(320, 212, 230, 56, 0, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.strokeStyle = '#0ec3dc';
         ctx.beginPath();
-        ctx.moveTo(80, 116);
+        ctx.moveTo(88, 224);
         stops.forEach((stop, i) => {
-          const x = 140 + i * 85;
-          const y = 92 + (i % 2) * 23;
+          const x = 160 + i * 96;
+          const y = 176 + (i % 2) * 44;
           const chosen = telemetry.selectedStops.includes(stop.label);
           if (chosen) ctx.lineTo(x, y);
           ctx.fillStyle = chosen ? '#7ef1ff' : '#595e7d';
-          ctx.fillRect(x - 4, y - 4, 8, 8);
+          ctx.fillRect(x - 5, y - 5, 10, 10);
           if (chosen) {
-            const size = 7 + Math.sin(phase * 1.5) * 2;
+            const size = 9 + Math.sin(phase * 1.5) * 2;
+            ctx.strokeStyle = '#7ef1ff';
             ctx.strokeRect(x - size, y - size, size * 2, size * 2);
           }
-          label(String(i + 1), x - 3, y - 10);
+          ctx.fillStyle = '#e2e6fa';
+          ctx.fillText(String(i + 1), x - 3, y - 12);
         });
-        ctx.lineTo(80, 116);
+        ctx.lineTo(88, 224);
         ctx.stroke();
         ctx.fillStyle = '#b2b8d4';
-        ctx.fillRect(74, 108, 12, 8);
+        ctx.fillRect(78, 216, 18, 12);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(85, 211, 3, 5);
         label(`TRAVERSE // ${telemetry.selectedStops.length}/3 STOPS · SAFE RETURN LOOP`);
       } else if (encounterId === 'question-in-the-soil') {
         const cards = (encounter.game_support.evidence_cards as EvidenceCard[]) ?? [];
         cards.slice(0, 3).forEach((card, i) => {
-          const x = 82 + i * 165;
+          const x = 66 + i * 176;
           const inspected = telemetry.flippedCards.includes(card.id);
+          ctx.fillStyle = '#0b0f1d';
+          ctx.fillRect(x, 126, 152, 92);
           ctx.strokeStyle = inspected ? '#0ec3dc' : '#595e7d';
-          ctx.strokeRect(x + 0.5, 57.5, 110, 62);
+          ctx.strokeRect(x + 0.5, 126.5, 151, 91);
           ctx.fillStyle = inspected ? '#087d99' : '#522116';
-          ctx.fillRect(x + 5, inspected ? 78 : 107, 101, inspected ? 36 : 7);
+          ctx.fillRect(x + 8, inspected ? 154 : 196, 136, inspected ? 56 : 12);
           if (inspected) {
             ctx.fillStyle = '#7ef1ff';
-            for (let b = 0; b < 4; b += 1) {
-              ctx.fillRect(x + 18 + b * 23, Math.round(108 - ((phase * 7 + b * 9) % 27)), 2, 2);
+            for (let b = 0; b < 5; b += 1) {
+              ctx.fillRect(x + 20 + b * 26, Math.round(198 - ((phase * 10 + b * 9) % 38)), 3, 3);
             }
           }
-          label(card.label, x - 4, 47);
+          ctx.fillStyle = inspected ? '#7ef1ff' : '#e2e6fa';
+          ctx.fillText(card.label.slice(0, 20), x + 8, 144);
         });
         label(`ASSAYS // ${telemetry.flippedCards.length}/${cards.length} RECORDS INSPECTED · COMPARE, THEN INFER`);
       } else if (encounterId === 'clues-beneath-the-wheel') {
         const exposed = Math.min(telemetry.scrapeCount, 3);
         ctx.fillStyle = '#e2e6fa';
-        ctx.fillRect(225, 130, exposed * 38, 8);
+        ctx.fillRect(230, 240, exposed * 42, 8);
+        const rx = 220 + exposed * 38;
         ctx.fillStyle = '#b2b8d4';
-        ctx.fillRect(214 + exposed * 35, 106, 38, 18);
+        ctx.fillRect(rx, 210, 48, 22);
+        ctx.fillStyle = '#0ec3dc';
+        ctx.fillRect(rx + 32, 202, 10, 8);
         ctx.fillStyle = '#131a2e';
-        ctx.fillRect(218 + exposed * 35, 124, 10, 8);
-        ctx.fillRect(241 + exposed * 35, 124, 10, 8);
+        ctx.fillRect(rx + 4, 232, 12, 10);
+        ctx.fillRect(rx + 32, 232, 12, 10);
         if (exposed > 0) {
           ctx.fillStyle = '#cf724a';
-          for (let i = 0; i < 8; i += 1) {
-            ctx.fillRect(225 + exposed * 35 - i * 9, Math.round(125 - ((phase * 6 + i * 3) % 15)), 2, 2);
+          for (let i = 0; i < 10; i += 1) {
+            ctx.fillRect(rx - 4 - i * 8, Math.round(238 - ((phase * 8 + i * 3) % 18)), 3, 2);
           }
         }
         label(`WHEEL SCRAPE // ${exposed}/3 · ${exposed ? 'BRIGHT SOIL EXPOSED' : 'INSPECT THE REGOLITH'}`);
       } else if (encounterId === 'air-thin-as-a-whisper') {
         const lifting = telemetry.rotorSlider >= 65 && telemetry.rotorSlider <= 85;
-        const hoverY = Math.round(112 - (lifting ? Math.round(telemetry.altSlider * 0.45) : 0));
+        const hoverY = Math.round(218 - (lifting ? Math.round(telemetry.altSlider * 0.85) : 0));
         ctx.fillStyle = '#b2b8d4';
-        ctx.fillRect(310, hoverY, 20, 8);
+        ctx.fillRect(306, hoverY, 28, 12);
+        ctx.fillStyle = '#0ec3dc';
+        ctx.fillRect(316, hoverY - 8, 8, 8);
         ctx.fillStyle = '#7ef1ff';
-        const rotorWidth = Math.round(16 + 28 * Math.abs(Math.cos(phase * (1.2 + telemetry.rotorSlider / 25))));
-        ctx.fillRect(320 - rotorWidth / 2, hoverY - 4, rotorWidth, 2);
-        ctx.fillStyle = 'rgba(11, 15, 29, 0.7)';
-        ctx.fillRect(308, 134, 24, 5);
-        ctx.strokeStyle = '#087d99';
-        ctx.strokeRect(365.5, hoverY + 0.5, 6, 128 - hoverY);
+        const rotorWidth = Math.round(24 + 44 * Math.abs(Math.cos(phase * (1.2 + telemetry.rotorSlider / 25))));
+        ctx.fillRect(320 - rotorWidth / 2, hoverY - 10, rotorWidth, 2);
+        ctx.fillStyle = '#05070f';
+        ctx.fillRect(304, 242, 32, 6);
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.strokeRect(374.5, hoverY + 0.5, 8, 246 - hoverY);
         label(`ROTOR ${telemetry.rotorSlider}% // ALTITUDE ${lifting ? telemetry.altSlider : 0}% (MODEL)`);
       } else if (encounterId === 'landing-not-planned') {
-        const targetX = telemetry.nearZone === 'saddle' ? 320 : telemetry.nearZone === 'ridge' ? 180 : 450;
-        const y = 48 + telemetry.nearTicks * 22;
-        ctx.strokeStyle = '#087d99';
-        ctx.setLineDash([3, 4]);
+        const targetX =
+          telemetry.nearZone === 'saddle' ? 320 : telemetry.nearZone === 'ridge' ? 186 : 444;
+        const y = 96 + telemetry.nearTicks * 46;
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.setLineDash([4, 4]);
         ctx.beginPath();
         ctx.moveTo(targetX, y);
-        ctx.lineTo(targetX, 124);
+        ctx.lineTo(targetX, 242);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.fillStyle = '#b2b8d4';
-        ctx.fillRect(targetX - 7, y, 14, 9);
-        ctx.strokeStyle = telemetry.nearZone === 'saddle' ? '#0ec3dc' : '#8389a8';
-        const radius = 18 + Math.sin(phase * 1.5) * 2;
+        ctx.fillRect(targetX - 12, y, 24, 14);
+        ctx.fillStyle = '#0ec3dc';
+        ctx.fillRect(targetX - 24, y + 4, 10, 4);
+        ctx.fillRect(targetX + 14, y + 4, 10, 4);
+        ctx.strokeStyle = telemetry.nearZone === 'saddle' ? '#7ef1ff' : '#8389a8';
+        const radius = 24 + Math.sin(phase * 1.5) * 3;
         ctx.beginPath();
-        ctx.ellipse(targetX, 126, radius, 6, 0, 0, Math.PI * 2);
-        ctx.moveTo(targetX - 25, 126);
-        ctx.lineTo(targetX + 25, 126);
+        ctx.ellipse(targetX, 244, radius, 8, 0, 0, Math.PI * 2);
+        ctx.moveTo(targetX - 34, 244);
+        ctx.lineTo(targetX + 34, 244);
         ctx.stroke();
         label(`HIMEROS DESCENT // ${telemetry.nearTicks}/3 CORRECTIONS · ${telemetry.nearTicks === 3 ? 'CONTACT' : 'RANGING'}`);
       } else if (encounterId === 'power-for-the-unknown') {
-        // Voyager RTG power bars & DSN wave
         const budget = telemetry.voyagerRound === 1 ? 10 : 8;
+        ctx.fillStyle = '#0b0f1d';
+        ctx.fillRect(40, 114, 260, 74);
+        ctx.strokeStyle = '#0ec3dc';
+        ctx.strokeRect(40.5, 114.5, 259, 73);
         for (let b = 0; b < 14; b += 1) {
           ctx.fillStyle = b < telemetry.voyagerPower ? (b < budget ? '#0ec3dc' : '#f59e0b') : '#1d263f';
-          ctx.fillRect(48 + b * 14, 64, 10, 10);
+          ctx.fillRect(54 + b * 16, 134, 12, 16);
         }
         ctx.strokeStyle = '#0ec3dc';
         ctx.beginPath();
-        ctx.arc(490, 74, 18 + (phase * 7) % 14, 0.7 * Math.PI, 1.3 * Math.PI);
+        ctx.arc(476, 150, 24 + ((phase * 10) % 20), 0.7 * Math.PI, 1.3 * Math.PI);
         ctx.stroke();
-        label(`RTG MODEL // ${telemetry.voyagerPower}/${budget} GAME POWER UNITS`, 40, 99);
+        ctx.beginPath();
+        ctx.arc(476, 150, 44, 0.75 * Math.PI, 1.25 * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = '#e2e6fa';
+        ctx.fillText('DSN', 492, 154);
+        ctx.fillStyle = '#0ec3dc';
+        ctx.fillText(`RTG MODEL // ${telemetry.voyagerPower}/${budget} GAME POWER UNITS`, 54, 174);
         const loss = encounter.behind_the_memory.key_numbers.find((item) => item.label === 'Power lost each year');
         if (loss) {
+          ctx.fillStyle = '#0b0f1d';
+          ctx.fillRect(40, 276, 390, 22);
           ctx.strokeStyle = '#f59e0b';
-          ctx.strokeRect(34.5, 142.5, 430, 18);
+          ctx.strokeRect(40.5, 276.5, 389, 21);
           ctx.fillStyle = '#f59e0b';
-          ctx.fillText(`[ VERIFIED RECORD ] RTG loss: ${loss.value}/year`, 40, 155);
+          ctx.fillText(`[ VERIFIED RECORD ] RTG loss: ${loss.value}/year`, 50, 291);
         }
-        label('DSN', 505, 80);
-        ctx.strokeStyle = '#0ec3dc';
-        ctx.beginPath();
-        ctx.arc(490, 74, 32, 0.75 * Math.PI, 1.25 * Math.PI);
-        ctx.stroke();
+        label(`VOYAGER RTG // ROUND ${telemetry.voyagerRound} MARGIN ACTIVE`);
       } else if (encounterId === 'one-chance-at-pluto') {
-        // Pluto + Charon flyby trajectory
         ctx.fillStyle = '#e89e7d';
         ctx.beginPath();
-        ctx.arc(320, 72, 26, 0, Math.PI * 2);
+        ctx.arc(320, 146, 36, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#8389a8';
         ctx.beginPath();
-        ctx.arc(388, 56, 9, 0, Math.PI * 2);
+        ctx.arc(406, 118, 12, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#7ef1ff';
-        ctx.setLineDash([5, 4]);
+        ctx.setLineDash([6, 4]);
         ctx.beginPath();
-        ctx.moveTo(120, 108);
-        ctx.lineTo(520, 32);
+        ctx.moveTo(96, 206);
+        ctx.lineTo(548, 72);
         ctx.stroke();
         ctx.setLineDash([]);
         const scan = (Math.sin(phase * 0.6) + 1) / 2;
-        const px = 160 + scan * 320;
-        const py = 108 - (px - 120) * 76 / 400;
+        const px = 148 + scan * 340;
+        const py = 206 - ((px - 96) * 134) / 452;
         ctx.fillStyle = '#b2b8d4';
-        ctx.fillRect(Math.round(px), Math.round(py), 10, 6);
+        ctx.fillRect(Math.round(px), Math.round(py), 14, 8);
         ctx.strokeStyle = '#0ec3dc';
         ctx.beginPath();
-        ctx.moveTo(px + 5, py + 6);
-        ctx.lineTo(304, 92);
-        ctx.lineTo(340, 92);
+        ctx.moveTo(px + 7, py + 8);
+        ctx.lineTo(296, 174);
+        ctx.lineTo(346, 174);
         ctx.closePath();
         ctx.stroke();
         for (let i = 0; i < 3; i += 1) {
           ctx.fillStyle = i < telemetry.plutoSlots.length ? '#0ec3dc' : '#1d263f';
-          ctx.fillRect(50 + i * 23, 85, 18, 10);
+          ctx.fillRect(46 + i * 28, 184, 22, 14);
         }
         label(`FLYBY CAMERA // ${telemetry.plutoSlots.length}/3 OBSERVATIONS QUEUED`);
       }
 
-      // Bottom status overlay bar inside canvas
-      ctx.fillStyle = 'rgba(11, 15, 29, 0.88)';
-      ctx.fillRect(10, 10, 290, 22);
-      ctx.strokeStyle = '#087d99';
-      ctx.strokeRect(10.5, 10.5, 289, 21);
-      ctx.font = 'bold 10px "IBM Plex Mono", monospace';
-      ctx.fillStyle = outcome === 'active' ? '#0ec3dc' : '#f59e0b';
-      ctx.fillText(
-        outcome === 'active'
-          ? `TELEMETRY STAGE ${Math.min(stepIdx + 1, stepsTotal)}/${stepsTotal}`
-          : 'SIGNAL LOCK VERIFIED // COMPLETE',
-        18,
-        25
-      );
+      // Mandatory SI-Generated Illustration tag (top-bottom right aligned)
       ctx.font = '10px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#0b0f1d';
+      ctx.fillRect(462, 336, 168, 16);
       ctx.fillStyle = '#8389a8';
-      ctx.fillText('SI-Generated Illustration', 470, 174);
+      ctx.fillText('SI-Generated Illustration', 468, 348);
       if (!motionQuery.matches && !paused && outcome === 'active' && !document.hidden) rafId = requestAnimationFrame(draw);
     };
     const redraw = () => {
@@ -360,7 +552,7 @@ function EncounterVisualStage({
       <canvas
         ref={canvasRef}
         width={640}
-        height={180}
+        height={360}
         className="encounter-visual-stage pixelated"
         aria-hidden="true"
       />

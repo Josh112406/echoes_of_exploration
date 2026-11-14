@@ -25,7 +25,8 @@ import { SurveyorEncounterPreview } from './game/SurveyorEncounterPreview';
 import narrativeJson from './text/narrative.json';
 
 type RoutePath = '/' | '/archive' | '/sources' | '/game';
-type ArchivePanelView = 'missions' | 'sources' | 'evidence' | 'methodology';
+type ArchiveSubView = 'missions' | 'evidence';
+type SourcesSubView = 'registry' | 'references' | 'methodology';
 type ChapterFilter = 'all' | 'moon' | 'mars' | 'elsewhere' | 'featured';
 type StatusGroupFilter = 'all' | 'active' | 'passive' | 'dormant' | 'ended';
 type GameMode = 'map' | 'console';
@@ -43,34 +44,52 @@ const ENCOUNTERS_CATALOG: CatalogEncounterRecord[] =
 const NARRATIVE = narrativeJson as unknown as NarrativeBundle;
 
 const ARCHIVE_MENU_OPTIONS: Array<{
-  id: ArchivePanelView;
+  id: ArchiveSubView | SourcesSubView;
+  route: '/archive' | '/sources';
+  group: string;
   href: string;
   label: string;
   desc: string;
 }> = [
   {
     id: 'missions',
+    route: '/archive',
+    group: 'MISSION ARCHIVES WEBPAGE (/archive)',
     href: '/archive',
-    label: 'Mission Archives (31)',
-    desc: 'Filterable catalog of NASA spacecraft on the Moon, Mars, and deep space',
-  },
-  {
-    id: 'sources',
-    href: '/sources',
-    label: 'Primary NASA Sources (33)',
-    desc: 'Official NASA, JPL, NSSDCA, ILRS, and PDS reference registry',
+    label: 'Mission Archives Catalog (31)',
+    desc: 'Filterable museum catalog of NASA spacecraft across Moon, Mars & Deep Space',
   },
   {
     id: 'evidence',
+    route: '/archive',
+    group: 'MISSION ARCHIVES WEBPAGE (/archive)',
     href: '/archive?view=evidence',
     label: 'Encounter Evidence Chains (9)',
-    desc: 'Learning intents, observation chains, and simplification disclosures',
+    desc: 'Learning intents, observation chains & simplification disclosures',
+  },
+  {
+    id: 'registry',
+    route: '/sources',
+    group: 'NASA SOURCES WEBPAGE (/sources)',
+    href: '/sources',
+    label: 'Primary NASA Sources Registry (33)',
+    desc: 'Verified NASA, JPL, NSSDCA, ILRS & PDS authority citations',
+  },
+  {
+    id: 'references',
+    route: '/sources',
+    group: 'NASA SOURCES WEBPAGE (/sources)',
+    href: '/sources?view=references',
+    label: 'Encounter Science References (6)',
+    desc: 'Key NASA instrument & telemetry parameter bibliographies',
   },
   {
     id: 'methodology',
-    href: '/archive?view=methodology',
-    label: 'Glossary, SI Disclosure & Save Data',
-    desc: 'Scientific standards, SI disclosure, and JSON save export/import',
+    route: '/sources',
+    group: 'NASA SOURCES WEBPAGE (/sources)',
+    href: '/sources?view=methodology',
+    label: 'Methodology, Glossary & Save Data',
+    desc: 'SI disclosure, Space Apps compliance, field glossary & save export',
   },
 ];
 
@@ -130,17 +149,24 @@ function normalizeRoutePath(pathname: string): RoutePath {
   return '/';
 }
 
-function getArchiveViewFromUrl(pathname: string, search: string): ArchivePanelView {
-  if (pathname === '/sources') return 'sources';
+function getArchiveSubViewFromUrl(search: string): ArchiveSubView {
   try {
     const view = new URLSearchParams(search).get('view');
-    if (view === 'missions' || view === 'sources' || view === 'evidence' || view === 'methodology') {
-      return view;
-    }
+    if (view === 'evidence') return 'evidence';
   } catch {
     // Ignore malformed query string
   }
   return 'missions';
+}
+
+function getSourcesSubViewFromUrl(search: string): SourcesSubView {
+  try {
+    const view = new URLSearchParams(search).get('view');
+    if (view === 'references' || view === 'methodology') return view;
+  } catch {
+    // Ignore malformed query string
+  }
+  return 'registry';
 }
 
 function getQueryEncounterId(): string | null {
@@ -152,6 +178,216 @@ function getQueryEncounterId(): string | null {
   }
 }
 
+const DIORAMA_BAYER_4X4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+];
+
+// Non-playable Observatory Hero Canvas inspired by docs/art-reference/img/02.jpg (Still Out There)
+function ObservatoryHeroDiorama({ missionsCount, encountersCount }: { missionsCount: number; encountersCount: number }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const robotImg = new Image();
+    const lmImg = new Image();
+    robotImg.src = '/assets/sprites/robot.png';
+    lmImg.src = '/assets/sprites/lm.png';
+
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let rafId = 0;
+
+    const draw = (time: number) => {
+      const pulse = motionQuery.matches ? 0 : time / 1000;
+      ctx.imageSmoothingEnabled = false;
+
+      // Sky background
+      ctx.fillStyle = '#05070f';
+      ctx.fillRect(0, 0, 640, 360);
+      ctx.fillStyle = '#0b0f1d';
+      ctx.fillRect(0, 110, 640, 150);
+
+      // Deterministic starfield
+      for (let i = 0; i < 72; i += 1) {
+        const sx = (i * 139 + 23) % 640;
+        const sy = (i * 61 + 13) % 210;
+        const bright = i % 8 === 0;
+        ctx.fillStyle =
+          bright && !motionQuery.matches && Math.sin(pulse * 2 + i) > 0.5
+            ? '#7ef1ff'
+            : bright
+              ? '#e2e6fa'
+              : i % 3 === 0
+                ? '#b2b8d4'
+                : '#8389a8';
+        ctx.fillRect(sx, sy, bright ? 2 : 1, bright ? 2 : 1);
+      }
+
+      // Hero Light: Pixel Earth upper-right with cyan rim & Bayer terminator (img/02.jpg)
+      const ex = 516;
+      const ey = 92;
+      const er = 36;
+      for (let y = -er; y <= er; y += 2) {
+        for (let x = -er; x <= er; x += 2) {
+          if (x * x + y * y > er * er) continue;
+          const tx = (x - 5) / er;
+          const n = Math.sin(x * 0.13 + y * 0.11) + Math.cos(y * 0.22 - x * 0.08);
+          const th = (DIORAMA_BAYER_4X4[(y + er) & 3][(x + er) & 3] - 7.5) / 36;
+          if (tx + th > 0.24) {
+            ctx.fillStyle = '#05070f';
+          } else if (n > 0.72) {
+            ctx.fillStyle = '#0ec3dc';
+          } else if (y < -20 && (x + y) % 8 < 3) {
+            ctx.fillStyle = '#e2e6fa';
+          } else {
+            ctx.fillStyle = n > 0.15 ? '#087d99' : '#064b5c';
+          }
+          ctx.fillRect(ex + x, ey + y, 2, 2);
+        }
+      }
+      ctx.strokeStyle = '#7ef1ff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(ex, ey, er + 1, Math.PI * 0.58, Math.PI * 1.65);
+      ctx.stroke();
+      ctx.strokeStyle = '#0ec3dc';
+      ctx.beginPath();
+      ctx.arc(ex, ey, er + 3, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 3 Layered Bayer-Dithered Lunar Ridges (img/02.jpg)
+      const ridges = [
+        { baseY: 224, amp: 14, freq: 0.015, phase: 0.3, fill: '#131a2e', rim: '#27293d' },
+        { baseY: 256, amp: 12, freq: 0.022, phase: 1.7, fill: '#27293d', rim: '#595e7d' },
+        { baseY: 292, amp: 9, freq: 0.014, phase: 2.9, fill: '#3b3e59', rim: '#8389a8' },
+      ];
+      for (const r of ridges) {
+        ctx.fillStyle = r.fill;
+        ctx.beginPath();
+        ctx.moveTo(0, 360);
+        for (let x = 0; x <= 640; x += 8) {
+          ctx.lineTo(x, r.baseY + Math.round(Math.sin(x * r.freq + r.phase) * r.amp));
+        }
+        ctx.lineTo(640, 360);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = r.rim;
+        ctx.beginPath();
+        for (let x = 0; x <= 640; x += 8) {
+          const y = r.baseY + Math.round(Math.sin(x * r.freq + r.phase) * r.amp);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // Bayer dither speckles across foreground lunar ridge
+      for (let y = 304; y < 360; y += 3) {
+        const t = (y - 304) / 56;
+        for (let x = 0; x < 640; x += 3) {
+          const th = (DIORAMA_BAYER_4X4[(y >> 1) & 3][(x >> 1) & 3] + 0.5) / 16;
+          if (t * 0.78 > th) {
+            ctx.fillStyle = '#27293d';
+            ctx.fillRect(x, y, 2, 2);
+          } else if ((x + y) % 17 === 0) {
+            ctx.fillStyle = '#595e7d';
+            ctx.fillRect(x, y, 2, 1);
+          }
+        }
+      }
+
+      // Left foreground scout sprite + cyan speech box (img/02.jpg)
+      const rx = 86;
+      const ry = 286;
+      ctx.fillStyle = '#05070f';
+      ctx.beginPath();
+      ctx.ellipse(rx, ry + 16, 15, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (robotImg.complete && robotImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.drawImage(robotImg, rx - 16, ry - 16, 32, 32);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#b2b8d4';
+        ctx.fillRect(rx - 10, ry - 10, 20, 18);
+        ctx.fillStyle = '#0ec3dc';
+        ctx.fillRect(rx - 5, ry - 6, 10, 4);
+      }
+
+      // Speech bubble pointer & Cyan terminal callout box
+      ctx.fillStyle = '#05070f';
+      ctx.fillRect(28, 174, 174, 64);
+      ctx.strokeStyle = '#0ec3dc';
+      ctx.strokeRect(28.5, 174.5, 173, 63);
+      ctx.beginPath();
+      ctx.moveTo(82, 238);
+      ctx.lineTo(86, 250);
+      ctx.lineTo(92, 238);
+      ctx.stroke();
+      ctx.font = 'bold 9px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#0ec3dc';
+      ctx.fillText('ARCHIVIST-01', 38, 190);
+      ctx.fillStyle = '#e2e6fa';
+      ctx.fillText(`OPTICS ONLINE. ${missionsCount} RELICS`, 38, 206);
+      ctx.fillText(`LOGGED · ${encountersCount} SIGNALS OUT THERE.`, 38, 220);
+
+      // Right distant lunar lander silhouette + amber beacon (img/02.jpg)
+      const lx = 548;
+      const ly = 248;
+      if (lmImg.complete && lmImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.drawImage(lmImg, lx - 16, ly - 16, 32, 26);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#cf724a';
+        ctx.fillRect(lx - 10, ly - 8, 20, 12);
+      }
+      ctx.fillStyle = !motionQuery.matches && Math.sin(pulse * 3) < -0.2 ? '#e65100' : '#f59e0b';
+      ctx.fillRect(lx - 1, ly - 20, 3, 3);
+
+      // Corner archive attribution & SI watermark
+      ctx.font = '9px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#8389a8';
+      ctx.fillText('DATA: NASA NSSDCA / PDS / JPL · EST. 1966-2026', 14, 348);
+      ctx.fillText('SI-Generated Illustration', 488, 348);
+
+      if (!motionQuery.matches && !document.hidden) rafId = requestAnimationFrame(draw);
+    };
+
+    const redraw = () => {
+      cancelAnimationFrame(rafId);
+      draw(performance.now());
+    };
+    redraw();
+    motionQuery.addEventListener('change', redraw);
+    document.addEventListener('visibilitychange', redraw);
+    return () => {
+      cancelAnimationFrame(rafId);
+      motionQuery.removeEventListener('change', redraw);
+      document.removeEventListener('visibilitychange', redraw);
+    };
+  }, [missionsCount, encountersCount]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={640}
+      height={360}
+      className="hero-diorama-canvas pixelated"
+      aria-hidden="true"
+    />
+  );
+}
+
 export function App() {
   const [routePath, setRoutePath] = useState<RoutePath>(() =>
     normalizeRoutePath(window.location.pathname)
@@ -160,14 +396,18 @@ export function App() {
   const [audioMuted, setAudioMuted] = useState<boolean>(false);
   const [utcTime, setUtcTime] = useState<string>('');
 
-  // Archive & Sources page state
+  // Separate Archive (/archive) & Sources (/sources) page state
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-  const [archivePanel, setArchivePanel] = useState<ArchivePanelView>(() =>
-    getArchiveViewFromUrl(window.location.pathname, window.location.search)
+  const [archiveSubView, setArchiveSubView] = useState<ArchiveSubView>(() =>
+    getArchiveSubViewFromUrl(window.location.search)
+  );
+  const [sourcesSubView, setSourcesSubView] = useState<SourcesSubView>(() =>
+    getSourcesSubViewFromUrl(window.location.search)
   );
   const [filterChapter, setFilterChapter] = useState<ChapterFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusGroupFilter>('all');
   const [sourceOrgFilter, setSourceOrgFilter] = useState<string>('ALL');
+  const [sourceSearch, setSourceSearch] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [selectedMission, setSelectedMission] = useState<MissionRecord | null>(null);
   const [saveMessage, setSaveMessage] = useState<string>('');
@@ -254,8 +494,10 @@ export function App() {
       const nextRoute = normalizeRoutePath(window.location.pathname);
       setRoutePath(nextRoute);
       setDropdownOpen(false);
-      if (nextRoute === '/archive' || nextRoute === '/sources') {
-        setArchivePanel(getArchiveViewFromUrl(window.location.pathname, window.location.search));
+      if (nextRoute === '/archive') {
+        setArchiveSubView(getArchiveSubViewFromUrl(window.location.search));
+      } else if (nextRoute === '/sources') {
+        setSourcesSubView(getSourcesSubViewFromUrl(window.location.search));
       }
       const q = getQueryEncounterId();
       if (nextRoute === '/game' && q) {
@@ -321,24 +563,35 @@ export function App() {
   }, []);
 
   const navigateTo = useCallback(
-    (target: RoutePath, options?: { encounterId?: string; mode?: GameMode; view?: ArchivePanelView }) => {
+    (
+      target: RoutePath,
+      options?: {
+        encounterId?: string;
+        mode?: GameMode;
+        archiveView?: ArchiveSubView;
+        sourcesView?: SourcesSubView;
+      }
+    ) => {
       telemetryAudio.playChirp(target === '/game' ? 980 : 820, 0.04);
       setDropdownOpen(false);
-      const nextRoute: RoutePath = options?.view === 'sources' ? '/sources' : target;
-      const url =
-        nextRoute === '/game' && options?.encounterId
-          ? `/game?encounter=${encodeURIComponent(options.encounterId)}`
-          : nextRoute === '/archive' && options?.view && options.view !== 'missions'
-            ? `/archive?view=${encodeURIComponent(options.view)}`
-            : nextRoute;
+      let url: string = target;
+      if (target === '/game' && options?.encounterId) {
+        url = `/game?encounter=${encodeURIComponent(options.encounterId)}`;
+      } else if (target === '/archive' && options?.archiveView && options.archiveView !== 'missions') {
+        url = `/archive?view=${encodeURIComponent(options.archiveView)}`;
+      } else if (target === '/sources' && options?.sourcesView && options.sourcesView !== 'registry') {
+        url = `/sources?view=${encodeURIComponent(options.sourcesView)}`;
+      }
       if (window.location.pathname + window.location.search !== url) {
         window.history.pushState({}, '', url);
       }
-      setRoutePath(nextRoute);
+      setRoutePath(target);
 
-      if (nextRoute === '/archive' || nextRoute === '/sources') {
-        setArchivePanel(nextRoute === '/sources' ? 'sources' : (options?.view ?? 'missions'));
-      } else if (nextRoute === '/game') {
+      if (target === '/archive') {
+        setArchiveSubView(options?.archiveView ?? 'missions');
+      } else if (target === '/sources') {
+        setSourcesSubView(options?.sourcesView ?? 'registry');
+      } else if (target === '/game') {
         if (options?.encounterId) {
           const found = narrative.encounters.find((e) => e.id === options.encounterId);
           if (found) {
@@ -353,10 +606,14 @@ export function App() {
     [narrative.encounters]
   );
 
-  const handleSelectArchivePanel = (panel: ArchivePanelView) => {
+  const handleSelectMenuItem = (item: (typeof ARCHIVE_MENU_OPTIONS)[number]) => {
     telemetryAudio.playChirp(860, 0.03);
     setDropdownOpen(false);
-    navigateTo(panel === 'sources' ? '/sources' : '/archive', { view: panel });
+    if (item.route === '/archive') {
+      navigateTo('/archive', { archiveView: item.id as ArchiveSubView });
+    } else {
+      navigateTo('/sources', { sourcesView: item.id as SourcesSubView });
+    }
   };
 
   const handleEncounterComplete = useCallback((badgeId: string) => {
@@ -438,9 +695,30 @@ export function App() {
   }, []);
 
   const filteredSources = useMemo(() => {
-    if (sourceOrgFilter === 'ALL') return SOURCES_LIST;
-    return SOURCES_LIST.filter((s) => s.organization === sourceOrgFilter);
-  }, [sourceOrgFilter]);
+    const q = sourceSearch.trim().toLowerCase();
+    return SOURCES_LIST.filter((s) => {
+      if (sourceOrgFilter !== 'ALL' && s.organization !== sourceOrgFilter) return false;
+      if (!q) return true;
+      return (
+        s.id.toLowerCase().includes(q) ||
+        s.title.toLowerCase().includes(q) ||
+        s.organization.toLowerCase().includes(q) ||
+        s.url.toLowerCase().includes(q)
+      );
+    });
+  }, [sourceOrgFilter, sourceSearch]);
+
+  const missionsBySourceId = useMemo(() => {
+    const map = new Map<string, MissionRecord[]>();
+    for (const m of MISSIONS) {
+      for (const sid of m.source_ids) {
+        const list = map.get(sid);
+        if (list) list.push(m);
+        else map.set(sid, [m]);
+      }
+    }
+    return map;
+  }, []);
 
   const handleLaunchFromMapOrList = useCallback(
     (encounterId: string) => {
@@ -515,9 +793,6 @@ export function App() {
     setSaveMessage('Signal archive progress reset to 0/9.');
   };
 
-  const activeArchiveOption =
-    ARCHIVE_MENU_OPTIONS.find((opt) => opt.id === archivePanel) ?? ARCHIVE_MENU_OPTIONS[0];
-
   return (
     <div className={`app-root ${crtActive ? 'crt-overlay' : ''}`}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -556,23 +831,23 @@ export function App() {
       </header>
 
       <div className="app-container">
-        {/* TOP NAVIGATION BAR (Main Page + Dedicated Archives/Sources Webpage) */}
+        {/* TOP NAVIGATION BAR (Main Page /, Archive /archive, Sources /sources) */}
         {routePath !== '/game' && (
           <nav className="top-nav" aria-label="Primary navigation">
             <div className="nav-links">
               <a
                 href="/"
-                className="btn-secondary btn-sm"
+                className={`btn-secondary btn-sm ${routePath === '/' ? 'active' : ''}`}
                 aria-current={routePath === '/' ? 'page' : undefined}
                 onClick={(e) => {
                   e.preventDefault();
                   navigateTo('/');
                 }}
               >
-                [ OBSERVATORY HOME ]
+                [ OBSERVATORY (/) ]
               </a>
 
-              {/* Required Dropdown linking to Dedicated Archives & Sources Webpage */}
+              {/* Required Dropdown linking directly to Separate /archive & /sources Webpages */}
               <div className="archive-dropdown" ref={dropdownRef}>
                 <button
                   ref={dropdownTriggerRef}
@@ -595,15 +870,16 @@ export function App() {
                     role="menu"
                     aria-label="Sources and Archives Menu"
                   >
-                    {ARCHIVE_MENU_OPTIONS.map((item) => (
+                    <div className="dropdown-group-label">MISSION ARCHIVES (/archive)</div>
+                    {ARCHIVE_MENU_OPTIONS.filter((i) => i.route === '/archive').map((item) => (
                       <a
                         key={item.id}
                         href={item.href}
                         role="menuitem"
-                        className={`dropdown-item ${(routePath === '/archive' || routePath === '/sources') && archivePanel === item.id ? 'active' : ''}`}
+                        className={`dropdown-item ${routePath === '/archive' && archiveSubView === item.id ? 'active' : ''}`}
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSelectArchivePanel(item.id);
+                          handleSelectMenuItem(item);
                         }}
                       >
                         <div>
@@ -615,22 +891,66 @@ export function App() {
                         </span>
                       </a>
                     ))}
+
+                    <div className="dropdown-group-label">PRIMARY NASA SOURCES (/sources)</div>
+                    {ARCHIVE_MENU_OPTIONS.filter((i) => i.route === '/sources').map((item) => (
+                      <a
+                        key={item.id}
+                        href={item.href}
+                        role="menuitem"
+                        className={`dropdown-item ${routePath === '/sources' && sourcesSubView === item.id ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSelectMenuItem(item);
+                        }}
+                      >
+                        <div>
+                          <span className="dropdown-item-title">{item.label}</span>
+                          <span className="dropdown-item-sub">{item.desc}</span>
+                        </div>
+                        <span className="mono" style={{ color: 'var(--amber)', fontSize: '12px' }}>
+                          →
+                        </span>
+                      </a>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {(routePath === '/archive' || routePath === '/sources') && (
-                <a
-                  href="/game"
-                  className="btn-observatory btn-sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('/game', { mode: 'map' });
-                  }}
-                >
-                  ▶ START GAME
-                </a>
-              )}
+              <a
+                href="/archive"
+                className="btn-secondary btn-sm"
+                aria-current={routePath === '/archive' ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/archive', { archiveView: 'missions' });
+                }}
+              >
+                MISSION ARCHIVES (/archive)
+              </a>
+
+              <a
+                href="/sources"
+                className="btn-secondary btn-sm"
+                aria-current={routePath === '/sources' ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/sources', { sourcesView: 'registry' });
+                }}
+              >
+                NASA SOURCES (/sources)
+              </a>
+
+              <a
+                href="/game"
+                className="btn-observatory btn-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateTo('/game', { mode: 'map' });
+                }}
+              >
+                ▶ START GAME
+              </a>
             </div>
 
             <div className="nav-progress" title="Reconstructed mission encounters">
@@ -656,16 +976,59 @@ export function App() {
             aria-label="Observatory Main Page"
             style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
           >
-            {/* HERO OBSERVATORY */}
+            {/* STILL OUT THERE INSPIRED OBSERVATORY HERO STAGE (img/02.jpg) */}
             <section className="hero-observatory">
-              <div className="hero-text">
-                <h1 className="hero-wordmark">Echoes of Exploration</h1>
-                <p className="hero-subtitle">
-                  Step into the signal observatory as a trainee Archivist. Explore Moon, Mars, and
-                  deep-space sites, play {narrative.encounters.length} physics-faithful encounters,
-                  and verify {missions.length} primary-sourced NASA mission records.
-                </p>
+              <div className="hero-diorama-stage">
+                <ObservatoryHeroDiorama
+                  missionsCount={missions.length}
+                  encountersCount={narrative.encounters.length}
+                />
 
+                <div className="hero-diorama-overlay">
+                  <h1 className="hero-wordmark">Echoes of Exploration</h1>
+                  <p className="hero-tagline-amber">Abandoned, but not forgotten</p>
+                  <p className="hero-subtitle">
+                    Explore {missions.length} NASA artifacts across Moon, Mars, and deep space,
+                    trace verified primary sources, and tune {narrative.encounters.length} live
+                    signal encounters on <code>/game</code>.
+                  </p>
+
+                  <div className="hero-actions">
+                    <a
+                      href="/game"
+                      className="btn-observatory"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo('/game', { mode: 'map' });
+                      }}
+                    >
+                      ▶ Start game
+                    </a>
+                    <a
+                      href="/archive"
+                      className="btn-secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo('/archive', { archiveView: 'missions' });
+                      }}
+                    >
+                      MISSION ARCHIVES ({missions.length})
+                    </a>
+                    <a
+                      href="/sources"
+                      className="btn-secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo('/sources', { sourcesView: 'registry' });
+                      }}
+                    >
+                      NASA SOURCES ({sourcesList.length})
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hero-meta-strip">
                 <div className="honesty-banner">
                   <strong style={{ color: 'var(--amber)' }}>Two-Voice Rule:</strong>{' '}
                   {narrative.ui_copy.honesty_label}
@@ -687,49 +1050,6 @@ export function App() {
                   {completedCount === narrative.encounters.length && (
                     <span className="status-badge active">SIGNAL ARCHIVIST PATCH UNLOCKED ✓</span>
                   )}
-                </div>
-
-                <div className="hero-actions">
-                  <a
-                    href="/game"
-                    className="btn-observatory"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('/game', { mode: 'map' });
-                    }}
-                  >
-                    ▶ START GAME
-                  </a>
-                  <a
-                    href="/archive"
-                    className="btn-secondary"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSelectArchivePanel('missions');
-                    }}
-                  >
-                    MISSION ARCHIVES ({missions.length})
-                  </a>
-                  <a
-                    href="/sources"
-                    className="btn-secondary"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSelectArchivePanel('sources');
-                    }}
-                  >
-                    NASA SOURCES ({sourcesList.length})
-                  </a>
-                </div>
-              </div>
-
-              <div className="hero-visual">
-                <div className="sprite-frame hero-earth-box">
-                  <img
-                    src="/assets/sprites/earth.png"
-                    alt="Pixel art team illustration of Earth from lunar orbit"
-                    className="pixelated"
-                  />
                 </div>
               </div>
             </section>
@@ -827,10 +1147,21 @@ export function App() {
                             onClick={(e) => {
                               e.preventDefault();
                               setFilterChapter(ch.id);
-                              handleSelectArchivePanel('missions');
+                              navigateTo('/archive', { archiveView: 'missions' });
                             }}
                           >
                             ARCHIVE ({chapterCounts[ch.id]})
+                          </a>
+                          <a
+                            href="/game"
+                            className="btn-observatory btn-sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setActiveSector(ch.id);
+                              navigateTo('/game', { mode: 'map' });
+                            }}
+                          >
+                            ▶ PLAY SECTOR
                           </a>
                         </div>
                       </div>
@@ -842,65 +1173,87 @@ export function App() {
           </main>
         )}
 
-        {/* SEPARATE WEBPAGE: /archive & /sources */}
-        {(routePath === '/archive' || routePath === '/sources') && (
+        {/* DEDICATED WEBPAGE #2: /archive (Mission Archives & Evidence Catalog — img/10.jpg) */}
+        {routePath === '/archive' && (
           <main
             id="main-content"
-            aria-label="Sources and Archives Webpage"
+            aria-label="Historical Mission Archive Webpage"
             style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
           >
             <section
               className="archive-section hud-panel"
               style={{ padding: '22px' }}
-              aria-label="Sources and Archives Explorer"
+              aria-label="Historical Mission Archive Catalog"
             >
               <div className="section-head">
                 <div>
-                  <h1>{activeArchiveOption.label}</h1>
+                  <h1>Historical Mission Archive</h1>
                   <p className="muted" style={{ fontSize: '14px', marginTop: '4px' }}>
-                    {activeArchiveOption.desc}
+                    {missions.length} NASA hardware artifacts across Moon, Mars &amp; Deep Space · Reviewed{' '}
+                    {missionsReviewedOn}
                   </p>
                 </div>
 
-                {/* Accessible Native Select Dropdown synced with Navigation Tabs */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <label htmlFor="archive-view-select" className="label">
-                    VIEW:
+                  <label htmlFor="archive-sector-select" className="label">
+                    SECTOR:
                   </label>
                   <select
-                    id="archive-view-select"
+                    id="archive-sector-select"
                     className="dropdown-select-inline"
-                    value={archivePanel}
-                    onChange={(e) => handleSelectArchivePanel(e.target.value as ArchivePanelView)}
+                    value={filterChapter}
+                    onChange={(e) => {
+                      telemetryAudio.playChirp(820, 0.03);
+                      setFilterChapter(e.target.value as ChapterFilter);
+                    }}
                   >
-                    {ARCHIVE_MENU_OPTIONS.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.label}
-                      </option>
-                    ))}
+                    <option value="all">ALL SECTORS ({missions.length})</option>
+                    <option value="moon">MOON ({chapterCounts.moon})</option>
+                    <option value="mars">MARS ({chapterCounts.mars})</option>
+                    <option value="elsewhere">DEEP SPACE ({chapterCounts.elsewhere})</option>
+                    <option value="featured">PLAYABLE ({chapterCounts.featured})</option>
                   </select>
+
+                  <a
+                    href="/sources"
+                    className="btn-secondary btn-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateTo('/sources', { sourcesView: 'registry' });
+                    }}
+                  >
+                    NASA SOURCES (/sources) →
+                  </a>
                 </div>
               </div>
 
-              <div className="filter-chips" role="navigation" aria-label="Archives and Sources Views">
-                {ARCHIVE_MENU_OPTIONS.map((opt) => (
-                  <a
-                    key={opt.id}
-                    href={opt.href}
-                    className={`filter-chip ${archivePanel === opt.id ? 'active' : ''}`}
-                    aria-current={archivePanel === opt.id ? 'page' : undefined}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSelectArchivePanel(opt.id);
-                    }}
-                  >
-                    {opt.label}
-                  </a>
-                ))}
+              <div className="filter-chips" role="navigation" aria-label="Archive Views">
+                <a
+                  href="/archive"
+                  className={`filter-chip ${archiveSubView === 'missions' ? 'active' : ''}`}
+                  aria-current={archiveSubView === 'missions' ? 'page' : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/archive', { archiveView: 'missions' });
+                  }}
+                >
+                  RECORDS ({missions.length})
+                </a>
+                <a
+                  href="/archive?view=evidence"
+                  className={`filter-chip ${archiveSubView === 'evidence' ? 'active' : ''}`}
+                  aria-current={archiveSubView === 'evidence' ? 'page' : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/archive', { archiveView: 'evidence' });
+                  }}
+                >
+                  EVIDENCE CHAINS ({encountersCatalog.length})
+                </a>
               </div>
 
-              {/* VIEW A: MISSION ARCHIVES (31) */}
-              {archivePanel === 'missions' && (
+              {/* SUBVIEW A: 31-MISSION MUSEUM CATALOG (img/10.jpg) */}
+              {archiveSubView === 'missions' && (
                 <>
                   <div className="filter-row">
                     <div className="filter-chips" role="group" aria-label="Chapter filter">
@@ -961,11 +1314,12 @@ export function App() {
                     onChange={(e) => setSearch(e.target.value)}
                   />
 
-                  <div className="missions-grid">
+                  <div className="archive-catalog-grid">
                     {filteredMissions.map((mission, idx) => {
                       const badge = getStatusBadgeInfo(mission.status);
                       const sprite = getMissionSprite(mission.id);
                       const linkedEncounter = encounterByMissionId.get(mission.id);
+                      const recovered = linkedEncounter ? isEncounterCompleted(linkedEncounter.id) : false;
 
                       return (
                         <button
@@ -999,13 +1353,11 @@ export function App() {
                                 className="label"
                                 style={{ color: getChapterAccentColor(mission.chapter) }}
                               >
-                                #{String(idx + 1).padStart(2, '0')} · {mission.chapter.toUpperCase()}
+                                #{String(idx + 1).padStart(2, '0')} · SECTOR // {mission.chapter.toUpperCase()}
                               </span>
                               {linkedEncounter && (
-                                <span className="status-badge active">
-                                  {isEncounterCompleted(linkedEncounter.id)
-                                    ? 'ENCOUNTER ✓'
-                                    : 'PLAYABLE'}
+                                <span className={`status-badge ${recovered ? 'active' : 'passive'}`}>
+                                  {recovered ? 'ECHO RECOVERED ✓' : 'PLAYABLE'}
                                 </span>
                               )}
                             </div>
@@ -1029,93 +1381,8 @@ export function App() {
                 </>
               )}
 
-              {/* VIEW B: PRIMARY NASA SOURCES (33) */}
-              {archivePanel === 'sources' && (
-                <>
-                  <div className="filter-chips" role="group" aria-label="Filter sources by organization">
-                    {sourceOrganizations.map((org) => (
-                      <button
-                        key={org}
-                        type="button"
-                        className={`filter-chip ${sourceOrgFilter === org ? 'active' : ''}`}
-                        onClick={() => {
-                          telemetryAudio.playChirp(820, 0.03);
-                          setSourceOrgFilter(org);
-                        }}
-                      >
-                        {org}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="voice-card voice-record">
-                    <span className="tag-record">
-                      Primary NASA Source Registry ({filteredSources.length} / {sourcesList.length})
-                    </span>
-                    <div className="missions-grid" style={{ marginTop: '6px' }}>
-                      {filteredSources.map((src) => (
-                        <a
-                          key={src.id}
-                          href={src.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="evidence-card"
-                          style={{ textDecoration: 'none', color: 'inherit' }}
-                        >
-                          <span className="mono" style={{ fontSize: '10px', color: 'var(--amber)' }}>
-                            {src.id} · {src.organization} · {src.tier}
-                          </span>
-                          <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>
-                            {src.title} ↗
-                          </strong>
-                          <span
-                            className="mono muted"
-                            style={{ fontSize: '11px', overflowWrap: 'anywhere' }}
-                          >
-                            {src.url}
-                          </span>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
-                  {narrative.references_consulted.length > 0 && (
-                    <div className="voice-card voice-record">
-                      <span className="tag-record">
-                        Encounter Science References ({narrative.references_consulted.length})
-                      </span>
-                      <div className="missions-grid" style={{ marginTop: '6px' }}>
-                        {narrative.references_consulted.map((ref) => (
-                          <a
-                            key={ref.url}
-                            href={ref.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="evidence-card"
-                            style={{ textDecoration: 'none', color: 'inherit' }}
-                          >
-                            <span className="mono" style={{ fontSize: '10px', color: 'var(--amber)' }}>
-                              {ref.used_for} · {ref.org}
-                            </span>
-                            <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>
-                              {ref.title} ↗
-                            </strong>
-                            <span
-                              className="mono muted"
-                              style={{ fontSize: '11px', overflowWrap: 'anywhere' }}
-                            >
-                              {ref.url}
-                            </span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* VIEW C: ENCOUNTER EVIDENCE CHAINS (9) */}
-              {archivePanel === 'evidence' && (
+              {/* SUBVIEW B: ENCOUNTER EVIDENCE CHAINS (9) */}
+              {archiveSubView === 'evidence' && (
                 <div className="missions-grid">
                   {encountersCatalog.map((enc) => {
                     const primarySrc = sourcesMap.get(enc.primary_source_id);
@@ -1168,16 +1435,257 @@ export function App() {
                   })}
                 </div>
               )}
+            </section>
+          </main>
+        )}
 
-              {/* VIEW D: GLOSSARY, SI DISCLOSURE & SAVE DATA */}
-              {archivePanel === 'methodology' && (
+        {/* DEDICATED WEBPAGE #3: /sources (Primary NASA Sources & Verification Registry) */}
+        {routePath === '/sources' && (
+          <main
+            id="main-content"
+            aria-label="Primary NASA Sources Registry Webpage"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'inherit' }}
+          >
+            <section
+              className="archive-section hud-panel"
+              style={{ padding: '22px' }}
+              aria-label="Primary NASA Sources and Methodology"
+            >
+              <div className="section-head">
+                <div>
+                  <h1>Primary NASA Sources &amp; Verification Registry</h1>
+                  <p className="muted" style={{ fontSize: '14px', marginTop: '4px' }}>
+                    {sourcesList.length} authoritative NASA, JPL, NSSDCA, ILRS &amp; PDS citations ·
+                    Cross-linked to {missions.length} mission records
+                  </p>
+                </div>
+
+                <a
+                  href="/archive"
+                  className="btn-secondary btn-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/archive', { archiveView: 'missions' });
+                  }}
+                >
+                  ← MISSION ARCHIVES (/archive)
+                </a>
+              </div>
+
+              {/* Distinct Telemetry Verification Strip */}
+              <div className="sources-metrics-bar" aria-label="Source Verification Summary">
+                <div className="readout-cell">
+                  <span className="k">PRIMARY SOURCES</span>
+                  <span className="v" style={{ color: 'var(--amber)' }}>{sourcesList.length} VERIFIED</span>
+                </div>
+                <div className="readout-cell">
+                  <span className="k">AGENCIES &amp; ARCHIVES</span>
+                  <span className="v">{sourceOrganizations.length - 1} AUTHORITIES</span>
+                </div>
+                <div className="readout-cell">
+                  <span className="k">ENCOUNTER REFERENCES</span>
+                  <span className="v">{narrative.references_consulted.length} SCIENCE BRIEFS</span>
+                </div>
+                <div className="readout-cell">
+                  <span className="k">LAST AUDIT DATE</span>
+                  <span className="v">{missionsReviewedOn}</span>
+                </div>
+              </div>
+
+              <div className="filter-chips" role="navigation" aria-label="Sources Sections">
+                <a
+                  href="/sources"
+                  className={`filter-chip ${sourcesSubView === 'registry' ? 'active' : ''}`}
+                  aria-current={sourcesSubView === 'registry' ? 'page' : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/sources', { sourcesView: 'registry' });
+                  }}
+                >
+                  NASA SOURCES REGISTRY ({sourcesList.length})
+                </a>
+                <a
+                  href="/sources?view=references"
+                  className={`filter-chip ${sourcesSubView === 'references' ? 'active' : ''}`}
+                  aria-current={sourcesSubView === 'references' ? 'page' : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/sources', { sourcesView: 'references' });
+                  }}
+                >
+                  ENCOUNTER REFERENCES ({narrative.references_consulted.length})
+                </a>
+                <a
+                  href="/sources?view=methodology"
+                  className={`filter-chip ${sourcesSubView === 'methodology' ? 'active' : ''}`}
+                  aria-current={sourcesSubView === 'methodology' ? 'page' : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateTo('/sources', { sourcesView: 'methodology' });
+                  }}
+                >
+                  METHODOLOGY, GLOSSARY &amp; SAVE DATA
+                </a>
+              </div>
+
+              {/* SUBVIEW A: 33 PRIMARY NASA SOURCES REGISTRY */}
+              {sourcesSubView === 'registry' && (
+                <>
+                  <div className="filter-chips" role="group" aria-label="Filter sources by organization">
+                    {sourceOrganizations.map((org) => (
+                      <button
+                        key={org}
+                        type="button"
+                        className={`filter-chip ${sourceOrgFilter === org ? 'active' : ''}`}
+                        onClick={() => {
+                          telemetryAudio.playChirp(820, 0.03);
+                          setSourceOrgFilter(org);
+                        }}
+                      >
+                        {org}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Filter primary NASA sources by ID, title, agency, or URL..."
+                    aria-label="Filter primary NASA sources"
+                    value={sourceSearch}
+                    onChange={(e) => setSourceSearch(e.target.value)}
+                  />
+
+                  <div className="voice-card voice-record">
+                    <span className="tag-record">
+                      Authoritative Citation Ledger ({filteredSources.length} / {sourcesList.length})
+                    </span>
+
+                    <div className="sources-ledger" style={{ marginTop: '6px' }}>
+                      {filteredSources.map((src) => {
+                        const citingMissions = missionsBySourceId.get(src.id) ?? [];
+                        return (
+                          <article key={src.id} className="source-ledger-row">
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                gap: '10px',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <span className="mono" style={{ fontSize: '11px', color: 'var(--amber)' }}>
+                                {src.id} · {src.organization} · {src.tier.toUpperCase()}
+                              </span>
+                              <span className="status-badge passive">
+                                {src.local_snapshot ? 'LOCAL SNAPSHOT LINKED' : 'LIVE URL CITED'}
+                              </span>
+                            </div>
+
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                gap: '12px',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <div style={{ display: 'grid', gap: '4px' }}>
+                                <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>
+                                  {src.title}
+                                </strong>
+                                <span
+                                  className="mono muted"
+                                  style={{ fontSize: '11px', overflowWrap: 'anywhere' }}
+                                >
+                                  {src.url}
+                                </span>
+                              </div>
+
+                              <a
+                                href={src.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary btn-sm"
+                              >
+                                OPEN SOURCE ↗
+                              </a>
+                            </div>
+
+                            {citingMissions.length > 0 && (
+                              <div className="source-mission-links">
+                                <span className="mono muted" style={{ fontSize: '10px' }}>
+                                  CITED BY ({citingMissions.length}):
+                                </span>
+                                {citingMissions.map((m) => (
+                                  <button
+                                    key={m.id}
+                                    type="button"
+                                    className="filter-chip"
+                                    style={{ minHeight: '26px', padding: '2px 8px', fontSize: '9px' }}
+                                    onClick={() => {
+                                      telemetryAudio.playChirp(1040, 0.04);
+                                      setSelectedMission(m);
+                                    }}
+                                  >
+                                    {m.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* SUBVIEW B: ENCOUNTER SCIENCE REFERENCES (6) */}
+              {sourcesSubView === 'references' && (
+                <div className="voice-card voice-record">
+                  <span className="tag-record">
+                    Encounter Science References ({narrative.references_consulted.length})
+                  </span>
+                  <div className="missions-grid" style={{ marginTop: '6px' }}>
+                    {narrative.references_consulted.map((ref) => (
+                      <a
+                        key={ref.url}
+                        href={ref.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="evidence-card"
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <span className="mono" style={{ fontSize: '10px', color: 'var(--amber)' }}>
+                          {ref.used_for} · {ref.org}
+                        </span>
+                        <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>
+                          {ref.title} ↗
+                        </strong>
+                        <span
+                          className="mono muted"
+                          style={{ fontSize: '11px', overflowWrap: 'anywhere' }}
+                        >
+                          {ref.url}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SUBVIEW C: METHODOLOGY, GLOSSARY, SI DISCLOSURE & SAVE DATA */}
+              {sourcesSubView === 'methodology' && (
                 <div style={{ display: 'grid', gap: '18px' }}>
                   <div className="voice-card voice-record">
                     <span className="tag-record">NASA Non-Endorsement &amp; Super Intelligence (SI) Disclosure</span>
                     <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', color: 'var(--ink)' }}>
                       <li>
                         <b>Non-Endorsement &amp; Branding Compliance:</b> Independent educational submission for
-                        NASA Space Apps Challenge 2026. No NASA "meatball" or worm insignia is used or altered.
+                        NASA Space Apps Challenge 2026. No NASA &quot;meatball&quot; or worm insignia is used or altered.
                       </li>
                       <li>
                         <b>Code, Data Normalization &amp; Narrative (SI-Assisted):</b> Scaffolding, TypeScript integration,
@@ -1247,9 +1755,13 @@ export function App() {
           </main>
         )}
 
-        {/* GAME ROUTE: /game */}
+        {/* GAME ROUTE: /game (STRICTLY gated so the game is ONLY playable on /game) */}
         {routePath === '/game' && (
-          <main id="main-content" className="encounter-layout" aria-label="Echoes of Exploration Game Stage">
+          <main
+            id="main-content"
+            className="encounter-layout game-route-shell"
+            aria-label="Echoes of Exploration Game Stage"
+          >
             <div className="game-topbar">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <a
