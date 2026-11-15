@@ -4,12 +4,14 @@
  * so the two never disagree.
  */
 
-/** Third-party software shipped in the build (versions pinned in package.json). */
+/** Third-party software shipped in the build or used to build it (versions pinned in package.json). */
 export const SOFTWARE: [name: string, licence: string, url: string][] = [
   ['Phaser 3.90', 'MIT', 'https://github.com/phaserjs/phaser'],
   ['Zod 3.24', 'MIT', 'https://github.com/colinhacks/zod'],
   ['Vite 6.1 (build tool)', 'MIT', 'https://github.com/vitejs/vite'],
   ['TypeScript 5.7 (build tool)', 'Apache-2.0', 'https://github.com/microsoft/TypeScript'],
+  ['tsx 4.19 (build tool)', 'MIT', 'https://github.com/privatenumber/tsx'],
+  ['@types/node 22.13 (build tool)', 'MIT', 'https://github.com/DefinitelyTyped/DefinitelyTyped'],
 ];
 
 export const MAPS: [name: string, credit: string, url: string][] = [

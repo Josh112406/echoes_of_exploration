@@ -24,6 +24,10 @@ from sprites_elsewhere import SPRITES_ELSEWHERE
 
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT_BASE = os.path.join(ROOT, "public", "assets", "generated")
+# Patches, sprites and globes carry no watermark (too small to hold one legibly) and the
+# game never loads them, so they are written outside public/ and never deployed.
+# Only the watermarked scene illustrations go to public/.
+LOCAL_BASE = os.path.join(HERE, "out")
 
 
 def make_patch(icon_fn, border_key="w2", bg_key="s1", accent_key="c3") -> Art:
@@ -50,7 +54,7 @@ def make_patch(icon_fn, border_key="w2", bg_key="s1", accent_key="c3") -> Art:
 
 
 def build_patches():
-    out_dir = os.path.join(OUT_BASE, "patches")
+    out_dir = os.path.join(LOCAL_BASE, "patches")
 
     def icon_gentle(p: Art):
         p.rect(8, 33, 32, 4, "m2")
@@ -171,7 +175,7 @@ def build_patches():
 
 
 def build_sprites():
-    out_dir = os.path.join(OUT_BASE, "sprites")
+    out_dir = os.path.join(LOCAL_BASE, "sprites")
     # Guide robot poses
     for pose in ("idle", "talk", "happy", "hover"):
         robot(pose=pose, beacon=(pose == "talk")).save(
@@ -189,7 +193,7 @@ def build_sprites():
 
 
 def build_bodies():
-    out_dir = os.path.join(OUT_BASE, "bodies")
+    out_dir = os.path.join(LOCAL_BASE, "bodies")
     earth(r=32, seed=5).save(os.path.join(out_dir, "earth.png"), title="Earth globe")
     moon_disc(r=30, seed=3).save(os.path.join(out_dir, "moon.png"), title="Moon disc")
     planet(28, "mars", seed=11, glow=False).save(os.path.join(out_dir, "mars.png"), title="Mars globe")

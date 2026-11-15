@@ -116,6 +116,8 @@ Coverage: 23 playable echoes, a 31-mission catalog, 9 designed encounters (2 wit
 - Zod 3.24, MIT licence. https://github.com/colinhacks/zod
 - Vite 6.1 (build tool), MIT licence. https://github.com/vitejs/vite
 - TypeScript 5.7 (build tool), Apache-2.0 licence. https://github.com/microsoft/TypeScript
+- tsx 4.19 (build tool), MIT licence. https://github.com/privatenumber/tsx
+- @types/node 22.13 (build tool), MIT licence. https://github.com/DefinitelyTyped/DefinitelyTyped
 
 ## Use of artificial intelligence
 

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Unwatermarked art-tool output (never deployed)
+tools/art/out/
