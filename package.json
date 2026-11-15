@@ -1,25 +1,27 @@
 {
   "name": "echoes-of-exploration",
+  "version": "2.1.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "description": "Echoes of Exploration: The NASA Signal Archive — Educational browser game about NASA equipment on the Moon, Mars, and deep space.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "validate:entries": "node tools/validate-entries.mjs",
+    "references": "tsx tools/build-references.ts",
+    "test": "node tools/validate-entries.mjs"
   },
   "dependencies": {
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "phaser": "3.90.0",
+    "zod": "3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^24.19.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "oxlint": "^1.90.0",
-    "typescript": "~7.0.2",
-    "vite": "^8.3.6"
+    "@types/node": "22.13.1",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "vite": "6.1.0"
   }
 }
+

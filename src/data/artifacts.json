@@ -1,0 +1,1304 @@
+{
+  "apollo-11-site": {
+    "id": "apollo-11-site",
+    "name": "Apollo 11 Landing Site",
+    "world": "moon",
+    "tier": "flagship",
+    "status": "dormant",
+    "launch_date": "1969-07-16",
+    "end_date": "1969-07-24",
+    "locations": [
+      {
+        "id": "apollo-11-lm",
+        "label": "Eagle LM Descent Stage, Mare Tranquillitatis",
+        "lat": 0.67408,
+        "lon": 23.47297,
+        "source_url": "https://www.nasa.gov/specials/apollo50th/missions.html",
+        "approximate": false
+      }
+    ],
+    "summary": "Apollo 11 was the first crewed mission to touch down on the Moon.",
+    "hook": "I carried humanity to the lunar surface and my descent stage still stands in Tranquility Base.",
+    "how_it_worked": "The Eagle descent stage used a throttleable descent engine and four landing pads to achieve the first powered lunar landing.",
+    "science": "Astronauts collected 21.5 kilograms of lunar rocks and deployed early passive seismometers.",
+    "facts": [
+      {
+        "text": "The descent stage served as the launch pad when the ascent stage lifted off to rejoin orbit.",
+        "source_url": "https://www.nasa.gov/mission_pages/apollo/apollo-11.html"
+      },
+      {
+        "text": "Laser pulses from Earth are still reflected off mirror prisms placed at the site.",
+        "source_url": "https://www.nasa.gov/mission/apollo-11/"
+      }
+    ],
+    "image": {
+      "nasa_id": "as11-40-5927",
+      "file": "assets/images/artifacts/apollo-11-site.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/as11-40-5927",
+      "alt": "Apollo 11 Lunar Module Eagle resting on the lunar surface at Tranquility Base, with Buzz Aldrin preparing to deploy experiments"
+    },
+    "sources": [
+      "https://www.nasa.gov/mission_pages/apollo/apollo-11.html"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Mare Tranquillitatis descent stage visual contact confirmed.",
+      "Tranquility Base: the first location on another celestial body visited by humans.",
+      "The throttleable descent engine fired continuously to guide the Eagle past boulder fields.",
+      "Returned 21.5 kilograms of ancient lunar basalt and breccia dating back 3.7 billion years.",
+      "The steel commemorative plaque remains attached to the ladder strut.",
+      "Resting permanently at 0.67408° N, 23.47297° E."
+    ]
+  },
+  "apollo-12-site": {
+    "id": "apollo-12-site",
+    "name": "Apollo 12 Landing Site",
+    "world": "moon",
+    "tier": "standard",
+    "status": "dormant",
+    "launch_date": "1969-11-14",
+    "end_date": "1969-11-24",
+    "locations": [
+      {
+        "id": "apollo-12-lm",
+        "label": "Intrepid LM Descent Stage, Oceanus Procellarum",
+        "lat": -3.01239,
+        "lon": -23.42157,
+        "source_url": "https://www.nasa.gov/mission/apollo-12/",
+        "approximate": false
+      }
+    ],
+    "summary": "Apollo 12 demonstrated precision pinpoint landing on another celestial body.",
+    "hook": "I landed within 200 meters of Surveyor 3 to prove pinpoint lunar landing accuracy.",
+    "how_it_worked": "Achieved precision landing using radar updates and deployed an ALSEP science station powered by an RTG.",
+    "science": "Recorded eight years of continuous seismic and solar wind data using its nuclear-powered station.",
+    "facts": [
+      {
+        "text": "Astronauts walked over to the robotic Surveyor 3 lander and inspected parts exposed to vacuum for over two years.",
+        "source_url": "https://www.nasa.gov/mission/apollo-12/"
+      },
+      {
+        "text": "Left a SNAP-27 radioisotope thermoelectric generator on the Moon that transmitted data until 1977.",
+        "source_url": "https://history.nasa.gov/alsj/a12/a12.html"
+      }
+    ],
+    "image": {
+      "nasa_id": "as12-46-6749",
+      "file": "assets/images/artifacts/apollo-12-site.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/as12-46-6749",
+      "alt": "Astronaut Alan Bean works at the equipment stowage bay of the Apollo 12 Lunar Module"
+    },
+    "sources": [
+      "https://www.nasa.gov/mission/apollo-12/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Pinpoint landing zone in Oceanus Procellarum located.",
+      "Apollo 12 demonstrated precision landing within walking distance of Surveyor 3.",
+      "Automated Doppler radar descent navigation enabled touchdown within 180 meters of target.",
+      "Retrieved components from Surveyor 3 to analyze long-term cosmic radiation exposure.",
+      "Astronauts Conrad and Bean deployed the first full ALSEP scientific station.",
+      "Intrepid descent stage located at 3.01239° S, 23.42157° W."
+    ]
+  },
+  "apollo-15-lrv": {
+    "id": "apollo-15-lrv",
+    "name": "Apollo 15 Lunar Roving Vehicle",
+    "world": "moon",
+    "tier": "flagship",
+    "status": "dormant",
+    "launch_date": "1971-07-26",
+    "end_date": "1971-08-07",
+    "locations": [
+      {
+        "id": "apollo-15-lrv-site",
+        "label": "Hadley-Apennine (near Falcon LM Descent Stage)",
+        "lat": 26.13222,
+        "lon": 3.63386,
+        "source_url": "https://www.nasa.gov/mission/apollo-15/",
+        "approximate": true
+      }
+    ],
+    "summary": "The Apollo 15 Lunar Roving Vehicle was the first motorized vehicle driven on the Moon.",
+    "hook": "I was the first rover driven on the Moon and traveled over 27 kilometers across Hadley Rille.",
+    "how_it_worked": "Powered by non-rechargeable silver-zinc batteries and four electric wheel motors with wire-mesh tires.",
+    "science": "Allowed astronauts to travel far from the lander and retrieve the 4-billion-year-old Genesis Rock.",
+    "facts": [
+      {
+        "text": "The rover was parked about 160 meters from the Lunar Module so its camera could film liftoff.",
+        "source_url": "https://www.nasa.gov/mission/apollo-15/"
+      },
+      {
+        "text": "Its tires were made of woven zinc-coated piano wire with titanium chevrons for grip.",
+        "source_url": "https://www.nasa.gov/history/alsj/a15/a15.lrvface.html"
+      }
+    ],
+    "image": {
+      "nasa_id": "as15-86-11603",
+      "file": "assets/images/artifacts/apollo-15-lrv.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/as15-86-11603",
+      "alt": "Astronaut James Irwin works at the Lunar Roving Vehicle at Hadley-Apennine, with Mount Hadley behind"
+    },
+    "sources": [
+      "https://www.nasa.gov/mission/apollo-15/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Lunar Roving Vehicle 1 stationed near Hadley Rille.",
+      "The first motorized vehicle driven by humans on the surface of another world.",
+      "Powered by four 0.25-horsepower electric motors with woven wire mesh wheels.",
+      "Allowed crew to traverse 27.9 kilometers to sample the deep layered gorge of Hadley Rille.",
+      "The commemorative Fallen Astronaut memorial figurine rests nearby in the regolith.",
+      "Parked at 26.13222° N, 3.63386° E."
+    ]
+  },
+  "apollo-17-site": {
+    "id": "apollo-17-site",
+    "name": "Apollo 17 Landing Site",
+    "world": "moon",
+    "tier": "standard",
+    "status": "dormant",
+    "launch_date": "1972-12-07",
+    "end_date": "1972-12-19",
+    "locations": [
+      {
+        "id": "apollo-17-lm",
+        "label": "Challenger LM Descent Stage, Taurus-Littrow",
+        "lat": 20.1908,
+        "lon": 30.77168,
+        "source_url": "https://www.nasa.gov/mission/apollo-17/",
+        "approximate": false
+      }
+    ],
+    "summary": "Apollo 17 was the final Apollo mission to land astronauts on the Moon.",
+    "hook": "I was the final Apollo human landing site in the Taurus-Littrow valley in 1972.",
+    "how_it_worked": "Supported the longest human stay on the lunar surface: over 74 hours with three moonwalks.",
+    "science": "Discovered orange soil beads formed by ancient volcanic fire-fountain eruptions on the Moon.",
+    "facts": [
+      {
+        "text": "Harrison Schmitt, the Lunar Module Pilot on Apollo 17, was the first professional geologist on the Moon.",
+        "source_url": "https://www.nasa.gov/mission/apollo-17/"
+      },
+      {
+        "text": "The crew traveled over 35 kilometers in their rover and gathered 110 kg of soil and rock samples.",
+        "source_url": "https://history.nasa.gov/alsj/a17/a17.html"
+      }
+    ],
+    "image": {
+      "nasa_id": "as17-134-20382",
+      "file": "assets/images/artifacts/apollo-17-site.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/as17-134-20382",
+      "alt": "Harrison Schmitt beside the flag at Taurus-Littrow, with the Lunar Module and Lunar Roving Vehicle in the background"
+    },
+    "sources": [
+      "https://www.nasa.gov/mission/apollo-17/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Taurus-Littrow valley final Apollo landing site.",
+      "The culminating crewed lunar mission of the 20th century in December 1972.",
+      "Geologist-astronaut Harrison Schmitt and Gene Cernan lived on the lunar surface for 75 hours.",
+      "Discovered orange volcanic pyroclastic glass beads formed by lunar explosive volcanism.",
+      "Returned 110.5 kilograms of samples, the largest collection from any lunar expedition.",
+      "Challenger descent stage coordinates: 20.1908° N, 30.77168° E."
+    ]
+  },
+  "apollo-retroreflectors": {
+    "id": "apollo-retroreflectors",
+    "name": "Apollo Laser Retroreflectors",
+    "world": "moon",
+    "tier": "standard",
+    "status": "active",
+    "launch_date": "1969-07-16",
+    "end_date": null,
+    "locations": [
+      {
+        "id": "lrrr-apollo-11",
+        "label": "Apollo 11 LRRR, Mare Tranquillitatis",
+        "lat": 0.67337,
+        "lon": 23.47293,
+        "source_url": "https://www.nasa.gov/mission/apollo-11/",
+        "approximate": false
+      },
+      {
+        "id": "lrrr-apollo-14",
+        "label": "Apollo 14 LRRR, Fra Mauro",
+        "lat": -3.64421,
+        "lon": -17.4788,
+        "source_url": "https://www.nasa.gov/mission/apollo-14/",
+        "approximate": false
+      },
+      {
+        "id": "lrrr-apollo-15",
+        "label": "Apollo 15 LRRR, Hadley-Apennine",
+        "lat": 26.13333,
+        "lon": 3.62837,
+        "source_url": "https://www.nasa.gov/mission/apollo-15/",
+        "approximate": false
+      }
+    ],
+    "summary": "Laser ranging retroreflectors are optical prism arrays still used for research today.",
+    "hook": "I require zero power and scientists on Earth still bounce laser beams off my prisms.",
+    "how_it_worked": "Corner-cube fused-silica prisms reflect incident laser pulses back toward their precise origin on Earth.",
+    "science": "Confirmed that the Moon is spiraling away from Earth at a rate of 3.8 centimeters per year.",
+    "facts": [
+      {
+        "text": "These retroreflectors are the only Apollo surface experiments still in active operational scientific use.",
+        "source_url": "https://www.nasa.gov/missions/artemis/clps/nasa-anticipates-lunar-findings-from-next-generation-retroreflector"
+      },
+      {
+        "text": "The Apollo 15 reflector array contains 300 corner cubes, three times larger than Apollo 11.",
+        "source_url": "https://history.nasa.gov/alsj/a15/a15.html"
+      }
+    ],
+    "image": {
+      "nasa_id": "as11-37-5551",
+      "file": "assets/images/artifacts/apollo-retroreflectors.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/as11-37-5551",
+      "alt": "Apollo 11 Laser Ranging Retro-Reflector and seismic experiment deployed on the lunar surface, seen from the Lunar Module"
+    },
+    "sources": [
+      "https://www.nasa.gov/missions/artemis/clps/nasa-anticipates-lunar-findings-from-next-generation-retroreflector"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Passive optical array detected in Mare Tranquillitatis.",
+      "High-precision silica corner-cube prisms that require zero electrical power.",
+      "Telescopes on Earth fire laser pulses; these retroreflectors bounce them back directly.",
+      "Measures the Earth-Moon distance to millimeter accuracy, tracking the Moon drifting 3.8 cm/year.",
+      "Three Apollo arrays (11, 14, 15) remain active scientific instruments today.",
+      "Operating across Mare Tranquillitatis, Fra Mauro, and Hadley-Apennine."
+    ]
+  },
+  "blue-ghost-1": {
+    "id": "blue-ghost-1",
+    "name": "Blue Ghost Mission 1",
+    "world": "moon",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "2025-01-15",
+    "end_date": "2025-03-02",
+    "locations": [
+      {
+        "id": "blue-ghost-1-site",
+        "label": "Mare Crisium, near Mons Latreille",
+        "lat": 18.562,
+        "lon": 61.81,
+        "source_url": "https://www.nasa.gov/clps",
+        "approximate": true
+      }
+    ],
+    "summary": "Blue Ghost Mission 1 was a commercial lunar lander flying payloads for NASA.",
+    "hook": "I delivered ten NASA payloads to Mare Crisium under the Commercial Lunar Payload Services initiative.",
+    "how_it_worked": "Used autonomous thruster guidance to land in Mare Crisium and powered science instruments through the lunar day.",
+    "science": "Investigated lunar regolith characteristics and tested GPS signal reception at lunar distance.",
+    "facts": [
+      {
+        "text": "Blue Ghost was selected under NASA Commercial Lunar Payload Services to deliver science payloads.",
+        "source_url": "https://www.nasa.gov/clps"
+      },
+      {
+        "text": "Completed operations across a full 14-day lunar daylight period in Mare Crisium.",
+        "source_url": "https://science.nasa.gov/moon/"
+      }
+    ],
+    "image": {
+      "nasa_id": "KSC-20250114-PH-KLS01_0039",
+      "file": "assets/images/artifacts/blue-ghost-1.jpg",
+      "credit": "NASA/Kim Shiflett",
+      "source_url": "https://images.nasa.gov/details/KSC-20250114-PH-KLS01_0039",
+      "alt": "SpaceX Falcon 9 rocket carrying Firefly Aerospace Blue Ghost Mission 1 at Launch Complex 39A before launch to the Moon"
+    },
+    "sources": [
+      "https://www.nasa.gov/clps"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Commercial Lunar Payload Services landing site in Mare Crisium.",
+      "Commercial lander carrying ten NASA science and technology demonstration instruments.",
+      "Equipped with autonomous terrain relative navigation and sample collection mechanisms.",
+      "Studies solar wind interactions, lunar regolith plume levitation, and GNSS reception.",
+      "Part of NASA Artemis program initiative for regular commercial lunar delivery.",
+      "Located in Mare Crisium near Mons Latreille at 18.562° N, 61.81° E."
+    ]
+  },
+  "im-1-odysseus": {
+    "id": "im-1-odysseus",
+    "name": "IM-1 Odysseus",
+    "world": "moon",
+    "tier": "standard",
+    "status": "dormant",
+    "launch_date": "2024-02-15",
+    "end_date": "2024-02-29",
+    "locations": [
+      {
+        "id": "im-1-odysseus-site",
+        "label": "Near Malapert A, Lunar South Polar Region",
+        "lat": -80.13,
+        "lon": 1.44,
+        "source_url": "https://www.nasa.gov/clps",
+        "approximate": true
+      }
+    ],
+    "summary": "IM-1 Odysseus achieved the first American commercial soft landing on the Moon.",
+    "hook": "I touched down near the lunar south pole in 2024 under NASA Commercial Lunar Payload Services.",
+    "how_it_worked": "Used liquid methane and liquid oxygen propulsion along with NASA Doppler Lidar sensor guidance.",
+    "science": "Demonstrated precision landing sensors and captured radio astronomy measurements in the south polar region.",
+    "facts": [
+      {
+        "text": "Landed at roughly 80 degrees South, the southernmost point reached by an operational lunar lander at the time.",
+        "source_url": "https://www.nasa.gov/clps"
+      },
+      {
+        "text": "Carried a retroreflector instrument for future precision navigation around the Moon.",
+        "source_url": "https://science.nasa.gov/moon/"
+      }
+    ],
+    "image": {
+      "nasa_id": "KSC-20240215-PH-KLS01_0023",
+      "file": "assets/images/artifacts/im-1-odysseus.jpg",
+      "credit": "NASA/Kim Shiflett",
+      "source_url": "https://images.nasa.gov/details/KSC-20240215-PH-KLS01_0023",
+      "alt": "A SpaceX Falcon 9 rocket lifts off at night from Kennedy Space Center's Launch Pad 39A, carrying the Intuitive Machines Nova-C lander Odysseus for the IM-1 mission"
+    },
+    "sources": [
+      "https://www.nasa.gov/clps"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Nova-C class lander positioned near Malapert A crater.",
+      "The first commercial spacecraft to achieve a soft touchdown on the Moon.",
+      "Powered by liquid methane and liquid oxygen, navigated via backup NASA optical Doppler lidar.",
+      "Gathered radio-frequency plasma measurements and space weather data near the lunar south pole.",
+      "Demonstrated commercial deep-space payload delivery in polar cryogenic terrain.",
+      "Positioned at 80.13° S, 1.44° E in the lunar south polar region."
+    ]
+  },
+  "surveyor-3": {
+    "id": "surveyor-3",
+    "name": "Surveyor 3",
+    "world": "moon",
+    "tier": "flagship",
+    "status": "dormant",
+    "launch_date": "1967-04-17",
+    "end_date": "1967-05-03",
+    "locations": [
+      {
+        "id": "surveyor-3-site",
+        "label": "Surveyor Crater, Oceanus Procellarum",
+        "lat": -3.015,
+        "lon": -23.418,
+        "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1967-035A",
+        "approximate": false
+      }
+    ],
+    "summary": "Surveyor 3 was an unmanned robotic probe that dug the first trenches in lunar soil.",
+    "hook": "I landed in 1967 in Oceanus Procellarum and was later visited by Apollo 12 astronauts.",
+    "how_it_worked": "Used radar Doppler landing guidance, a surface soil scoop arm, and a television transmission system.",
+    "science": "Proved the lunar soil could physically support the weight of heavy Apollo Lunar Modules.",
+    "facts": [
+      {
+        "text": "Apollo 12 landed within walking distance in 1969 and brought Surveyor 3 camera parts home to Earth.",
+        "source_url": "https://www.nasa.gov/mission/apollo-12/"
+      },
+      {
+        "text": "Returned 6,315 television images during its first lunar day of surface operation.",
+        "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1967-035A"
+      }
+    ],
+    "image": {
+      "nasa_id": "AS12-48-7133",
+      "file": "assets/images/artifacts/surveyor-3.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/AS12-48-7133",
+      "alt": "Surveyor 3 in its crater with the Apollo 12 Lunar Module on the horizon"
+    },
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1967-035A"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Imaging first robotic footprint in Oceanus Procellarum.",
+      "Before astronauts walked here, Surveyor tested if the lunar dust would hold weight.",
+      "Its robotic scoop dug trenches into the regolith to calculate surface bearing strength.",
+      "Data confirmed the soil could support human landing modules without sinking.",
+      "Primary NASA records confirm Apollo 12 retrieved its camera two years later.",
+      "Coordinates verified inside Surveyor Crater at 3.015° S, 23.418° W."
+    ]
+  },
+  "curiosity": {
+    "id": "curiosity",
+    "name": "Curiosity Rover (Mars Science Laboratory)",
+    "world": "mars",
+    "tier": "standard",
+    "status": "active",
+    "launch_date": "2011-11-26",
+    "end_date": null,
+    "locations": [
+      {
+        "id": "curiosity-site",
+        "label": "Bradbury Landing, Gale Crater",
+        "lat": -4.59,
+        "lon": 137.44,
+        "source_url": "https://ode.rsl.wustl.edu/mars/pagehelp/Content/Missions_Instruments/Landing_Sites.htm",
+        "approximate": false
+      }
+    ],
+    "summary": "Curiosity is a car-sized nuclear-powered rover exploring the geology of Gale Crater.",
+    "hook": "I have climbed Mount Sharp inside Gale Crater since 2012 investigating past habitable environments.",
+    "how_it_worked": "Landed via sky-crane rocket system and runs on an RTG nuclear generator with laser spectrometers and sample drills.",
+    "science": "Discovered ancient organic molecules and evidence that fresh lake water once persisted in Gale Crater.",
+    "facts": [
+      {
+        "text": "Curiosity has driven over 30 kilometers across Gale Crater and continues active science operations.",
+        "source_url": "https://mars.nasa.gov/msl/"
+      },
+      {
+        "text": "Uses its ChemCam instrument to vaporize rock samples with laser pulses from up to 7 meters away.",
+        "source_url": "https://science.nasa.gov/mission/msl-curiosity/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA16239",
+      "file": "assets/images/artifacts/curiosity.jpg",
+      "credit": "NASA/JPL-Caltech/MSSS",
+      "source_url": "https://images.nasa.gov/details/PIA16239",
+      "alt": "Curiosity rover self-portrait taken with its arm camera at Rocknest in Gale Crater"
+    },
+    "sources": [
+      "https://mars.nasa.gov/msl/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Active Mars Science Laboratory telemetry at Gale Crater.",
+      "Car-sized nuclear-powered mobile laboratory actively ascending Mount Sharp since 2012.",
+      "Powered by a Multi-Mission Radioisotope Thermoelectric Generator with a 2-meter robotic arm.",
+      "Discovered ancient freshwater lake environments containing organic carbon building blocks.",
+      "Has driven over 32 kilometers while drilling rock samples and monitoring radiation.",
+      "Bradbury Landing coordinates: 4.5895° S, 137.4417° E."
+    ]
+  },
+  "ingenuity": {
+    "id": "ingenuity",
+    "name": "Ingenuity Mars Helicopter",
+    "world": "mars",
+    "tier": "flagship",
+    "status": "ended",
+    "launch_date": "2020-07-30",
+    "end_date": "2024-01-25",
+    "locations": [
+      {
+        "id": "ingenuity-airfield",
+        "label": "Valinor Hills (Airfield Chi), Jezero Crater",
+        "lat": 18.44,
+        "lon": 77.45,
+        "source_url": "https://mars.nasa.gov/technology/helicopter/",
+        "approximate": true
+      }
+    ],
+    "summary": "Ingenuity was the first aircraft to achieve powered controlled flight on another planet.",
+    "hook": "I completed 72 powered flights in the thin atmosphere of Mars before retiring in Jezero Crater.",
+    "how_it_worked": "Coaxial counter-rotating carbon-fiber rotors spinning at 2,400 RPM to lift in atmospheric density under 1% of Earth.",
+    "science": "Proved aerial scout capability across complex dunes and guided routes for the Perseverance rover.",
+    "facts": [
+      {
+        "text": "Originally designed for five demonstration flights, Ingenuity flew 72 times and logged over two hours in the air.",
+        "source_url": "https://mars.nasa.gov/technology/helicopter/"
+      },
+      {
+        "text": "Carried a small swatch of fabric from the Wright brothers 1903 Flyer underneath its solar panel.",
+        "source_url": "https://www.jpl.nasa.gov/news/nasas-ingenuity-mars-helicopter-succeeds-in-historic-first-flight"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA24547",
+      "file": "assets/images/artifacts/ingenuity.jpg",
+      "credit": "NASA/JPL-Caltech/ASU",
+      "source_url": "https://images.nasa.gov/details/PIA24547",
+      "alt": "Close-up of the Ingenuity Mars Helicopter on the Martian surface, taken by the Mastcam-Z cameras on the Perseverance rover"
+    },
+    "sources": [
+      "https://mars.nasa.gov/technology/helicopter/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Valinor Hills final airfield Chi in Jezero Crater.",
+      "The first aircraft to achieve powered, controlled flight in the atmosphere of another world.",
+      "Twin counter-rotating carbon-fiber rotors spinning at 2,400+ RPM in thin atmospheric density.",
+      "Demonstrated aerial scouting across 72 flights, covering 17 kilometers of Martian terrain.",
+      "Carried a swatch of muslin fabric from the Wright Brothers 1903 Flyer.",
+      "Airfield Chi coordinates: 18.44° N, 77.45° E."
+    ]
+  },
+  "insight": {
+    "id": "insight",
+    "name": "InSight Mars Lander",
+    "world": "mars",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "2018-05-05",
+    "end_date": "2022-12-15",
+    "locations": [
+      {
+        "id": "insight-site",
+        "label": "Homestead Hollow, Elysium Planitia",
+        "lat": 4.5,
+        "lon": 135.62,
+        "source_url": "https://www.jpl.nasa.gov/missions/insight",
+        "approximate": false
+      }
+    ],
+    "summary": "InSight studied the interior structure of Mars by measuring seismic tremors.",
+    "hook": "I placed a seismometer on the Martian plains to record marsquakes and map the planet interior.",
+    "how_it_worked": "Stationary geophysical lander carrying an ultra-sensitive seismometer protected by a wind and thermal shield.",
+    "science": "Recorded over 1,300 marsquakes, revealing the thickness of Mars crust and the size of its liquid core.",
+    "facts": [
+      {
+        "text": "InSight recorded a magnitude 5 marsquake in May 2022, the strongest ever detected on another planet.",
+        "source_url": "https://www.jpl.nasa.gov/missions/insight"
+      },
+      {
+        "text": "Dust accumulation on its solar panels steadily reduced power until transmission ceased in late 2022.",
+        "source_url": "https://science.nasa.gov/mission/insight/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA22876",
+      "file": "assets/images/artifacts/insight.jpg",
+      "credit": "NASA/JPL-Caltech",
+      "source_url": "https://images.nasa.gov/details/PIA22876",
+      "alt": "InSight lander selfie showing its solar panels and deck on Mars"
+    },
+    "sources": [
+      "https://www.jpl.nasa.gov/missions/insight"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Elysium Planitia geophysical station.",
+      "Dedicated interior exploration lander operating from 2018 through 2022.",
+      "Deployed the SEIS ultra-sensitive seismometer under a vacuum-sealed wind and thermal shield.",
+      "Detected more than 1,300 marsquakes, revealing the thickness of Mars crust and molten core.",
+      "Completed the first comprehensive internal structural mapping of a terrestrial planet.",
+      "Homestead Hollow coordinates: 4.5024° N, 135.6234° E."
+    ]
+  },
+  "mars-polar-lander": {
+    "id": "mars-polar-lander",
+    "name": "Mars Polar Lander",
+    "world": "mars",
+    "tier": "standard",
+    "status": "lost",
+    "launch_date": "1999-01-03",
+    "end_date": "1999-12-03",
+    "locations": [
+      {
+        "id": "mpl-loss-zone",
+        "label": "Ultimi Scopuli, South Polar Layered Terrain",
+        "lat": -76.57,
+        "lon": 165.2,
+        "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A",
+        "approximate": true
+      }
+    ],
+    "summary": "Mars Polar Lander was an ambitious robotic probe sent to study the Martian south pole.",
+    "hook": "Contact was lost during my atmospheric descent into the southern polar terrain of Mars in 1999.",
+    "how_it_worked": "Designed to use thrusters to touch down softly on layered polar deposits and analyze soil ice.",
+    "science": "Highlighted the critical need for continuous telemetry during off-world atmospheric descent and landing.",
+    "facts": [
+      {
+        "text": "Telemetry was lost seconds before atmospheric entry, leading NASA to redesign landing monitoring for all future missions.",
+        "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A"
+      },
+      {
+        "text": "Carried two microprobes designed to penetrate the surface soil upon high-speed impact.",
+        "source_url": "https://science.nasa.gov/mission/mars-polar-lander-deep-space-2/"
+      }
+    ],
+    "image": {
+      "nasa_id": "KSC-98pc1212",
+      "file": "assets/images/artifacts/mars-polar-lander.jpg",
+      "credit": "NASA",
+      "source_url": "https://images.nasa.gov/details/KSC-98pc1212",
+      "alt": "Mars Polar Lander awaiting testing at Kennedy Space Center before launch"
+    },
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1999-001A"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Southern polar layered deposits wreckage zone.",
+      "Intended to investigate water ice and climate history near the south polar cap in 1999.",
+      "Designed with descent thrusters, a meteorological station, and a deep-soil scoop.",
+      "Telemetry ceased during atmospheric entry due to premature engine cutoff prior to touchdown.",
+      "Failure investigations led to modernized entry, descent, and landing telemetry protocols.",
+      "Targeted touchdown zone: 76.57° S, 165.2° E."
+    ]
+  },
+  "perseverance-landing-hardware": {
+    "id": "perseverance-landing-hardware",
+    "name": "Perseverance Landing Hardware",
+    "world": "mars",
+    "tier": "standard",
+    "status": "dormant",
+    "launch_date": "2020-07-30",
+    "end_date": "2021-02-18",
+    "locations": [
+      {
+        "id": "perseverance-debris",
+        "label": "Octavia E. Butler Landing Debris Field, Jezero Crater",
+        "lat": 18.4447,
+        "lon": 77.4508,
+        "source_url": "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter",
+        "approximate": true
+      }
+    ],
+    "summary": "The parachute and backshell that protected the Perseverance rover during atmospheric entry.",
+    "hook": "My parachute and backshell brought Perseverance to Jezero Crater and were later photographed by Ingenuity.",
+    "how_it_worked": "A supersonic nylon parachute and protective aeroshell slowed the entry vehicle from orbital velocities.",
+    "science": "Provided valuable engineering data on high-speed entry parachute dynamics in the thin Martian atmosphere.",
+    "facts": [
+      {
+        "text": "The 70-foot supersonic parachute carried a coded binary pattern spelling Dare Mighty Things in its canopy.",
+        "source_url": "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter"
+      },
+      {
+        "text": "The debris field was imaged from an aerial vantage point by the Ingenuity helicopter during Flight 26.",
+        "source_url": "https://mars.nasa.gov/mars2020/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA25218",
+      "file": "assets/images/artifacts/perseverance-landing-hardware.jpg",
+      "credit": "NASA/JPL-Caltech",
+      "source_url": "https://images.nasa.gov/details/PIA25218",
+      "alt": "Debris field of the Perseverance backshell and parachute photographed from the air by Ingenuity"
+    },
+    "sources": [
+      "https://www.jpl.nasa.gov/images/pia25218-debris-field-for-perseverance-landing-gear-seen-from-mars-helicopter"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Octavia E. Butler Landing debris field located.",
+      "The supersonic parachute and rocket-powered Sky Crane descent stage for Perseverance.",
+      "Terrain Relative Navigation guided the descent vehicle away from hazardous cliff faces.",
+      "Enabled the pinpoint touchdown of the 1,025-kilogram rover inside ancient Jezero Crater.",
+      "Hardware debris field was later surveyed and photographed aerially by Ingenuity.",
+      "Jezero Crater field coordinates: 18.4447° N, 77.4508° E."
+    ]
+  },
+  "phoenix": {
+    "id": "phoenix",
+    "name": "Phoenix Mars Lander",
+    "world": "mars",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "2007-08-04",
+    "end_date": "2008-11-02",
+    "locations": [
+      {
+        "id": "phoenix-site",
+        "label": "Green Valley, Vastitas Borealis",
+        "lat": 68.22,
+        "lon": -125.75,
+        "source_url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+        "approximate": false
+      }
+    ],
+    "summary": "Phoenix landed in the Martian arctic to study water ice beneath the surface soil.",
+    "hook": "I dug into the arctic soils of northern Mars and verified subsurface water ice in 2008.",
+    "how_it_worked": "Stationary lander equipped with a 2.35-meter robotic trenching arm and thermal oven analyzers.",
+    "science": "Exposed chunks of bright white water ice that sublimated into vapor over several days.",
+    "facts": [
+      {
+        "text": "Phoenix detected perchlorate salts in the soil, which lower the freezing point of water.",
+        "source_url": "https://science.nasa.gov/mission/phoenix/"
+      },
+      {
+        "text": "Mission ended when solar panels lost sunlight during the onset of the deep northern Martian winter.",
+        "source_url": "https://www.jpl.nasa.gov/missions/phoenix"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA11719",
+      "file": "assets/images/artifacts/phoenix.jpg",
+      "credit": "NASA/JPL-Caltech/University of Arizona/Texas A&M University",
+      "source_url": "https://images.nasa.gov/details/PIA11719",
+      "alt": "Phoenix lander self-portrait on Mars, showing its deck and solar panels from above"
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/phoenix/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Vastitas Borealis arctic plains landing site.",
+      "Stationary lander deployed to investigate the history of water in the Martian arctic.",
+      "Used a 2.35-meter robotic trenching arm and Thermal and Evolved-Gas Analyzer ovens.",
+      "Exposed and photographed subsurface water ice that sublimated into the atmosphere.",
+      "Detected perchlorate salts and calcium carbonate in the alkaline northern soil.",
+      "Green Valley touchdown coordinates: 68.22° N, 125.75° W."
+    ]
+  },
+  "sojourner-pathfinder": {
+    "id": "sojourner-pathfinder",
+    "name": "Mars Pathfinder & Sojourner",
+    "world": "mars",
+    "tier": "flagship",
+    "status": "ended",
+    "launch_date": "1996-12-04",
+    "end_date": "1997-09-27",
+    "locations": [
+      {
+        "id": "pathfinder-site",
+        "label": "Carl Sagan Memorial Station, Ares Vallis",
+        "lat": 19.47,
+        "lon": -33.25,
+        "source_url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+        "approximate": false
+      }
+    ],
+    "summary": "Mars Pathfinder landed the first wheeled rover ever operated on Mars.",
+    "hook": "I carried the microwave-sized Sojourner rover across the ancient floodplains of Ares Vallis.",
+    "how_it_worked": "Used an innovative parachute, retro-rocket, and airbag bounce-landing system on the Martian surface.",
+    "science": "Determined that rocks in Ares Vallis were rounded and sorted by catastrophic prehistoric water floods.",
+    "facts": [
+      {
+        "text": "The Sojourner microrover weighed only 10.6 kg and operated for nearly three months.",
+        "source_url": "https://science.nasa.gov/mission/mars-pathfinder/"
+      },
+      {
+        "text": "Pathfinder returned more than 16,500 images from the lander and 550 from the rover, plus more than 15 chemical analyses of rocks and soil.",
+        "source_url": "https://science.nasa.gov/mission/mars-pathfinder/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA01120",
+      "file": "assets/images/artifacts/sojourner-pathfinder.jpg",
+      "credit": "NASA/JPL",
+      "source_url": "https://images.nasa.gov/details/PIA01120",
+      "alt": "Mars Pathfinder lander on the surface of Mars"
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/mars-pathfinder/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Carl Sagan Memorial Station located in Ares Vallis.",
+      "Humanity first mobile rover on Mars: the 11.5 kg, six-wheeled Sojourner.",
+      "Used airbag cluster cushioning for landing and solar array panels for surface power.",
+      "Traveled 100 meters analyzing volcanic boulders using an Alpha Particle X-Ray Spectrometer.",
+      "Proved that rover exploration of planetary surfaces was scientifically feasible and robust.",
+      "Landed in Ares Vallis outflow channel at 19.47° N, 33.25° W."
+    ]
+  },
+  "spirit-opportunity": {
+    "id": "spirit-opportunity",
+    "name": "Spirit and Opportunity",
+    "world": "mars",
+    "tier": "flagship",
+    "status": "ended",
+    "launch_date": "2003-06-10",
+    "end_date": "2018-06-10",
+    "locations": [
+      {
+        "id": "spirit-site",
+        "label": "Spirit (MER-A), Columbia Memorial Station, Gusev Crater",
+        "lat": -14.5692,
+        "lon": 175.4729,
+        "source_url": "https://an.rsl.wustl.edu/help/Content/About%20the%20mission/MER/MER%20mission.htm",
+        "approximate": false,
+        "launch_date": "2003-06-10",
+        "end_date": "2010-03-22"
+      },
+      {
+        "id": "opportunity-site",
+        "label": "Opportunity (MER-B), Challenger Memorial Station, Meridiani Planum",
+        "lat": -1.9462,
+        "lon": -5.5266,
+        "source_url": "https://an.rsl.wustl.edu/help/Content/About%20the%20mission/MER/MER%20mission.htm",
+        "approximate": false,
+        "launch_date": "2003-07-07",
+        "end_date": "2018-06-10"
+      }
+    ],
+    "summary": "Twin robotic rovers searched opposite sides of Mars for evidence of ancient liquid water.",
+    "hook": "We were twin rovers built for 90 days that explored Mars for over fourteen years.",
+    "how_it_worked": "Six-wheel rocker-bogie rovers equipped with panoramic cameras, mineral spectrometers, and rock abrasion tools.",
+    "science": "Discovered hematite blueberries and silica deposits proving liquid water once covered ancient Martian terrain.",
+    "facts": [
+      {
+        "text": "Opportunity drove more than 45 kilometers on Mars, an off-world driving record that stood until Perseverance passed it.",
+        "source_url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+      },
+      {
+        "text": "Spirit discovered ancient hydrothermal silica deposits while dragging a broken front wheel.",
+        "source_url": "https://science.nasa.gov/mission/mer-spirit/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA17759",
+      "file": "assets/images/artifacts/spirit-opportunity.jpg",
+      "credit": "NASA/JPL-Caltech/Cornell Univ./Arizona State Univ.",
+      "source_url": "https://images.nasa.gov/details/PIA17759",
+      "alt": "Self-portrait by the Opportunity rover on Mars in January 2014, about three weeks before completing a decade of work"
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Twin Mars Exploration Rovers Gusev and Meridiani records.",
+      "Robotic geologists Spirit and Opportunity designed for a 90-sol primary mission.",
+      "Equipped with Rock Abrasion Tools, Mössbauer spectrometers, and microscopic imagers.",
+      "Opportunity found hematite blueberries and sedimentary rocks proving ancient liquid water.",
+      "Spirit drove 7.7 km; Opportunity operated for nearly 15 years driving a marathon 45.16 km.",
+      "Spirit at Gusev (-14.5692°, 175.4729°); Opportunity at Meridiani (-1.9462°, -5.5266°)."
+    ]
+  },
+  "viking-1-2": {
+    "id": "viking-1-2",
+    "name": "Viking 1 and Viking 2 Landers",
+    "world": "mars",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "1975-08-20",
+    "end_date": "1982-11-13",
+    "locations": [
+      {
+        "id": "viking-1-site",
+        "label": "Viking 1 Lander, Chryse Planitia",
+        "lat": 22.27,
+        "lon": -47.95,
+        "source_url": "https://www.giss.nasa.gov/tools/mars24/help/landers.html",
+        "approximate": false,
+        "launch_date": "1975-08-20",
+        "end_date": "1982-11-13"
+      },
+      {
+        "id": "viking-2-site",
+        "label": "Viking 2 Lander, Utopia Planitia",
+        "lat": 47.668,
+        "lon": 134.28,
+        "source_url": "https://ode.rsl.wustl.edu/mars/pagehelp/Content/Missions_Instruments/Landing_Sites.htm",
+        "approximate": false,
+        "launch_date": "1975-09-09",
+        "end_date": "1980-04-11"
+      }
+    ],
+    "summary": "The Viking landers were the first American spacecraft to touch down safely and operate on Mars.",
+    "hook": "We operated through the late 1970s and transmitted humanity first panoramic photographs of Mars.",
+    "how_it_worked": "Powered by radioisotope thermoelectric generators (RTGs) with biological test chambers and meteorology booms.",
+    "science": "Recorded weather cycles, analyzed soil chemistry, and observed seasonal frost forming on volcanic rocks.",
+    "facts": [
+      {
+        "text": "Viking 1 operated on the Martian surface for over six years (2,245 sols).",
+        "source_url": "https://science.nasa.gov/mission/viking-1/"
+      },
+      {
+        "text": "Viking 2 photographed winter frost made of water ice on Martian rocks in Utopia Planitia.",
+        "source_url": "https://science.nasa.gov/mission/viking-2/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA00563",
+      "file": "assets/images/artifacts/viking-1-2.jpg",
+      "credit": "NASA/JPL",
+      "source_url": "https://images.nasa.gov/details/PIA00563",
+      "alt": "First color image from Viking Lander 1 on the surface of Mars"
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/viking-1/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Chryse and Utopia Planitia landing telemetry recovered.",
+      "The first successful long-term operational landing probes on the Martian surface in 1976.",
+      "Equipped with gas chromatograph-mass spectrometers, seismometers, and robotic sample scoops.",
+      "Transmitted the first clear color panoramic views of red Martian soil and rocky plains.",
+      "Analyzed atmosphere composition and monitored weather across multiple Martian years.",
+      "Viking 1 at 22.27° N, 47.95° W; Viking 2 at 47.668° N, 134.28° E."
+    ]
+  },
+  "voyager-1": {
+    "id": "voyager-1",
+    "name": "Voyager 1 Interstellar Probe",
+    "world": "elsewhere",
+    "tier": "flagship",
+    "status": "active",
+    "launch_date": "1977-09-05",
+    "end_date": null,
+    "locations": [
+      {
+        "id": "voyager-1-interstellar",
+        "label": "Interstellar Medium (Over 160 AU from Earth)",
+        "lat": 35.1,
+        "lon": -108.4,
+        "source_url": "https://science.nasa.gov/mission/voyager/voyager-1/",
+        "approximate": true
+      }
+    ],
+    "summary": "Voyager 1 completed historic flybys of Jupiter and Saturn before becoming the first spacecraft to enter interstellar space.",
+    "hook": "My 3.7-meter high-gain dish still points back toward Earth from beyond the heliopause, carrying a Golden Record.",
+    "how_it_worked": "Uses three plutonium-238 radioisotope thermoelectric generators and S/X-band transmitters communicating with NASA's Deep Space Network.",
+    "science": "Captured the Pale Blue Dot portrait and measures plasma density, cosmic rays, and magnetic fields in the interstellar medium.",
+    "facts": [
+      {
+        "text": "Voyager 1 crossed the heliopause into interstellar space in August 2012, over 18 billion kilometers from the Sun.",
+        "source_url": "https://science.nasa.gov/mission/voyager/voyager-1/"
+      },
+      {
+        "text": "Radio signals between Earth and Voyager 1 take more than 22 hours to travel each way at the speed of light.",
+        "source_url": "https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA23645",
+      "file": "assets/images/artifacts/voyager-1.jpg",
+      "credit": "NASA/JPL-Caltech",
+      "source_url": "https://images.nasa.gov/details/PIA23645",
+      "alt": "Voyager 1's \"Pale Blue Dot\" (2020 reprocessing): Earth appears as a tiny, softly blue speck inside a band of scattered sunlight, photographed from about 6 billion kilometers away in 1990."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/voyager/voyager-1/",
+      "https://science.nasa.gov/mission/voyager/where-are-voyager-1-and-voyager-2-now/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "visit",
+    "reel_notes": [
+      "Unit-7 telemetry: Faint X-band carrier locked via Deep Space Network calibration.",
+      "Launched in 1977 on a Grand Tour alignment that occurs once every 176 years.",
+      "Discovered active silicate volcanism on Jupiter's moon Io in 1979.",
+      "Imaged Saturn's rings and Titan's nitrogen haze in 1980 before swinging northward.",
+      "Carries a gold-plated phonograph record of Earth sounds, music, and greetings.",
+      "Over 24 billion kilometers from home and still transmitting scientific particles telemetry."
+    ]
+  },
+  "galileo": {
+    "id": "galileo",
+    "name": "Galileo Jupiter Orbiter",
+    "world": "elsewhere",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "1989-10-18",
+    "end_date": "2003-09-21",
+    "locations": [
+      {
+        "id": "galileo-jupiter-entry",
+        "label": "Jupiter Upper Atmosphere (Intentional Deorbit)",
+        "lat": -1.4,
+        "lon": -91.7,
+        "source_url": "https://science.nasa.gov/mission/galileo/",
+        "approximate": true
+      }
+    ],
+    "summary": "Galileo was the first spacecraft to orbit Jupiter, study the Jovian system for eight years, and deploy a probe directly into Jupiter's atmosphere.",
+    "hook": "After completing 35 orbits around Jupiter, NASA commanded me into the planet to protect Europa from terrestrial contamination.",
+    "how_it_worked": "Spun at 3.15 rpm for stability while a despun instrument platform kept cameras pointed accurately using low-gain antenna workarounds.",
+    "science": "Revealed strong magnetic evidence for a subsurface saltwater ocean beneath Jupiter's icy moon Europa and imaged Shoemaker-Levy 9 comet impacts.",
+    "facts": [
+      {
+        "text": "Galileo discovered Dactyl, the first confirmed moon orbiting an asteroid (243 Ida), while en route to Jupiter.",
+        "source_url": "https://science.nasa.gov/mission/galileo/"
+      },
+      {
+        "text": "On December 7, 1995, Galileo's atmospheric probe descended 156 kilometers into Jupiter before pressure crushed its hull.",
+        "source_url": "https://science.nasa.gov/mission/galileo/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA19048",
+      "file": "assets/images/artifacts/galileo.jpg",
+      "credit": "NASA/JPL-Caltech/SETI Institute",
+      "source_url": "https://images.nasa.gov/details/PIA19048",
+      "alt": "Galileo color view of Jupiter's icy moon Europa: a pale, cracked ice surface crossed by long reddish-brown ridges and bands."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/galileo/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "visit",
+    "reel_notes": [
+      "Unit-7 telemetry: Jovian system orbital ephemeris and radiation log recovered.",
+      "First orbiter dedicated to an outer gas giant planet.",
+      "Overcame a stuck main high-gain antenna by compressing science data for its low-gain dish.",
+      "Survived over four times its designed Jovian radiation belt exposure.",
+      "Confirmed liquid water oceans below icy shells on Europa, Ganymede, and Callisto.",
+      "Deorbited into Jupiter on September 21, 2003."
+    ]
+  },
+  "near-shoemaker": {
+    "id": "near-shoemaker",
+    "name": "NEAR Shoemaker",
+    "world": "elsewhere",
+    "tier": "flagship",
+    "status": "dormant",
+    "launch_date": "1996-02-17",
+    "end_date": "2001-02-28",
+    "locations": [
+      {
+        "id": "eros-himeros",
+        "label": "Himeros Saddle Region, Asteroid 433 Eros",
+        "lat": -36.32,
+        "lon": -80.93,
+        "source_url": "https://science.nasa.gov/mission/near-shoemaker/",
+        "approximate": true
+      }
+    ],
+    "summary": "NEAR Shoemaker became the first spacecraft to orbit an asteroid and execute a controlled landing onto its boulder-strewn surface.",
+    "hook": "Engineers designed me only as an orbiter, yet five gentle hydrazine braking burns set me down intact on Asteroid 433 Eros.",
+    "how_it_worked": "Conducted five planned thruster deceleration burns to touch down at roughly 1.8 meters per second onto 433 Eros despite not being originally built as a lander.",
+    "science": "Mapped Eros's potato-shaped topography, gravity field, and chondritic elemental composition, even gathering close-up gamma-ray spectra on the surface.",
+    "facts": [
+      {
+        "text": "On February 12, 2001, NEAR Shoemaker achieved the first asteroid landing in history on 433 Eros.",
+        "source_url": "https://science.nasa.gov/mission/near-shoemaker/"
+      },
+      {
+        "text": "Surface gravity on 433 Eros is so weak—around 0.0006 g—that an astronaut's gentle push could exceed escape velocity.",
+        "source_url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1996-008A"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA02923",
+      "file": "assets/images/artifacts/near-shoemaker.jpg",
+      "credit": "NASA/JPL/JHUAPL",
+      "source_url": "https://images.nasa.gov/details/PIA02923",
+      "alt": "NEAR Shoemaker mosaic of asteroid 433 Eros: an elongated, saddle-shaped gray rock covered in craters, with a large curved depression on one side."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/near-shoemaker/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "jetpack",
+    "reel_notes": [
+      "Unit-7 telemetry: Micro-gravity descent trace on 433 Eros recovered.",
+      "Completed a full year orbiting a near-Earth asteroid only 34 kilometers long.",
+      "Touchdown velocity was slower than human walking speed (~1.5 to 1.8 m/s).",
+      "Continued operating its gamma-ray spectrometer on the regolith for 16 days after landing.",
+      "Resting silently on the southern edge of Himeros crater on Eros."
+    ]
+  },
+  "cassini-huygens": {
+    "id": "cassini-huygens",
+    "name": "Cassini-Huygens & Titan Probe",
+    "world": "elsewhere",
+    "tier": "flagship",
+    "status": "ended",
+    "launch_date": "1997-10-15",
+    "end_date": "2017-09-15",
+    "locations": [
+      {
+        "id": "huygens-titan",
+        "label": "Xanadu-Adiri Borderland, Titan (Saturn System)",
+        "lat": -10.2,
+        "lon": 167.7,
+        "source_url": "https://science.nasa.gov/mission/cassini/",
+        "approximate": true
+      }
+    ],
+    "summary": "Cassini orbited Saturn for 13 years while its European-built Huygens lander executed the farthest touchdown in history onto Titan.",
+    "hook": "Huygens parachuted through Titan's thick orange nitrogen haze while Cassini spent thirteen years mapping Saturn's rings and icy plumes.",
+    "how_it_worked": "Huygens separated in orbit, survived a 12-G atmospheric entry over Titan under heat shields, and deployed three staged parachutes down to hydrocarbon plains.",
+    "science": "Discovered geysers of water vapor erupting from Enceladus's south pole and revealed liquid methane lakes and rivers across Titan.",
+    "facts": [
+      {
+        "text": "Huygens achieved the most distant spacecraft landing from Earth when it touched down on Saturn's hazy moon Titan on January 14, 2005.",
+        "source_url": "https://science.nasa.gov/mission/cassini/"
+      },
+      {
+        "text": "Cassini concluded its mission in 2017 with 22 daring Grand Finale dives threaded inside the 2,400-kilometer gap between Saturn and its rings.",
+        "source_url": "https://science.nasa.gov/mission/cassini/grand-finale/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA08329",
+      "file": "assets/images/artifacts/cassini-huygens.jpg",
+      "credit": "NASA/JPL/Space Science Institute",
+      "source_url": "https://images.nasa.gov/details/PIA08329",
+      "alt": "Cassini's \"In Saturn's Shadow\": Saturn backlit by the Sun, its dark disk ringed by glowing rings, with faint outer rings and Earth as a pale dot."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/cassini/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "visit",
+    "reel_notes": [
+      "Unit-7 telemetry: Titan atmospheric entry & ring-plane dive logs synchronized.",
+      "Cooperative flagship partnership between NASA, ESA, and ASI.",
+      "Huygens photographed smooth water-ice cobbles carved by liquid methane rain.",
+      "Cassini sampled active hydrothermal chemistry inside Enceladus's subsurface ocean plumes.",
+      "Vaporized intentionally in Saturn's upper atmosphere on September 15, 2017."
+    ]
+  },
+  "deep-impact": {
+    "id": "deep-impact",
+    "name": "Deep Impact (Tempel 1 Encounter)",
+    "world": "elsewhere",
+    "tier": "standard",
+    "status": "ended",
+    "launch_date": "2005-01-12",
+    "end_date": "2013-09-20",
+    "locations": [
+      {
+        "id": "tempel-1-crater",
+        "label": "Impact Crater Site, Comet 9P/Tempel",
+        "lat": -12.0,
+        "lon": 144.0,
+        "source_url": "https://science.nasa.gov/mission/deep-impact-epoxi/",
+        "approximate": true
+      }
+    ],
+    "summary": "Deep Impact launched an autonomous copper impactor straight into the nucleus of comet Tempel 1 to expose primordial solar system material.",
+    "hook": "My autonomous optical navigation steered a 370-kilogram copper block into a comet at 10.2 kilometers per second while my flyby craft filmed.",
+    "how_it_worked": "The flyby bus released an autonomous 370-kilogram copper-core impactor into comet Tempel 1 at 10.2 km/s, using Autonomous Navigation (AutoNav) thruster corrections up to impact.",
+    "science": "Vaporization plumes revealed Tempel 1 contains water ice, organic compounds, silicates, and a surprisingly fluffy porous interior structure.",
+    "facts": [
+      {
+        "text": "The impactor continued snapping close-up images until only 3 seconds before colliding with comet Tempel 1 on July 4, 2005.",
+        "source_url": "https://science.nasa.gov/mission/deep-impact-epoxi/"
+      },
+      {
+        "text": "After its primary encounter, the flyby spacecraft was repurposed as EPOXI to image comet Hartley 2 and search for exoplanets.",
+        "source_url": "https://solarsystem.nasa.gov/missions/deep-impact/in-depth/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA02137",
+      "file": "assets/images/artifacts/deep-impact.jpg",
+      "credit": "NASA/JPL-Caltech/UMD",
+      "source_url": "https://images.nasa.gov/details/PIA02137",
+      "alt": "Comet Tempel 1 photographed by the Deep Impact flyby spacecraft 67 seconds after the impactor struck it, with a bright burst of light and debris erupting from the nucleus."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/deep-impact-epoxi/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "visit",
+    "reel_notes": [
+      "Unit-7 telemetry: Tempel 1 optical impact sequence reconstructed.",
+      "Delivered the first controlled excavation into the interior of a comet nucleus.",
+      "Copper was chosen specifically so its spectral signature would not interfere with cometary chemistry.",
+      "Follow-on spacecraft Stardust-NExT returned in 2011 and imaged the 150-meter impact crater.",
+      "Flyby spacecraft remains in heliocentric orbit after contact ended in 2013."
+    ]
+  },
+  "new-horizons": {
+    "id": "new-horizons",
+    "name": "New Horizons (Pluto-Kuiper Belt)",
+    "world": "elsewhere",
+    "tier": "flagship",
+    "status": "active",
+    "launch_date": "2006-01-19",
+    "end_date": null,
+    "locations": [
+      {
+        "id": "pluto-sputnik",
+        "label": "Kuiper Belt Trajectory (Past Pluto System)",
+        "lat": 25.0,
+        "lon": 175.0,
+        "source_url": "https://science.nasa.gov/mission/new-horizons/",
+        "approximate": true
+      }
+    ],
+    "summary": "New Horizons rocketed past Pluto in July 2015, transforming the distant dwarf planet from a blurry pixel smudge into a geologically active world.",
+    "hook": "Launched at nearly 58,000 kilometers per hour, I had one unrepeatable flyby pass across Pluto's frozen heart before rushing onward into the Kuiper Belt.",
+    "how_it_worked": "Unable to carry enough propellant to brake into orbit after a nine-year fast cruise, the spacecraft executed pre-programmed autonomous slews across Pluto's system during closest approach.",
+    "science": "Revealed nitrogen glaciers circulating across a vast nitrogen ice plain named Sputnik Planitia across Pluto, towering water-ice mountains, and haze layers in thin nitrogen skies.",
+    "facts": [
+      {
+        "text": "On July 14, 2015, New Horizons swept within 12,500 kilometers of Pluto at roughly 49,600 km/h.",
+        "source_url": "https://science.nasa.gov/mission/new-horizons/"
+      },
+      {
+        "text": "On January 1, 2019, it achieved the farthest planetary flyby ever performed at Kuiper Belt object Arrokoth (486958).",
+        "source_url": "https://science.nasa.gov/mission/new-horizons/"
+      }
+    ],
+    "image": {
+      "nasa_id": "PIA19952",
+      "file": "assets/images/artifacts/new-horizons.jpg",
+      "credit": "NASA/Johns Hopkins University Applied Physics Laboratory/Southwest Research Institute",
+      "source_url": "https://images.nasa.gov/details/PIA19952",
+      "alt": "New Horizons enhanced-color view of Pluto from July 14, 2015: a round world in pale blues, yellows and deep reds, with the bright heart-shaped plain of Sputnik Planitia."
+    },
+    "sources": [
+      "https://science.nasa.gov/mission/new-horizons/"
+    ],
+    "written_by": "Member 4 (Science & Story Lead)",
+    "verified_by": "Member 6 (Dataset & Source Lead)",
+    "last_verified": "2026-11-14",
+    "recovery": "visit",
+    "reel_notes": [
+      "Unit-7 telemetry: Pluto closest-approach optical frame buffer recovered.",
+      "Fastest spacecraft launch speed off Earth in mission history until Parker Solar Probe.",
+      "Completed the initial reconnaissance of every classical major world from Mercury to Pluto.",
+      "Because bandwidth from 4.8 billion km away is ~1-2 kilobits/sec, downlinking Pluto encounter data took 16 months.",
+      "Currently traversing deep Kuiper Belt space more than 58 AU from the Sun."
+    ]
+  }
+}

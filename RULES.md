@@ -18,13 +18,19 @@ Every team member and AI coding assistant must follow these competition, scienti
    * All text on the Project Submission page, presentation deck, and web application must be in **English**.
 4. **References & Attribution Checkboxes:**
    * Every external resource—including NASA datasets, NSSDCA records, images, fonts, and open-source code libraries—must be listed in the **References field** on the project submission form.
-   * **AI Assistance Disclosure:** Disclose the use of AI coding assistants in the References/methodology section and verify all generated code and facts by a human team member.
-5. **NASA Branding & Non-Endorsement:**
+5. **NASA Official Super Intelligence (SI) & AI Policy (Mandatory):**
+   * **Permitted Tools:** Chatbots, LLMs, foundation models, and image generation are permitted to accelerate innovation.
+   * **Strict NASA Branding Prohibition:** Generated content **MAY NOT** use, contain, or modify any NASA branding or design elements (such as NASA logos, the meatball, worm, flags, or official mission identifiers/patches).
+   * **Mandatory Visible Watermarking on Images & Videos:** Any SI-generated images and videos **must include a visible watermark** indicating they are SI-generated.
+   * **Mandatory Audio Disclosure:** Audio generated or synthesized via SI must be acknowledged in descriptive text and metadata.
+   * **Mandatory Code & Data Disclosure:** Code and dataset normalization generated with SI must be acknowledged in descriptive text, metadata, and repository documentation.
+   * **Judges' Evaluation:** While the SI data collection field is administrative, judges **will evaluate originality, intent, and execution based on visible SI watermarks, metadata, and disclosures** in the project.
+6. **NASA Branding & Non-Endorsement:**
    * Follow the [NASA Media Usage Guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/). Do not use the NASA insignia/logo in a way that implies NASA sponsorship or endorsement.
    * NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites.
-6. **China Funding Restriction Policy:**
+7. **China Funding Restriction Policy:**
    * Per NASA Space Apps Terms & Conditions (PDF Page 4), no prohibited bilateral activity or affiliation with China or a Chinese-owned entity.
-7. **Submission Deadline:**
+8. **Submission Deadline:**
    * Official deadline: **Sunday, November 15 at 11:59 p.m. local time** (Local Event time).
    * **Internal Team Deadline:** Submit at least **2 hours early (by 10:00 p.m.)** to avoid server congestion.
 
@@ -61,12 +67,12 @@ Every feature and design choice must support the five official NASA judging crit
 
 | Member | Role | Owned Directories / Deliverables |
 |---|---|---|
-| **Member 1 (Coder 1)** | Web Platform Lead | `src/pages/`, `src/components/`, `src/context/`, `src/App.tsx`, routing (`/`, `/archive`, `/about`) & deployment |
-| **Member 2 (Coder 2)** | Integration Lead | Integrates the game into `/game` (`src/game/`), wires datasets and assets into the application |
-| **Member 3** | Asset Maker | `public/assets/`, `public/images/` — UI graphics, mission badges, textures, and synthesized audio SFX |
-| **Member 4** | Game & Story Creator | Creates the game mechanics/content (`src/game/`) and narrative scripts/science cards (`src/text/`) |
+| **Member 1 (Coder 1)** | Web Platform & UI Lead | `src/ui/`, `src/core/`, `index.html`, accessible overlays (`TitleScreen`, `HubMap`, `ArchiveModal`, `EntryReaderModal`, `FieldTaskModal`, `SettingsModal`, `AboutModal`) & deployment |
+| **Member 2 (Coder 2)** | Engine & Integration Lead | `src/scenes/`, `src/systems/`, `src/main.ts`, Phaser 3 campaign & 60 Hz minigame integration |
+| **Member 3** | Asset & Audio Maker | `src/audio/`, `public/assets/`, `src/systems/SpriteArt.ts` — procedural pixel art, maps, and Web Audio API SFX/music |
+| **Member 4** | Game & Story Creator | `src/data/story.ts`, `src/data/fieldTasks.ts`, `src/data/finale.ts`, `data/cinematics/` — UNIT-7 narrative scripts, quizzes, and science field tasks |
 | **Member 5** | Pitch & Submission Lead | Builds the 7-slide presentation deck / 30s demo video and manages the Space Apps submission portal |
-| **Member 6** | Dataset Manager | `src/data/` (`missions.json`, `sources.json`, `encounters.json`), coordinates, and References ledger |
+| **Member 6** | Dataset Manager | `src/data/` (`artifacts.json`, `missions.json`, `sources.json`, `encounters.json`), coordinates, and `docs/submission-references.md` ledger |
 
 ---
 
