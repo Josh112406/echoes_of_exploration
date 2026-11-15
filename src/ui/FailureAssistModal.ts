@@ -33,7 +33,7 @@ export class FailureAssistModal {
             <button id="btn-try-assist" class="btn" style="justify-content:center; border-color:${PALETTE.beaconGold}; color:${PALETTE.beaconGold};">
               TRY ${mg.code} WITH ASSIST (+25% Margin)
             </button>
-            <button id="btn-skip-challenge" class="btn" style="justify-content:center; color:${PALETTE.slateMuted};">
+            <button id="btn-skip-challenge" class="btn" style="justify-content:center; color:var(--muted);">
               SKIP ${mg.code} CHALLENGE (VISIT RECOVERY)
             </button>
           ` : ''}

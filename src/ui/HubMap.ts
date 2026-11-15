@@ -30,6 +30,7 @@ export class HubMap {
     });
 
     EventBus.on(EVENTS.ENTRY_UNLOCKED, () => {
+      this.activeEntryId = '';
       this.render();
     });
   }
@@ -41,7 +42,8 @@ export class HubMap {
     const entries = Object.values(ALL_ENTRIES).filter(e => e.world === currentWorld);
 
     if (!entries.find(e => e.id === this.activeEntryId)) {
-      this.activeEntryId = entries[0]?.id || 'apollo-11-site';
+      const nextTarget = entries.find(e => !GameState.isEntryRecovered(e.id) && GameState.isSiteActive(e.id));
+      this.activeEntryId = nextTarget?.id || entries[0]?.id || 'apollo-11-site';
     }
 
     this.container.innerHTML = `
@@ -156,12 +158,15 @@ export class HubMap {
         const topPercent = ((90 - loc.lat) / 180) * 100;
         const beaconColor = isRecovered ? '#f59e0b' : '#06b6d4';
         const isSelected = entry.id === this.activeEntryId;
+        const isNextTarget = !isRecovered && GameState.isSiteActive(entry.id);
+        // Priority stacking prevents overlapping recovered sites (e.g. Jezero Crater) from occluding active targets.
+        const zIndex = (isSelected && !isRecovered) ? 16 : isNextTarget ? 15 : isSelected ? 14 : !isRecovered ? 12 : 10;
 
         return `
           <div class="map-marker ${isSelected ? 'selected' : ''}"
                data-entry-id="${entry.id}"
                title="${loc.label} (${entry.name})"
-               style="position:absolute; left:${leftPercent}%; top:${topPercent}%; transform:translate(-50%, -50%); cursor:pointer; z-index:10; padding:6px;">
+               style="position:absolute; left:${leftPercent}%; top:${topPercent}%; transform:translate(-50%, -50%); cursor:pointer; z-index:${zIndex}; padding:6px;">
             <div style="width:${isSelected ? '16px' : '12px'}; height:${isSelected ? '16px' : '12px'}; border-radius:50%; background:${beaconColor}; border:2px solid #ffffff; box-shadow:0 0 ${isSelected ? '14px' : '8px'} ${beaconColor}; transition:all 0.15s ease;"></div>
           </div>
         `;

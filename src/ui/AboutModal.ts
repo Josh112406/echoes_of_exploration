@@ -38,7 +38,7 @@ export class AboutModal {
 
     this.container.innerHTML = `
       <div class="about-panel" role="dialog" aria-labelledby="about-title" style="background:${PALETTE.deepIndigo}; border:1px solid ${PALETTE.cyanGlow};">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:12px;">
           <h2 id="about-title" style="font-size:15px; font-weight:700; letter-spacing:0.04em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono); margin:0;">ABOUT ECHOES OF EXPLORATION</h2>
           <button id="btn-close-about" class="btn">CLOSE [X]</button>
         </div>

@@ -406,7 +406,7 @@ header.nav {
 /* Cards & Archive Grid */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -417,6 +417,8 @@ header.nav {
   border-radius: 0px; /* Square corners */
   padding: 16px;
   cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
   transition: all 0.2s var(--m-ease-ui);
 }
 
@@ -898,7 +900,11 @@ header.nav {
 
 #title-overlay.is-compact .tmenu-say {
   display: block;
-  top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px));
+  --say-top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px));
+  /* Divide viewport pixel offsets by --ui-zoom so CSS zoom on .tmenu-say does not push it off bottom. */
+  top: calc(var(--say-top) / var(--ui-zoom, 1));
+  max-height: calc((100vh - var(--say-top) - 12px) / var(--ui-zoom, 1));
+  overflow-y: auto;
 }
 
 #title-overlay.is-compact .tmenu-keys,
@@ -1349,8 +1355,16 @@ header.nav {
   max-width: calc(100% - 12px);
 }
 
+.hero-title {
+  font-size: clamp(16px, 4.5vw, 24px);
+  font-family: var(--font-mono);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 /* About & References */
 .about-panel {
+  width: 100%;
   max-width: 720px;
   margin: auto;
   padding: 24px;
@@ -1497,6 +1511,20 @@ html.high-contrast :is(
 ) {
   border-color: #e2e8f0;
   color: #ffffff;
+}
+
+html.high-contrast .btn.btn--primary,
+html.high-contrast .btn.btn--primary:hover {
+  color: #000000;
+}
+
+html.high-contrast .artifact-card.locked {
+  opacity: 0.85;
+  border-color: #94a3b8;
+}
+
+html.high-contrast .tmenu__item[aria-disabled="true"] {
+  color: #94a3b8;
 }
 
 html.high-contrast :is(
