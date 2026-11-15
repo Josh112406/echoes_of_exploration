@@ -23,6 +23,7 @@ const ROBOT_SCALE = 2;
 export class TitleScene extends Phaser.Scene {
   private logoText!: Phaser.GameObjects.Text;
   private cursorText!: Phaser.GameObjects.Text;
+  private taglineText!: Phaser.GameObjects.Text;
   private typedChars: number = 0;
   private typingTimer: number = 0;
   private readonly fullLogo: string = 'ECHOES OF EXPLORATION';
@@ -387,6 +388,7 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0)
       .setShadow(0, 1, PALETTE.emberShadow, 0, false, true);
 
+    this.taglineText = tagline;
     this.tweens.add({ targets: tagline, alpha: 1, duration: 1000, delay: 1400 });
   }
 
@@ -413,6 +415,10 @@ export class TitleScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    const compactTitle = window.matchMedia('(pointer: coarse)').matches && document.getElementById('title-overlay')?.classList.contains('is-compact');
+    this.logoText.setVisible(!compactTitle);
+    this.cursorText.setVisible(!compactTitle);
+    this.taglineText.setVisible(!compactTitle);
     const dt = delta / 1000;
     if (this.talking && this.bubbleText?.active) {
       if (this.talk.tick(dt)) this.bubbleText.setText(this.talk.visible);

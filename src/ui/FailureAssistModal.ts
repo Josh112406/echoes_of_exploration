@@ -21,12 +21,12 @@ export class FailureAssistModal {
     const mg = getMinigameMetaForSite(data.siteId);
 
     this.container.innerHTML = `
-      <div style="max-width:440px; margin:auto; background:${PALETTE.deepIndigo}; border:1px solid ${PALETTE.thrusterOrange}; padding:24px; text-align:center; box-shadow:0 12px 36px rgba(5,7,15,0.95);">
+      <div class="failure-card" style="max-width:440px; margin:auto; background:${PALETTE.deepIndigo}; border:1px solid ${PALETTE.thrusterOrange}; padding:24px; text-align:center; box-shadow:0 12px 36px rgba(5,7,15,0.95);">
         <h3 style="color:${PALETTE.thrusterOrange}; font-size:16px; font-weight:700; margin-bottom:8px; font-family:var(--font-mono); letter-spacing:0.04em;">${mg.code} ANOMALY DETECTED</h3>
         <p style="font-size:12px; font-family:var(--font-mono); color:${PALETTE.lunarCrustCream}; margin-bottom:12px;">${mg.title} exited outside safe parameters.</p>
         <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.slateMuted}; margin-bottom:20px;">Attempt ${data.attempts} on this site</p>
 
-        <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="failure-actions" style="display:flex; flex-direction:column; gap:8px;">
           <button id="btn-try-again" class="btn btn--primary" style="justify-content:center;">TRY AGAIN</button>
           
           ${offerAssist ? `

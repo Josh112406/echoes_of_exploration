@@ -10,7 +10,7 @@ import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUDGauges, HUD_FONT } from '../ui/NineSliceHUD.ts';
 import { CIN_MARGIN, buildLandingTerrain } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
-import { completeMinigame, failMinigame, leaveMinigame, minTouchTarget, missionName } from '../systems/MinigameKit.ts';
+import { completeMinigame, failMinigame, leaveMinigame, minTouchTarget, missionName, showBriefing } from '../systems/MinigameKit.ts';
 import { Practice } from '../systems/Practice.ts';
 
 interface Particle {
@@ -342,6 +342,21 @@ export class LandingScene extends Phaser.Scene {
     const W = CONSTANTS.CANVAS.WIDTH;
     const H = CONSTANTS.CANVAS.HEIGHT;
     const phys = this.engine.physics;
+
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      showBriefing(this, {
+        title: `PRE-FLIGHT AVIONICS // ${missionName(this.siteId).toUpperCase()}`,
+        subtitle: `DIFFICULTY: ${this.config.difficulty.toUpperCase()} · GRAVITY: ${this.config.world === 'moon' ? '1.62 m/s² (MOON)' : '3.71 m/s² (MARS)'}`,
+        lines: [
+          '• HOLD THRUST: FIRE MAIN RETRO-THRUSTERS',
+          '• HOLD THE STEER BUTTONS: TILT AND DRIFT SIDEWAYS',
+          `• SAFE TOUCHDOWN: VY ≤ ${phys.safeVerticalSpeed.toFixed(1)} m/s & VX ≤ ${phys.safeHorizontalSpeed.toFixed(1)} m/s`,
+          '• WATCH FUEL: CONTINUOUS FIRING USES IT QUICKLY',
+        ],
+        cta: 'ENGAGE DESCENT ➔',
+      }, () => this.closeTutorial());
+      return;
+    }
 
     this.tutorialContainer = this.ui(this.add.container(W / 2, H / 2).setDepth(150));
 

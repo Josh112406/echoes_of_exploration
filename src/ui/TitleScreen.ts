@@ -76,7 +76,7 @@ export class TitleScreen {
     const small = this.items.filter((i) => i.size === 'small');
 
     this.container.innerHTML = `
-      <h1 class="sr-only">ECHOES OF EXPLORATION — THE NASA SIGNAL ARCHIVE</h1>
+      <h1 class="tmenu-title sr-only">ECHOES OF EXPLORATION<span>THE NASA SIGNAL ARCHIVE</span></h1>
       <nav class="tmenu ${this.isWorldSelectOpen ? 'tmenu--worlds' : ''}" aria-label="${this.isWorldSelectOpen ? 'Select destination' : 'Main menu'}">
         ${this.isWorldSelectOpen ? '<p class="tmenu__heading">SELECT DESTINATION</p>' : ''}
         <ul class="tmenu__list">

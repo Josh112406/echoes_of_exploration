@@ -260,6 +260,56 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
   const lines = run
     ? [...spec.lines, '• PRACTICE RUN: NO ECHO IS RECOVERED.', `• TRUE STORY: ${run.note.toUpperCase()}`]
     : spec.lines;
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    const overlay = document.createElement('div');
+    overlay.className = 'mobile-briefing';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', spec.title);
+    const card = document.createElement('div');
+    card.className = 'mobile-briefing__card';
+    const heading = document.createElement('h2');
+    heading.textContent = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
+    const subtitle = document.createElement('p');
+    subtitle.className = 'mobile-briefing__subtitle';
+    subtitle.textContent = spec.subtitle;
+    const body = document.createElement('div');
+    body.className = 'mobile-briefing__body';
+    for (const line of lines) {
+      const p = document.createElement('p');
+      p.textContent = line;
+      body.appendChild(p);
+    }
+    const button = document.createElement('button');
+    button.className = 'btn btn--primary';
+    button.textContent = spec.cta;
+    let done = false;
+    const start = () => {
+      if (done) return;
+      done = true;
+      overlay.remove();
+      scene.input.keyboard?.off('keydown-SPACE', start);
+      scene.input.keyboard?.off('keydown-ENTER', start);
+      SoundFX.playClick();
+      onStart();
+    };
+    button.addEventListener('click', start);
+    card.append(heading, subtitle, body, button);
+    overlay.appendChild(card);
+    document.getElementById('game-stage')?.appendChild(overlay);
+    scene.time.delayedCall(150, () => {
+      if (done) return;
+      scene.input.keyboard?.on('keydown-SPACE', start);
+      scene.input.keyboard?.on('keydown-ENTER', start);
+    });
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      done = true;
+      overlay.remove();
+      scene.input.keyboard?.off('keydown-SPACE', start);
+      scene.input.keyboard?.off('keydown-ENTER', start);
+    });
+    return;
+  }
   const c = scene.add.container(W / 2, H / 2).setDepth(150).setScrollFactor(0);
   // Lines are laid out by their wrapped height, so long notes never overlap
   const texts = lines.map((line) => scene.add.text(-164, 0, line, {
