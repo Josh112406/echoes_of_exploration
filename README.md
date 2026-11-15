@@ -20,9 +20,9 @@
 - **Interactive Science Field Tasks:**
   - **Viking Soil Ambiguity ("A Question in the Soil"):** Compare Labeled Release and GCMS results to practice scientific caution.
   - **Voyager 1 RTG Power Budgeting ("Power for the Unknown"):** Balance shrinking radioisotope power across deep-space instruments.
-- **100% Sourced & Offline-Ready:**
-  - Every date, coordinate, photograph, and scientific claim links directly to official NASA, JPL, NSSDCA, ILRS, or PDS primary sources (see [docs/submission-references.md](docs/submission-references.md)).
-  - Zero runtime external API calls and zero third-party cookies; all progress is saved locally in `localStorage`.
+- **100% Sourced, Compliant & Offline-Ready:**
+  - Every date, coordinate, photograph, story fact, and scientific claim links directly to official NASA, JPL, NSSDCA, ILRS, or PDS partner sources mirrored in `src/data/` and separated into NASA Data vs. Space Agency Partner & Other Data in [docs/submission-references.md](docs/submission-references.md).
+  - Zero runtime external API calls and zero third-party cookies; game progress is stored locally in `localStorage` (standard static-host request logs may apply on Vercel). See [docs/accessibility-privacy-legal.md](docs/accessibility-privacy-legal.md).
 
 ## Playing on a Phone
 
