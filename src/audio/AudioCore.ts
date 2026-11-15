@@ -37,7 +37,6 @@ class AudioCoreSystem {
   private duckGain: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   private runningListeners: (() => void)[] = [];
-  private unlockCleanup: (() => void) | null = null;
   private installed = false;
 
   /** True when this browser can make sound at all. */
@@ -116,38 +115,50 @@ class AudioCoreSystem {
   }
 
   private notifyRunning(): void {
-    this.unlockCleanup?.();
-    this.unlockCleanup = null;
     this.runningListeners.forEach((fn) => fn());
   }
 
   /**
-   * Starts audio on the first click, tap or key press (browsers require a gesture),
-   * and pauses it while the tab is hidden.
+   * Starts audio as early as the browser allows, and keeps it running:
+   * - tries straight away (browsers that allow autoplay start the music at once);
+   * - otherwise starts on the first click, tap or key press. Every gesture is
+   *   watched, not just the first one, because the context can be suspended again
+   *   later (phone locked, call received, iOS "interrupted" state) and a swipe or
+   *   a touch on the joystick does not always count as a gesture;
+   * - pauses while the tab is hidden and comes back when it is shown.
    */
   install(): void {
     if (this.installed || typeof window === 'undefined') return;
     this.installed = true;
-    const events = ['pointerdown', 'keydown', 'touchend'] as const;
+    // iPhone/iPad: play through the speaker even with the ring/silent switch on silent,
+    // like a video would (otherwise Web Audio is silently muted).
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) {
+      try { session.type = 'playback'; } catch { /* older Safari */ }
+    }
+
+    const events = ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'touchend', 'click', 'keydown'] as const;
     const unlock = () => {
-      if (!this.supported) return;
+      if (!this.supported || this.running) return;
       const wasRunning = this.running;
       this.context();
-      // If construction/resume succeeded synchronously (not transitioning later via statechange),
-      // stop listening and notify runningListeners once.
-      if (!wasRunning && this.running) {
-        this.notifyRunning();
-      }
-    };
-    this.unlockCleanup = () => {
-      for (const ev of events) window.removeEventListener(ev, unlock, { capture: true });
+      // Resumed synchronously (no statechange will follow): tell listeners now
+      if (!wasRunning && this.running) this.notifyRunning();
     };
     for (const ev of events) window.addEventListener(ev, unlock, { capture: true, passive: true });
-    document.addEventListener('visibilitychange', () => {
+
+    // Autoplay: allowed when the browser already trusts this site (returning players,
+    // Firefox/desktop settings). If it is not allowed the context just waits, suspended.
+    if (this.supported) this.context();
+
+    const wake = () => {
       if (!this.ctx) return;
       if (document.hidden) this.ctx.suspend().catch(() => {});
-      else this.ctx.resume().catch(() => {});
-    });
+      else if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('pageshow', wake);
+    window.addEventListener('focus', wake);
   }
 
   // ---------------------------------------------------------------------------

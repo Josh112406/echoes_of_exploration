@@ -14,6 +14,29 @@ export type FrameVariant = 'panel' | 'primary' | 'secondary' | 'ghost' | 'amber'
 /** Shared pixel font + spacing used by every in-canvas label (matches the title screen). */
 export const HUD_FONT = 'StillOutTherePixel, monospace';
 
+/** Touch screens (phones, tablets): the canvas is shown small, so HUD text is drawn larger. */
+export const TOUCH_UI = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
+/**
+ * HUD font size: as designed on desktop, larger on touch screens. The pixel font
+ * draws "C" like "O" at 10-11px, so touch sizes skip those (7 -> 9, 9 -> 12).
+ */
+export function hudPx(px: number): string {
+  if (!TOUCH_UI) return `${px}px`;
+  const up = px <= 8 ? 9 : Math.max(12, px + 3);
+  return `${up}px`;
+}
+
+/** Steps a label's font size down (not below minPx) until it fits maxW, then truncates as a last resort. */
+export function shrinkToFit(t: Phaser.GameObjects.Text, maxW: number, minPx = 7): Phaser.GameObjects.Text {
+  let px = parseInt(String(t.style.fontSize), 10) || minPx;
+  while (t.width > maxW && px > minPx) {
+    px--;
+    t.setFontSize(px);
+  }
+  return fitText(t, maxW);
+}
+
 /** Truncate a single-line HUD text with an ellipsis until it fits within maxW pixels. */
 export function fitText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
   const full = t.text;

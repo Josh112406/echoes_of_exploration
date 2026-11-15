@@ -29,6 +29,13 @@ with sync_playwright() as p:
             g.scene.start('SiteScene');
         }""")
         page.wait_for_function("window.__PHASER_GAME__.scene.getScene('SiteScene').robot")
+        # Phones held upright are asked to rotate first; carry on upright for this check
+        if mobile and height > width:
+            assert page.locator('#rotate-prompt').is_visible()
+            page.locator('#rotate-dismiss').tap()
+            assert not page.locator('#rotate-prompt').is_visible()
+        elif mobile:
+            assert not page.locator('#rotate-prompt').is_visible()
         if mobile:
             assert not page.locator('.mobile-joystick-label').is_visible()
             box = page.locator('#mobile-site-actions').bounding_box()
@@ -37,7 +44,7 @@ with sync_playwright() as p:
             assert stick['x'] + stick['width'] < box['x']
             page.locator('#mobile-map').tap()
             assert page.locator('.exploration-nav__you').is_visible()
-            page.locator('#btn-close-hub-mobile').tap()
+            page.locator('#btn-close-hub').tap()
             assert not page.locator('#hub-overlay').is_visible()
         else:
             assert not page.locator('#mobile-game-controls').is_visible()

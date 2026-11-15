@@ -4,7 +4,7 @@ import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant, fitText } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, fitText, hudPx, shrinkToFit } from '../ui/NineSliceHUD.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { Practice } from './Practice.ts';
 import { fieldTaskForEntry } from '../data/fieldTasks.ts';
@@ -198,10 +198,10 @@ export function touchButton(
   zone.on('pointerup', onUp);
   zone.on('pointerout', onUp);
   zone.on('pointercancel', onUp);
-  const text = scene.add.text(x + w / 2, y + h / 2, label, {
-    fontFamily: HUD_FONT, fontSize: '7px', letterSpacing: 1,
+  const text = shrinkToFit(scene.add.text(x + w / 2, y + h / 2, label, {
+    fontFamily: HUD_FONT, fontSize: hudPx(7), letterSpacing: 1,
     color: variant === 'primary' ? PALETTE.spaceBlack : PALETTE.lunarCrustCream,
-  }).setOrigin(0.5).setDepth(102).setScrollFactor(0);
+  }).setOrigin(0.5).setDepth(102).setScrollFactor(0), w - 6);
   return { zone, label: text };
 }
 
@@ -213,8 +213,8 @@ export function exitButton(scene: Phaser.Scene, label: string, onExit: () => voi
   const hit = minTouchTarget(scene);
   const zone = scene.add.zone(W - 55, Math.max(19, hit / 2), Math.max(86, hit), Math.max(22, hit))
     .setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
-  const txt = scene.add.text(W - 55, 19, label, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarHighlight, letterSpacing: 1 })
-    .setOrigin(0.5).setDepth(102).setScrollFactor(0);
+  const txt = shrinkToFit(scene.add.text(W - 55, 19, label, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarHighlight, letterSpacing: 1 })
+    .setOrigin(0.5).setDepth(102).setScrollFactor(0), 80);
   zone.on('pointerdown', () => {
     SoundFX.playClick();
     if (Practice.run) leaveMinigame(scene, 'exited');
@@ -233,7 +233,7 @@ export class Banner {
   constructor(scene: Phaser.Scene, y: number, reduced: boolean) {
     this.scene = scene;
     this.reduced = reduced;
-    this.text = scene.add.text(MG_W / 2, y, '', { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.cyanLaser, letterSpacing: 2 })
+    this.text = scene.add.text(MG_W / 2, y, '', { fontFamily: HUD_FONT, fontSize: hudPx(9), color: PALETTE.cyanLaser, letterSpacing: 2 })
       .setOrigin(0.5).setDepth(140).setScrollFactor(0).setAlpha(0)
       .setShadow(0, 1, PALETTE.spaceBlack, 0, false, true);
   }

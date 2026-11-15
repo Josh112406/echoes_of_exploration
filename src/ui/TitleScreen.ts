@@ -2,11 +2,13 @@ import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { typeInto } from './Talk.ts';
+import { Fullscreen } from './DeviceFit.ts';
 
 const MOON_TOTAL = 8;
 const MARS_TOTAL = 9;
 const ELSEWHERE_TOTAL = 6;
 const TOTAL = MOON_TOTAL + MARS_TOTAL + ELSEWHERE_TOTAL;
+const TOUCH = window.matchMedia('(pointer: coarse)').matches;
 
 /** One option in the title menu, plus what UNIT-7 says while it is highlighted. */
 interface Item {
@@ -57,8 +59,24 @@ export class TitleScreen {
 
     // Game-style menu navigation: arrows / WASD move the cursor, Enter / Space confirm
     window.addEventListener('keydown', (e: KeyboardEvent) => this.onKeyDown(e));
+    // Keep the FULLSCREEN / WINDOW label honest (the player can also leave with Back or Esc)
+    Fullscreen.onChange(() => {
+      const label = this.container.querySelector('#btn-fullscreen .tmenu__label');
+      if (label) label.textContent = Fullscreen.active() ? 'WINDOW' : 'FULLSCREEN';
+    });
     // Phaser resizes the canvas on its own resize handler; measure after it
     window.addEventListener('resize', () => window.setTimeout(() => this.layout(), 80));
+    // The first layout can run before Phaser has fitted the canvas (and fullscreen or
+    // browser bars can resize it later without a window resize): follow the canvas itself.
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(() => this.layout());
+      const watch = () => {
+        const canvas = document.querySelector('#game-container canvas');
+        if (canvas) observer.observe(canvas);
+        else requestAnimationFrame(watch);
+      };
+      watch();
+    }
   }
 
   render(): void {
@@ -135,6 +153,11 @@ export class TitleScreen {
       endingUnlocked
         ? { id: 'btn-replay-ending', label: 'ENDING', size: 'small', hint: 'Play the final transmission again.' }
         : { id: 'btn-ending-locked', label: 'ENDING', size: 'small', disabled: true, hint: `The final transmission opens after all ${TOTAL} echoes.` },
+      // Touch screens only (desktop has F11), and only where the browser can really do it
+      // (not iPhone Safari), so it never breaks the layout
+      ...(TOUCH && Fullscreen.supported()
+        ? [{ id: 'btn-fullscreen', label: Fullscreen.active() ? 'WINDOW' : 'FULLSCREEN', size: 'small' as const, hint: 'Fill the whole screen. No browser bars, a bigger picture.' }]
+        : []),
     ];
   }
 
@@ -212,13 +235,14 @@ export class TitleScreen {
     this.hintTimer = window.setTimeout(() => {
       if (this.container.classList.contains('hidden')) return;
       const hint = item?.hint ?? '';
-      // Small screens: the scene (and UNIT-7's bubble) is too small to read, so the line
-      // is typed under the menu instead, at the same talking pace.
-      TitleScreen.currentHint = this.compact ? '' : hint;
+      // Small screens and touch screens: the scene (and UNIT-7's bubble) is too small to read,
+      // so the line is typed in a dialogue box instead, at the same talking pace.
+      const domSay = this.compact || TOUCH;
+      TitleScreen.currentHint = domSay ? '' : hint;
       EventBus.emit(EVENTS.TITLE_HINT, TitleScreen.currentHint);
       const say = this.container.querySelector<HTMLElement>('.tmenu-say__text');
       this.cancelTyping();
-      if (say) this.cancelTyping = this.compact ? typeInto(say, hint, { instant: GameState.getState().settings.reducedMotion }) : () => {};
+      if (say) this.cancelTyping = domSay ? typeInto(say, hint, { instant: GameState.getState().settings.reducedMotion }) : () => {};
     }, 140);
   }
 
@@ -228,7 +252,7 @@ export class TitleScreen {
    * menu above the scene, UNIT-7's dialogue box below it.
    */
   private layout(): void {
-    const canvas = document.querySelector<HTMLCanvasElement>('#game-stage canvas');
+    const canvas = document.querySelector<HTMLCanvasElement>('#game-container canvas');
     const box = this.container.getBoundingClientRect();
     if (!canvas || box.height === 0) return;
     const r = canvas.getBoundingClientRect();
@@ -390,6 +414,11 @@ export class TitleScreen {
       SoundFX.playClick();
       this.leave();
       EventBus.emit(EVENTS.SHOW_FINALE);
+    });
+
+    on('btn-fullscreen', () => {
+      SoundFX.playClick();
+      void Fullscreen.toggle();
     });
 
     on('btn-replay-intro', () => {

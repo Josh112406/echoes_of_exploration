@@ -17,7 +17,7 @@ import { Soundscape } from '../audio/Soundscape.ts';
 import { minTouchTarget } from '../systems/MinigameKit.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, TOUCH_UI, hudPx } from '../ui/NineSliceHUD.ts';
 import { Unit7Voice } from '../ui/Unit7Voice.ts';
 import { MobileJoystick, bindPressAction } from '../ui/MobileJoystick.ts';
 import { StoryDirector } from '../systems/StoryDirector.ts';
@@ -141,6 +141,7 @@ export class SiteScene extends Phaser.Scene {
   private ringPhase: number = 0;
   private facing: 1 | -1 = 1;
   private hudProgressText!: Phaser.GameObjects.Text;
+  private hudProgressBox!: Phaser.GameObjects.Graphics;
 
   // Zero-g flight (Elsewhere): ion pack instead of treads
   private flying: boolean = false;
@@ -300,7 +301,7 @@ export class SiteScene extends Phaser.Scene {
     // Proximity prompt graphics & text (world space)
     this.promptBg = this.add.graphics().setDepth(30).setVisible(false).setScale(WORLD_TEXT_SCALE);
     this.promptText = this.add.text(0, 0, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 1,
@@ -741,7 +742,7 @@ export class SiteScene extends Phaser.Scene {
     const label = this.add.container(coord.x, coord.y + 11).setDepth(3000).setAlpha(0).setVisible(false).setScale(WORLD_TEXT_SCALE);
     const labelPlate = this.add.graphics();
     const labelText = this.add.text(0, 0, coord.name.toUpperCase(), {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 1,
@@ -769,7 +770,7 @@ export class SiteScene extends Phaser.Scene {
     const w = Math.ceil(m.labelText.width) + 20;
     m.labelText.setX(4);
     m.labelPlate.clear();
-    NineSliceHUD.drawFrame(m.labelPlate, -w / 2, -7, w, 14, variant);
+    NineSliceHUD.drawFrame(m.labelPlate, -w / 2, TOUCH_UI ? -9 : -7, w, TOUCH_UI ? 18 : 14, variant);
     NineSliceHUD.drawStatusDot(m.labelPlate, -w / 2 + 5, -1, dot);
 
     m.glowDisk.setVisible(isActiveTarget).setTint(PALETTE.cyanGlowHex).setAlpha(0.55);
@@ -813,27 +814,31 @@ export class SiteScene extends Phaser.Scene {
       .setScrollFactor(0).setDepth(101);
 
     this.hudTargetText = this.add.text(38, 22, 'RADAR: SEARCHING...', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.cyanLaser,
-      letterSpacing: 2,
+      letterSpacing: TOUCH_UI ? 1 : 2,
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
-    // 2. Top-Right Progress panel + MAP & MENU buttons
-    const rightBox = this.add.graphics().setScrollFactor(0).setDepth(100);
-    NineSliceHUD.drawFrame(rightBox, W - 298, 10, 182, 24, 'panel');
-    NineSliceHUD.drawStatusDot(rightBox, W - 289, 21);
-    NineSliceHUD.drawFrame(rightBox, W - 110, 10, 44, 24, 'secondary');
-    NineSliceHUD.drawFrame(rightBox, W - 62, 10, 50, 24, 'secondary');
-
+    // 2. Top-Right Progress panel + MAP & MENU buttons.
+    // Touch screens already have big MAP / MENU buttons beside the joystick, so the
+    // canvas copies are left out there and the progress panel takes the corner.
+    this.hudProgressBox = this.add.graphics().setScrollFactor(0).setDepth(100);
     this.hudProgressText = this.add.text(W - 282, 22, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
-      letterSpacing: 2,
+      letterSpacing: TOUCH_UI ? 1 : 2,
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
     this.updateHUDProgress(world);
+    if (TOUCH_UI) {
+      this.bindTouchMapMenu(world);
+      return;
+    }
+    const rightBox = this.add.graphics().setScrollFactor(0).setDepth(100);
+    NineSliceHUD.drawFrame(rightBox, W - 110, 10, 44, 24, 'secondary');
+    NineSliceHUD.drawFrame(rightBox, W - 62, 10, 50, 24, 'secondary');
 
     // Map button
     const hitH = Math.max(24, minTouchTarget(this));
@@ -885,6 +890,18 @@ export class SiteScene extends Phaser.Scene {
     menuBtn.on('pointerout', () => menuText.setColor(PALETTE.lunarHighlight));
   }
 
+  /** Touch: the on-screen MAP / MENU buttons (index.html) drive the same actions. */
+  private bindTouchMapMenu(world: WorldId): void {
+    const keep = () => {
+      if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+      SoundFX.playClick();
+    };
+    const mobileMap = document.getElementById('mobile-map');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMap) this.shutdownCleanups.push(bindPressAction(mobileMap, () => { keep(); EventBus.emit(EVENTS.NAVIGATE_TO_HUB); }));
+    if (mobileMenu) this.shutdownCleanups.push(bindPressAction(mobileMenu, () => { keep(); EventBus.emit(EVENTS.SHOW_TITLE); }));
+  }
+
   private setRadarText(text: string): void {
     if (text === this.hudCompassLast) return;
     this.hudCompassLast = text;
@@ -899,6 +916,14 @@ export class SiteScene extends Phaser.Scene {
     const total = GameState.getChronoList(world).length;
     const worldName = world === 'moon' ? 'MOON' : world === 'mars' ? 'MARS' : 'DEEP SPACE';
     this.hudProgressText.setText(`${worldName} // ${recovered}/${total} FOUND`);
+    // Desktop: fixed slot left of MAP / MENU. Touch: sized to the text, in the corner.
+    const W = CONSTANTS.CANVAS.WIDTH;
+    const boxW = TOUCH_UI ? Math.ceil(this.hudProgressText.width) + 28 : 182;
+    const boxX = TOUCH_UI ? W - 12 - boxW : W - 298;
+    this.hudProgressText.setX(boxX + 16);
+    this.hudProgressBox.clear();
+    NineSliceHUD.drawFrame(this.hudProgressBox, boxX, 10, boxW, 24, 'panel');
+    NineSliceHUD.drawStatusDot(this.hudProgressBox, boxX + 9, 21);
   }
 
   private createTutorialToast(): void {
@@ -906,15 +931,19 @@ export class SiteScene extends Phaser.Scene {
       .setScrollFactor(0).setDepth(110);
 
     const bg = this.add.graphics();
-    NineSliceHUD.drawFrame(bg, -160, -10, 320, 20, 'muted');
     this.tutorialContainer.add(bg);
 
     const verb = this.flying ? 'FLY' : 'DRIVE';
-    const t = this.add.text(0, 0, `WASD / DRAG TO ${verb} · [Q] TALK TO UNIT-7 · FOLLOW THE CYAN ARROW`, {
-      fontSize: '7px',
+    const tip = TOUCH_UI
+      ? `STICK TO ${verb} · FOLLOW THE CYAN ARROW`
+      : `WASD / DRAG TO ${verb} · [Q] TALK TO UNIT-7 · FOLLOW THE CYAN ARROW`;
+    const t = this.add.text(0, 0, tip, {
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarCrustCream,
     }).setOrigin(0.5);
+    const tw = Math.max(320, Math.ceil(t.width) + 24);
+    NineSliceHUD.drawFrame(bg, -tw / 2, TOUCH_UI ? -12 : -10, tw, TOUCH_UI ? 24 : 20, 'muted');
     this.tutorialContainer.add(t);
   }
 
@@ -1206,7 +1235,7 @@ export class SiteScene extends Phaser.Scene {
       const boxW = Math.max(120, Math.ceil(this.promptText.width) + 16);
       this.promptBg.setDepth(3100);
       this.promptBg.setPosition(px, py);
-      NineSliceHUD.drawFrame(this.promptBg, -boxW / 2, -7, boxW, 16, variant);
+      NineSliceHUD.drawFrame(this.promptBg, -boxW / 2, TOUCH_UI ? -9 : -7, boxW, TOUCH_UI ? 20 : 16, variant);
 
       if (!blocked && Phaser.Input.Keyboard.JustDown(this.keyE)) {
         this.interact(this.nearestMarker.id);
