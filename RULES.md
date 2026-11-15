@@ -67,12 +67,12 @@ Every feature and design choice must support the five official NASA judging crit
 
 | Member | Role | Owned Directories / Deliverables |
 |---|---|---|
-| **Member 1 (Coder 1)** | Web Platform Lead | `src/pages/`, `src/components/`, `src/context/`, `src/App.tsx`, routing (`/`, `/archive`, `/about`) & deployment |
-| **Member 2 (Coder 2)** | Integration Lead | Integrates the game into `/game` (`src/game/`), wires datasets and assets into the application |
-| **Member 3** | Asset Maker | `public/assets/`, `public/images/` — UI graphics, mission badges, textures, and synthesized audio SFX |
-| **Member 4** | Game & Story Creator | Creates the game mechanics/content (`src/game/`) and narrative scripts/science cards (`src/text/`) |
+| **Member 1 (Coder 1)** | Web Platform & UI Lead | `src/ui/`, `src/core/`, `index.html`, accessible overlays (`TitleScreen`, `HubMap`, `ArchiveModal`, `EntryReaderModal`, `FieldTaskModal`, `SettingsModal`, `AboutModal`) & deployment |
+| **Member 2 (Coder 2)** | Engine & Integration Lead | `src/scenes/`, `src/systems/`, `src/main.ts`, Phaser 3 campaign & 60 Hz minigame integration |
+| **Member 3** | Asset & Audio Maker | `src/audio/`, `public/assets/`, `src/systems/SpriteArt.ts` — procedural pixel art, maps, and Web Audio API SFX/music |
+| **Member 4** | Game & Story Creator | `src/data/story.ts`, `src/data/fieldTasks.ts`, `src/data/finale.ts`, `data/cinematics/` — UNIT-7 narrative scripts, quizzes, and science field tasks |
 | **Member 5** | Pitch & Submission Lead | Builds the 7-slide presentation deck / 30s demo video and manages the Space Apps submission portal |
-| **Member 6** | Dataset Manager | `src/data/` (`missions.json`, `sources.json`, `encounters.json`), coordinates, and References ledger |
+| **Member 6** | Dataset Manager | `src/data/` (`artifacts.json`, `missions.json`, `sources.json`, `encounters.json`), coordinates, and `docs/submission-references.md` ledger |
 
 ---
 

@@ -1,6 +1,7 @@
 import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { getMinigameMetaForSite } from '../data/minigames.ts';
+import { fieldTaskForEntry } from '../data/fieldTasks.ts';
 import { PALETTE } from './theme.ts';
 
 export class FailureAssistModal {
@@ -56,9 +57,11 @@ export class FailureAssistModal {
     this.container.querySelector('#btn-skip-challenge')?.addEventListener('click', () => {
       this.container.classList.add('hidden');
       GameState.unlockEntry(data.siteId, true);
-      // Return to the exploration view; the briefing plays over it.
+      // Return to the exploration view; run the field task (if any) before opening the record.
       EventBus.emit(EVENTS.NAVIGATE_TO_SITE, data.siteId);
-      EventBus.emit(EVENTS.OPEN_ENTRY, data.siteId);
+      const task = fieldTaskForEntry(data.siteId);
+      if (task) EventBus.emit(EVENTS.OPEN_FIELD_TASK, task.id, () => EventBus.emit(EVENTS.OPEN_ENTRY, data.siteId));
+      else EventBus.emit(EVENTS.OPEN_ENTRY, data.siteId);
     });
 
     this.container.querySelector('#btn-back-to-site')?.addEventListener('click', () => {
