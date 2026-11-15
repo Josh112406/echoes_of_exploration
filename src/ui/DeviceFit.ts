@@ -13,6 +13,7 @@
  */
 import Phaser from 'phaser';
 import { PixelArtGenerator } from '../systems/PixelArtGenerator.ts';
+import { AudioCore } from '../audio/AudioCore.ts';
 
 type FsDocument = Document & {
   webkitFullscreenEnabled?: boolean;
@@ -151,4 +152,33 @@ export function installRotatePrompt(game: Phaser.Game): void {
   update();
   // First rendered frame: the loop is now running and can be paused
   if (!game.isRunning) game.events.once(Phaser.Core.Events.POST_RENDER, update);
+}
+
+/**
+ * "Tap for sound": if the browser has stopped the audio and will not let it
+ * restart on its own (some phones after fullscreen, a call or switching apps,
+ * or when the only touches were joystick drags), a small button appears. A tap
+ * on a real button always counts, so sound can always be brought back.
+ * It never shows before the player's first tap, or when sound is switched off.
+ */
+export function installSoundPrompt(): void {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'sound-prompt';
+  button.className = 'sound-prompt';
+  button.hidden = true;
+  button.innerHTML = '<span aria-hidden="true">🔇</span> TAP FOR SOUND';
+  button.addEventListener('click', () => {
+    AudioCore.kick();
+    window.setTimeout(check, 300);
+  });
+  document.getElementById('app')?.appendChild(button);
+
+  let strikes = 0;
+  const check = () => {
+    // Two checks in a row, so a normal resume in progress never flashes the button
+    strikes = AudioCore.blocked ? strikes + 1 : 0;
+    button.hidden = strikes < 2;
+  };
+  window.setInterval(check, 1000);
 }

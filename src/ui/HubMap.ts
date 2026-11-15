@@ -130,13 +130,16 @@ export class HubMap {
     const robot = art('robot', () => PixelArtGenerator.createRobotCanvas());
     const position = GameState.getRobotPosition(world);
     const nextId = GameState.getNextTarget(world);
-    const next = coords.find((c) => c.id === nextId);
+    const spot = spreadPins(coords, WORLD_WIDTH, WORLD_HEIGHT);
+    const nextC = coords.find((c) => c.id === nextId);
+    const next = nextC ? spot.get(nextC.id) : undefined;
 
     const pins = coords.map((c, i) => {
       const state = this.siteState(c.id);
       const sprite = art(`hw_${c.id}`, () => PixelArtGenerator.createHardwareSprite(c.id, world));
+      const at = spot.get(c.id) ?? c;
       return `<button type="button" class="hub-pin exploration-nav__site is-${state}" data-entry-id="${c.id}"
-          style="left:${pct(c.x, WORLD_WIDTH)};top:${pct(c.y, WORLD_HEIGHT)}"
+          style="left:${pct(at.x, WORLD_WIDTH)};top:${pct(at.y, WORLD_HEIGHT)}"
           aria-label="${i + 1}. ${esc(c.name)} (${state === 'done' ? 'recovered' : state === 'next' ? 'next echo' : 'locked'})">
           <img src="${sprite}" alt="" draggable="false" /><span class="hub-pin__num">${state === 'done' ? '✓' : i + 1}</span></button>`;
     }).join('');
@@ -286,4 +289,34 @@ export class HubMap {
     this.container.classList.add('hidden');
     EventBus.emit(EVENTS.START_LANDING, siteId);
   }
+}
+
+/**
+ * Map positions for the pins. Sites that really are neighbours (Apollo 12 landed
+ * beside Surveyor 3) are pushed apart a little so each one can be tapped.
+ */
+function spreadPins(coords: WorldArtifactCoord[], worldW: number, worldH: number): Map<string, { x: number; y: number }> {
+  // Work in "% of map width" on both axes (the map is 3:2)
+  const toW = (y: number) => (y / worldH) * (100 / 1.5);
+  const pts = coords.map((c) => ({ id: c.id, x: (c.x / worldW) * 100, y: toW(c.y) }));
+  const minD = 11; // about one pin wide on the narrowest (phone upright) map
+  for (let pass = 0; pass < 6; pass++) {
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const a = pts[i], b = pts[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.hypot(dx, dy);
+        if (d >= minD) continue;
+        if (d < 0.01) { dx = 1; dy = 0; d = 1; }
+        const push = (minD - d) / 2;
+        a.x -= (dx / d) * push; a.y -= (dy / d) * push;
+        b.x += (dx / d) * push; b.y += (dy / d) * push;
+      }
+    }
+  }
+  const clamp = (v: number, max: number) => Math.max(4, Math.min(max - 4, v));
+  return new Map(pts.map((p) => [p.id, {
+    x: (clamp(p.x, 100) / 100) * worldW,
+    y: (clamp(p.y, 100 / 1.5) / (100 / 1.5)) * worldH,
+  }]));
 }

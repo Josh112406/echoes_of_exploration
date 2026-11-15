@@ -7,7 +7,7 @@ import { getLevelConfig, ALL_LEVELS } from '../data/levels.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUDGauges, HUD_FONT } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUDGauges, HUD_FONT, hudPx, shrinkToFit } from '../ui/NineSliceHUD.ts';
 import { CIN_MARGIN, buildLandingTerrain } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
 import { completeMinigame, failMinigame, fitHeaderText, fitText, leaveMinigame, minTouchTarget, missionName, showBriefing } from '../systems/MinigameKit.ts';
@@ -463,12 +463,12 @@ export class LandingScene extends Phaser.Scene {
       if (Practice.run) leaveMinigame(this, 'exited');
       else this.scene.start('SiteScene');
     });
-    const exitText = this.ui(this.add.text(W - 53, 21, 'SURFACE MAP', {
-      fontSize: '7px',
+    const exitText = this.ui(shrinkToFit(this.add.text(W - 53, 21, 'SURFACE MAP', {
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 2,
-    }).setOrigin(0.5).setDepth(102));
+    }).setOrigin(0.5).setDepth(102), 80));
     exitZone.on('pointerover', () => exitText.setColor(PALETTE.cyanLaser));
     exitZone.on('pointerout', () => exitText.setColor(PALETTE.lunarHighlight));
 
@@ -491,7 +491,7 @@ export class LandingScene extends Phaser.Scene {
       zone.on('pointerout', () => { this.touchSteer = 0; });
       zone.on('pointercancel', () => { this.touchSteer = 0; });
       this.ui(this.add.text(x + steerW / 2, btnY + buttonH / 2, label, {
-        fontSize: mobile ? '9px' : '7px',
+        fontSize: mobile ? '12px' : '7px',
         fontFamily: HUD_FONT,
         color: mobile ? PALETTE.lunarHighlight : PALETTE.slateMuted,
         letterSpacing: 2,
@@ -508,7 +508,7 @@ export class LandingScene extends Phaser.Scene {
     thrustZone.on('pointerout', () => { this.touchThrust = false; });
     thrustZone.on('pointercancel', () => { this.touchThrust = false; });
     this.ui(this.add.text(W / 2, btnY + buttonH / 2, mobile ? 'THRUST' : 'THRUST [SPACE / W]', {
-      fontSize: mobile ? '9px' : '7px',
+      fontSize: mobile ? '12px' : '7px',
       fontFamily: HUD_FONT,
       color: PALETTE.spaceBlack,
       letterSpacing: 2,

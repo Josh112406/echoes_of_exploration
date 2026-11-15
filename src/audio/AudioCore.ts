@@ -38,6 +38,10 @@ class AudioCoreSystem {
   private noise: AudioBuffer | null = null;
   private runningListeners: (() => void)[] = [];
   private installed = false;
+  /** The player has clicked, tapped or pressed a key at least once. */
+  private interacted = false;
+  /** Audio has played at least once (so it is the browser, not the player, that stopped it). */
+  private everRan = false;
 
   /** True when this browser can make sound at all. */
   get supported(): boolean {
@@ -59,11 +63,35 @@ class AudioCoreSystem {
       this.ctx = new Ctor({ latencyHint: 'playback' });
       this.build(this.ctx);
       this.ctx.addEventListener('statechange', () => {
-        if (this.running) this.notifyRunning();
+        if (this.running) {
+          this.everRan = true;
+          this.notifyRunning();
+        }
       });
     }
     if (this.ctx && this.ctx.state === 'suspended' && !document.hidden) this.ctx.resume().catch(() => {});
     return this.ctx;
+  }
+
+  /**
+   * True when sound should be playing but the browser is holding it back
+   * (it needs one more tap). Used by the "tap for sound" button.
+   */
+  get blocked(): boolean {
+    return this.supported && this.interacted && !document.hidden && !this.running
+      && GameState.getState().settings.audioEnabled;
+  }
+
+  /** Tries to start or restart audio. Call it from a click or tap whenever possible. */
+  kick(): void {
+    if (!this.supported || document.hidden) return;
+    if (this.ctx?.state === 'closed') return;
+    const wasRunning = this.running;
+    this.context();
+    if (!wasRunning && this.running) {
+      this.everRan = true;
+      this.notifyRunning();
+    }
   }
 
   /** Runs `fn` every time audio (re)starts, e.g. after the first click. */
@@ -139,11 +167,8 @@ class AudioCoreSystem {
 
     const events = ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'touchend', 'click', 'keydown'] as const;
     const unlock = () => {
-      if (!this.supported || this.running) return;
-      const wasRunning = this.running;
-      this.context();
-      // Resumed synchronously (no statechange will follow): tell listeners now
-      if (!wasRunning && this.running) this.notifyRunning();
+      this.interacted = true;
+      if (!this.running) this.kick();
     };
     for (const ev of events) window.addEventListener(ev, unlock, { capture: true, passive: true });
 
@@ -151,14 +176,30 @@ class AudioCoreSystem {
     // Firefox/desktop settings). If it is not allowed the context just waits, suspended.
     if (this.supported) this.context();
 
-    const wake = () => {
-      if (!this.ctx) return;
-      if (document.hidden) this.ctx.suspend().catch(() => {});
-      else if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+    // Pause while the page is hidden, play again when it is shown. Entering fullscreen
+    // or rotating a phone can flip "hidden" off and on very quickly, so the visibility
+    // is checked again once a suspend has finished (otherwise audio could stay off).
+    const sync = () => {
+      const ctx = this.ctx;
+      if (!ctx || ctx.state === 'closed') return;
+      if (document.hidden) {
+        if (ctx.state === 'running') ctx.suspend().then(sync, () => {});
+      } else if (ctx.state !== 'running') {
+        ctx.resume().catch(() => {});
+      }
     };
-    document.addEventListener('visibilitychange', wake);
-    window.addEventListener('pageshow', wake);
-    window.addEventListener('focus', wake);
+    document.addEventListener('visibilitychange', sync);
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    window.addEventListener('pageshow', sync);
+    window.addEventListener('focus', sync);
+    window.addEventListener('orientationchange', sync);
+    window.addEventListener('resize', sync);
+    // Watchdog: phones can stop audio on their own (calls, other apps, audio route
+    // changes, iOS "interrupted"). Once it has played, keep asking for it back.
+    window.setInterval(() => {
+      if (this.everRan && !document.hidden && this.ctx && this.ctx.state !== 'running') sync();
+    }, 1000);
   }
 
   // ---------------------------------------------------------------------------

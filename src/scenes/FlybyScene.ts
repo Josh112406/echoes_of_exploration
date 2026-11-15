@@ -4,7 +4,7 @@ import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, TOUCH_UI } from '../ui/NineSliceHUD.ts';
 import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import { MobileJoystick, bindHeldAction, bindPressAction } from '../ui/MobileJoystick.ts';
@@ -124,6 +124,11 @@ export class FlybyScene extends Phaser.Scene {
   private hud!: Phaser.GameObjects.Graphics;
   private readout!: Phaser.GameObjects.Text;
   private targetLabels: Phaser.GameObjects.Text[] = [];
+  private get listLayout(): { y: number; w: number; h: number; row: number; readY: number; barX: number } {
+    if (!TOUCH_UI) return { y: 252, w: 230, h: 72, row: 14, readY: 304, barX: 140 };
+    const y = 38, row = 15, readY = y + 10 + this.targets.length * row;
+    return { y, w: 300, h: readY - y + 16, row, readY, barX: 196 };
+  }
   private sparks!: Particles;
   private plume!: Particles;
   private banner!: Banner;
@@ -486,13 +491,15 @@ export class FlybyScene extends Phaser.Scene {
   private createHUD(name: string): void {
     const f = this.add.graphics().setDepth(100);
     NineSliceHUD.drawFrame(f, 12, 8, 330, 24, 'panel');
-    NineSliceHUD.drawFrame(f, 12, 252, 230, 72, 'panel');
+    // Phones: the target list sits top-left, clear of the AIM stick in the bottom-left corner
+    const L = this.listLayout;
+    NineSliceHUD.drawFrame(f, 12, L.y, L.w, L.h, 'panel');
     NineSliceHUD.drawStatusDot(f, 20, 19);
     fitText(hudText(this, 28, 16, `${this.theme.title} // ${name.toUpperCase()}`, PALETTE.cyanLaser), 306);
-    this.targetLabels = this.targets.map((tg, i) => hudText(this, 46, 260 + i * 14, tg.name, PALETTE.lunarCrustCream));
-    this.readout = hudText(this, 20, 304, '', PALETTE.lunarDustLight);
+    this.targetLabels = this.targets.map((tg, i) => hudText(this, 46, L.y + 8 + i * L.row, tg.name, PALETTE.lunarCrustCream));
+    this.readout = hudText(this, 20, L.readY, '', PALETTE.lunarDustLight);
     this.hud = this.add.graphics().setDepth(101);
-    this.banner = new Banner(this, 54, this.reduced);
+    this.banner = new Banner(this, TOUCH_UI ? 130 : 54, this.reduced);
     exitButton(this, 'SURFACE MAP', () => this.scene.start('SiteScene'));
     if (!window.matchMedia('(pointer: coarse)').matches) {
       touchButton(this, W - 230, H - 32, 100, 24, 'DUST COVER', 'ghost', () => { this.touchShield = true; }, () => { this.touchShield = false; });
@@ -503,8 +510,9 @@ export class FlybyScene extends Phaser.Scene {
   private renderHUD(): void {
     const g = this.hud;
     g.clear();
+    const L = this.listLayout;
     this.targets.forEach((tg, i) => {
-      const y = 260 + i * 14;
+      const y = L.y + 8 + i * L.row;
       // Thumbnail pip: filled once captured
       g.fillStyle(tg.captured ? PALETTE.beaconGoldHex : PALETTE.shadowNavyHex, 1).fillRect(22, y, 16, 9);
       g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(22, y, 16, 1);
@@ -513,7 +521,7 @@ export class FlybyScene extends Phaser.Scene {
       this.targetLabels[i].setText(`${tg.name} · ${state}`)
         .setColor(tg.captured ? PALETTE.beaconGold : tg.visible && tg.lit ? PALETTE.cyanLaser : PALETTE.lunarDustLight);
     });
-    drawSegBar(g, 140, 302, 96, 9, this.storage / this.storageMax, PALETTE.lunarCrustCreamHex, { segments: this.storageMax, warnBelow: 0.3 });
+    drawSegBar(g, L.barX, L.readY - 2, 96, 9, this.storage / this.storageMax, PALETTE.lunarCrustCreamHex, { segments: this.storageMax, warnBelow: 0.3 });
     const ca = Math.round((this.T / 2 - this.t));
     this.readout.setText(`C/A ${ca >= 0 ? 'T−' : 'T+'}${Math.abs(ca)}S  STORAGE`);
     // Flyby window

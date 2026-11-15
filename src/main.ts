@@ -7,8 +7,7 @@ import { SoundFX } from './audio/SoundEffects.ts';
 import { Soundscape } from './audio/Soundscape.ts';
 import { getMinigameKeyForSite } from './data/minigames.ts';
 import { Practice } from './systems/Practice.ts';
-import { mountAmbientBackdrop } from './ui/AmbientBackdrop.ts';
-import { installRotatePrompt } from './ui/DeviceFit.ts';
+import { installRotatePrompt, installSoundPrompt } from './ui/DeviceFit.ts';
 
 // Prefer Canvas when an older driver cannot compile the fragment precision Phaser needs.
 function supportsWebGLShaders(): boolean {
@@ -54,11 +53,10 @@ window.addEventListener('DOMContentLoaded', () => {
   else game.events.once(Phaser.Core.Events.BOOT, watchRenderer);
   (window as any).__PHASER_GAME__ = game;
 
-  // The bars around the 16:9 picture glow with the scene's colours instead of flat black
-  const stage = document.getElementById('game-stage');
-  if (stage) mountAmbientBackdrop(game, stage);
   // Phones held upright: ask to rotate (the game pauses behind the prompt)
   installRotatePrompt(game);
+  // If the browser ever holds the sound back, offer a one-tap way to bring it back
+  installSoundPrompt();
 
   // Android browser bars can change the visible height without updating CSS viewport units.
   const fitVisibleViewport = () => {

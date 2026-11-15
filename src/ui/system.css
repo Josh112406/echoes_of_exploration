@@ -532,7 +532,8 @@ header.nav {
 }
 
 @media (pointer: coarse) and (orientation: portrait) {
-  body.in-game #game-stage::before {
+  /* Hidden while a panel is open on top (it would show through the panel's backdrop) */
+  body.in-game #game-stage:not(:has(.overlay-pane:not(.hidden):not(#title-overlay), .mobile-briefing))::before {
     content: 'TURN SIDEWAYS FOR A BIGGER VIEW';
     position: absolute;
     top: max(20px, env(safe-area-inset-top));
@@ -1471,6 +1472,58 @@ header.nav {
   .briefing__controls { grid-column: 1 / -1; }
 }
 
+/* Touch screens: the panel always fits the screen. Only the record card scrolls (inside its
+   frame), so UNIT-7's box and its NEXT button never end up below the fold. */
+@media (pointer: coarse) {
+  #entry-overlay.briefing-mode { overflow: hidden; }
+  .briefing {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+  .briefing .briefing__stage { flex: 1 1 auto; min-height: 0; }
+  .briefing .briefing__card {
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+  .briefing__top .btn { min-height: 38px; padding: 6px 10px; font-size: 12px; }
+}
+
+/* Phones on their side (and fullscreen): short screens, so the card and UNIT-7 sit side by side */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .briefing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 36%);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px 10px;
+  }
+  .briefing__top { grid-column: 1 / -1; max-width: none; flex-wrap: nowrap; }
+  .briefing__verified { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .briefing__actions { flex-wrap: nowrap; flex-shrink: 0; }
+  .briefing .briefing__stage { grid-column: 1; grid-row: 2; align-items: stretch; }
+  .briefing .briefing__card { max-width: none; padding: 12px 14px; }
+  .briefing .briefing__dialogue {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+    max-width: none;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 10px;
+    padding: 10px;
+  }
+  .briefing__portrait { grid-row: 1; width: 40px; height: 40px; }
+  .briefing__speech { grid-row: 1 / span 2; }
+  .briefing .briefing__controls { grid-row: 3; grid-column: 1 / -1; flex-wrap: wrap; }
+  .briefing__controls .btn { flex: 1 1 auto; justify-content: center; }
+}
+
 
 /* In-game Reduced Motion setting */
 .briefing--still .briefing__card { animation: none !important; }
@@ -1762,37 +1815,6 @@ html.text-xlarge {
 }
 
 /* ==========================================================================
-   Ambient backdrop (src/ui/AmbientBackdrop.ts): the bars around the 16:9 game
-   picture glow with a blurred copy of the scene instead of flat black.
-   ========================================================================== */
-.ambient-backdrop {
-  position: absolute;
-  left: -10%;
-  top: -10%;
-  width: 120%;
-  height: 120%;
-  z-index: 0;
-  pointer-events: none;
-  image-rendering: auto;
-  filter: blur(40px) saturate(1.5) brightness(0.9);
-}
-.ambient-shade {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* Edges fall off to the night, with faint scanlines so the bars read as "screen", not void */
-  background:
-    radial-gradient(ellipse at center, transparent 45%, rgba(5, 7, 15, 0.6) 100%),
-    repeating-linear-gradient(0deg, rgba(5, 7, 15, 0.22) 0 1px, transparent 1px 3px);
-}
-#game-container { position: relative; z-index: 1; }
-#game-container canvas {
-  box-shadow: 0 0 0 1px rgba(126, 241, 255, 0.07), 0 0 40px 6px rgba(5, 7, 15, 0.55);
-}
-html.high-contrast .ambient-backdrop { filter: blur(36px) brightness(0.35); }
-
-/* ==========================================================================
    Rotate prompt (src/ui/DeviceFit.ts): phones held upright
    ========================================================================== */
 .rotate-prompt {
@@ -1857,6 +1879,34 @@ html.high-contrast .ambient-backdrop { filter: blur(36px) brightness(0.35); }
   .rotate-prompt__phone, .rotate-prompt__phone img { animation: none; }
 }
 
+/* "Tap for sound" (DeviceFit.installSoundPrompt): only when the browser has stopped audio */
+.sound-prompt {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 95;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  font: 13px/1 var(--font-pixel);
+  letter-spacing: 0.12em;
+  color: #05070f;
+  background: var(--accent-laser);
+  border: 1px solid var(--accent-laser);
+  box-shadow: 0 0 0 1px #05070f, 0 0 18px rgba(126, 241, 255, 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: sound-prompt-in 240ms ease-out;
+}
+.sound-prompt[hidden] { display: none; }
+.sound-prompt:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@keyframes sound-prompt-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+@media (prefers-reduced-motion: reduce) { .sound-prompt { animation: none; } }
+
 /* ==========================================================================
    Touch screens: larger, roomier text everywhere
    ========================================================================== */
@@ -1883,19 +1933,25 @@ html.high-contrast .ambient-backdrop { filter: blur(36px) brightness(0.35); }
   .tmenu-hud__count { font-size: 18px; }
   .tmenu-say { font-size: 13px; }
   .tmenu-say__who { font-size: 9px; }
-  /* Landscape: UNIT-7's line sits at the bottom of the scene, under the menu */
+  /* Landscape: UNIT-7's line sits under the menu, in the room that is left
+     (measured by TitleScreen.placeSay, so it never covers an option) */
   #title-overlay:not(.is-compact) .tmenu-say {
     display: block;
-    top: auto;
-    bottom: max(8px, env(safe-area-inset-bottom), calc(100% - var(--cv-y, 0px) - var(--cv-h, 100%) + 8px));
+    top: var(--say-top, auto);
+    bottom: auto;
     width: min(440px, calc(var(--cv-w, 100%) - 32px));
     min-height: 0;
-    max-height: 26%;
+    max-height: calc(var(--say-max, 25vh) - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     padding: 8px 12px;
     text-align: center;
     background: rgba(11, 15, 29, 0.88);
   }
+  #title-overlay.say-off .tmenu-say { display: none !important; }
+
+  /* Every option is a full-size tap target */
+  .tmenu__item { min-height: 44px; justify-content: center; }
+  .tmenu__item--small { min-height: 44px; }
 
   /* In-game touch controls and UNIT-7's dialogue */
   .unit7-mobile { font-size: 15px; }
@@ -1905,4 +1961,49 @@ html.high-contrast .ambient-backdrop { filter: blur(36px) brightness(0.35); }
   .mobile-briefing__card { font-size: 15px; }
   .mobile-briefing__subtitle { font-size: 13px; }
   .mobile-briefing h2 { font-size: 17px; }
+}
+
+/* Touch: the last small labels (12px minimum; the pixel font skips 10-11px) and
+   full-size tap targets on the map and in the records */
+@media (pointer: coarse) {
+  .tmenu-hud__count small { font-size: 12px; }
+  #title-overlay .tmenu-say__who { font-size: 12px; }
+
+  .hub-tab small { font-size: 12px; }
+  .hub-you b { font-size: 12px; padding: 3px 5px 2px; }
+  .hub-map__legend { font-size: 12px; gap: 8px; padding: 5px 8px; }
+  .hub-map__legend i { width: 9px; height: 9px; }
+  .hub-pin { --pin: clamp(38px, 8cqw, 64px); }
+  /* Invisible 48px finger area around each machine */
+  .hub-pin::after { content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 48px); height: max(100%, 48px); transform: translate(-50%, -50%); }
+
+  .briefing__verified, .briefing__name { font-size: 12px; }
+  .briefing .briefing__actions .btn, .briefing .briefing__controls .btn, .briefing__top .btn { font-size: 13px; min-height: 44px; }
+  /* Source links: inline padding grows the finger area without moving the text */
+  .briefing__card a, .briefing-single a { padding: 12px 4px; margin: 0 -4px; }
+  /* Page dots: the dot stays small, the button around it is finger-sized */
+  .briefing__dots { gap: 0; }
+  .briefing__dots .reel-dot { position: relative; width: 28px; height: 44px; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  .briefing__dots .reel-dot::before {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
+    transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid #475569;
+  }
+  .briefing__dots .reel-dot.seen, .briefing__dots .reel-dot.active { background: none; box-shadow: none; }
+  .briefing__dots .reel-dot.seen::before { border-color: var(--accent); background: rgba(14, 195, 220, 0.25); }
+  .briefing__dots .reel-dot.active::before { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .briefing__dots .reel-dot:focus-visible { outline: 2px solid var(--accent-laser); outline-offset: -6px; }
+
+  .ft-label { font-size: 12px; }
+}
+
+/* Touch, short landscape screens (phones on their side): the menu starts right under
+   the logo so every option and UNIT-7's line fit on screen */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  #title-overlay:not(.is-compact) .tmenu { top: calc(var(--cv-y, 0px) + var(--cv-h, 100%) * 0.2); }
+  .tmenu__list { gap: 0; }
+  .tmenu__item { padding-top: 2px; padding-bottom: 2px; }
+  .tmenu__row { margin-top: 0; }
+  .tmenu__heading { margin-bottom: 2px; }
+  .tmenu--worlds .tmenu__item { padding-bottom: 4px; }
+  .tmenu__meta { margin-top: 3px; }
 }

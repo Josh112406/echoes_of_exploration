@@ -69,15 +69,28 @@ export class TitleScreen {
     // The first layout can run before Phaser has fitted the canvas (and fullscreen or
     // browser bars can resize it later without a window resize): follow the canvas itself.
     if ('ResizeObserver' in window) {
-      const observer = new ResizeObserver(() => this.layout());
+      // Next frame: layout() resizes the say box, which would re-trigger the observer
+      // inside the same frame ("ResizeObserver loop" warning)
+      let queued = 0;
+      this.observer = new ResizeObserver(() => {
+        if (queued) return;
+        queued = requestAnimationFrame(() => {
+          queued = 0;
+          this.layout();
+        });
+      });
       const watch = () => {
         const canvas = document.querySelector('#game-container canvas');
-        if (canvas) observer.observe(canvas);
+        if (canvas) this.observer?.observe(canvas);
         else requestAnimationFrame(watch);
       };
       watch();
     }
+    // The pixel font loads after the first layout and changes the menu's height
+    document.fonts?.ready.then(() => this.layout()).catch(() => {});
   }
+
+  private observer: ResizeObserver | null = null;
 
   render(): void {
     const moon = GameState.getRecoveredCount('moon');
@@ -118,6 +131,9 @@ export class TitleScreen {
     `;
 
     this.container.classList.toggle('is-still', GameState.getState().settings.reducedMotion);
+    // Re-measure if the menu itself changes size (font loading, text size settings)
+    const nav = this.container.querySelector('.tmenu');
+    if (nav) this.observer?.observe(nav);
     this.layout();
     this.selectedIndex = 0;
     this.bindEvents();
@@ -266,6 +282,26 @@ export class TitleScreen {
     this.compact = r.height < 330 && box.height > box.width;
     this.container.classList.toggle('is-compact', this.compact);
     if (wasCompact !== this.compact) this.sayHint();
+    this.placeSay(box);
+  }
+
+  /**
+   * Touch screens (not upright): UNIT-7's box goes in the space under the menu and
+   * is sized to fit it, so it can never cover an option. No room: it is hidden.
+   */
+  private placeSay(box: DOMRect): void {
+    const say = this.container.querySelector<HTMLElement>('.tmenu-say');
+    const menu = this.container.querySelector<HTMLElement>('.tmenu');
+    if (!TOUCH || this.compact || !say || !menu) {
+      this.container.classList.remove('say-off');
+      return;
+    }
+    const top = Math.round(menu.getBoundingClientRect().bottom - box.top + 8);
+    const room = Math.floor(this.container.clientHeight - top - 8);
+    const st = this.container.style;
+    st.setProperty('--say-top', `${top}px`);
+    st.setProperty('--say-max', `${room}px`);
+    this.container.classList.toggle('say-off', room < 52);
   }
 
   private isActive(): boolean {

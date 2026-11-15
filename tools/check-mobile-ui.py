@@ -78,12 +78,12 @@ with sync_playwright() as p:
         }""")
         if mobile:
             assert page.locator('.briefing__p').first.evaluate("e => parseFloat(getComputedStyle(e).fontSize)") >= 16
-            assert page.locator('.briefing__card').evaluate("e => e.scrollHeight <= e.clientHeight + 2")
-            assert page.locator('#entry-overlay').evaluate("e => getComputedStyle(e).overflowY") == 'auto'
-            page.locator('#btn-reel-next').scroll_into_view_if_needed()
-            assert page.locator('#btn-reel-next').is_visible()
+            # The panel fits the screen: UNIT-7's NEXT is visible without scrolling; long cards scroll inside
+            assert page.locator('#btn-reel-next').evaluate("e => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight + 1 }")
+            assert page.locator('#entry-overlay').evaluate("e => e.scrollHeight <= e.clientHeight + 2")
+            assert page.locator('.briefing .briefing__card').evaluate("e => getComputedStyle(e).overflowY") == 'auto'
             page.evaluate("window.testReader.showPage(2, false)")
-            assert page.locator('#entry-overlay').evaluate('e => e.scrollTop') == 0
+            assert page.locator('.briefing .briefing__card').evaluate('e => e.scrollTop') == 0
         page.evaluate("""() => {
             document.querySelector('#entry-overlay').classList.add('hidden');
             const g = window.__PHASER_GAME__;

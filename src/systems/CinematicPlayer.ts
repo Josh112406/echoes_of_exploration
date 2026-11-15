@@ -6,7 +6,7 @@ import { TalkClock } from '../ui/Talk.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, TOUCH_UI, hudPx } from '../ui/NineSliceHUD.ts';
 import { CinematicTimeline, CinematicEvent, CinematicSpriteCue } from '../data/schema.ts';
 import {
   BackdropKind,
@@ -400,10 +400,12 @@ export class CinematicPlayer {
   }
 
   private createCaptionConsole(W: number, H: number): void {
+    // Phones: a taller console so the caption can use a readable font size
     const boxW = W - 48;
-    const boxH = 58;
+    const boxH = TOUCH_UI ? 84 : 58;
     const boxX = 24;
-    const boxY = H - boxH - 14;
+    const boxY = H - boxH - (TOUCH_UI ? 6 : 14);
+    const head = TOUCH_UI ? 22 : 18;
 
     const box = this.ui(this.scene.add.graphics().setDepth(100));
     NineSliceHUD.drawFrame(box, boxX, boxY, boxW, boxH, 'panel');
@@ -424,35 +426,35 @@ export class CinematicPlayer {
     box.fillRect(bx1 - arm, by1 - 1, arm, 1);
     box.fillRect(bx1 - 1, by1 - arm, 1, arm);
 
-    NineSliceHUD.drawStatusDot(box, boxX + 10, boxY + 9);
+    NineSliceHUD.drawStatusDot(box, boxX + 10, boxY + (TOUCH_UI ? 11 : 9));
     box.fillStyle(PALETTE.atmosphericDuskHex, 1);
-    box.fillRect(boxX + 8, boxY + 18, boxW - 16, 1);
+    box.fillRect(boxX + 8, boxY + head, boxW - 16, 1);
 
     this.headerText = this.ui(this.scene.add.text(boxX + 17, boxY + 6, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.cyanLaser,
       letterSpacing: 2,
     }).setDepth(101));
 
     this.counterText = this.ui(this.scene.add.text(boxX + boxW - 10, boxY + 6, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.slateMuted,
       letterSpacing: 2,
     }).setOrigin(1, 0).setDepth(101));
 
-    this.captionText = this.ui(this.scene.add.text(boxX + 10, boxY + 25, '', {
-      fontSize: '7px',
+    this.captionText = this.ui(this.scene.add.text(boxX + 10, boxY + head + 7, '', {
+      fontSize: TOUCH_UI ? '12px' : '7px',
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 1,
       wordWrap: { width: boxW - 34, useAdvancedWrap: true },
-      lineSpacing: 4,
+      lineSpacing: TOUCH_UI ? 5 : 4,
     }).setDepth(101));
 
     this.continueMark = this.ui(this.scene.add.text(boxX + boxW - 10, boxY + boxH - 7, '▶', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.cyanGlow,
     }).setOrigin(1, 1).setDepth(101).setVisible(false));
@@ -463,16 +465,16 @@ export class CinematicPlayer {
   }
 
   private createSkipButton(W: number): void {
-    const btnW = 92;
-    const btnH = 20;
+    const btnW = TOUCH_UI ? 112 : 92;
+    const btnH = TOUCH_UI ? 30 : 20;
     const btnX = W - btnW - 14;
-    const btnY = 12;
+    const btnY = TOUCH_UI ? 8 : 12;
 
     const bg = this.ui(this.scene.add.graphics().setDepth(100));
     NineSliceHUD.drawFrame(bg, btnX, btnY, btnW, btnH, 'secondary');
 
-    const txt = this.ui(this.scene.add.text(btnX + btnW / 2, btnY + btnH / 2, 'SKIP [ESC] ➔', {
-      fontSize: '7px',
+    const txt = this.ui(this.scene.add.text(btnX + btnW / 2, btnY + btnH / 2, TOUCH_UI ? 'SKIP ➔' : 'SKIP [ESC] ➔', {
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarCrustCream,
       letterSpacing: 2,
@@ -512,7 +514,8 @@ export class CinematicPlayer {
     this.scene.input.keyboard?.on('keydown-ESC', () => this.skipCinematic());
 
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.y > 40) handleAdvance();
+      // Taps below the skip button advance the caption
+      if (pointer.y > (TOUCH_UI ? 46 : 40)) handleAdvance();
     });
   }
 

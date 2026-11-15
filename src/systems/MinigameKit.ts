@@ -159,8 +159,9 @@ export function drawPips(g: Phaser.GameObjects.Graphics, x: number, y: number, n
   }
 }
 
+/** HUD label or readout; one step larger on touch screens (see hudPx). */
 export function hudText(scene: Phaser.Scene, x: number, y: number, text: string, color: string = PALETTE.lunarHighlight, size = 7): Phaser.GameObjects.Text {
-  return scene.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: `${size}px`, color, letterSpacing: 1 }).setDepth(101).setScrollFactor(0);
+  return scene.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: hudPx(size), color, letterSpacing: 1 }).setDepth(101).setScrollFactor(0);
 }
 
 export { fitText };
