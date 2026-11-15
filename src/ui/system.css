@@ -195,6 +195,19 @@ header.nav {
 .unit7-mobile { display: none; }
 .hub-mobile-toolbar { display: none; }
 
+.exploration-nav { flex-shrink: 0; padding: 16px; margin-bottom: 24px; border: 1px solid var(--accent); background: var(--g-card); }
+.exploration-nav h2 { margin: 0 0 12px; font: 12px/1.5 var(--font-pixel); }
+.exploration-nav p { font: 13px/1.5 var(--font-mono); margin: 0 0 12px; }
+.exploration-nav__layout { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
+.exploration-nav__map { position: relative; flex: 1 1 260px; max-width: 540px; aspect-ratio: 3 / 2; border: 1px solid var(--muted); background: repeating-linear-gradient(0deg, transparent 0 24%, #ffffff0a 25%), repeating-linear-gradient(90deg, #05070f 0 24%, #ffffff0a 25%); }
+.exploration-nav__site { position: absolute; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; transform: translate(-50%, -50%); }
+.exploration-nav__site > span { position: absolute; left: 50%; transform: translateX(-50%); font: bold 12px var(--font-mono); color: var(--ink); }
+.exploration-nav .is-target { color: var(--verified); }
+.exploration-nav__site.is-target { background: var(--verified); }
+.exploration-nav__you { position: absolute; z-index: 1; transform: translate(-50%, -50%); color: white; font: bold 18px/1 var(--font-mono); text-shadow: 0 0 4px black; }
+.exploration-nav__you b { position: absolute; font-size: 12px; background: #05070f; padding: 3px; }
+.exploration-nav__legend { flex: 1 1 200px; margin: 0; padding-left: 24px; font: 13px/1.8 var(--font-mono); }
+
 @media (pointer: coarse) {
   #hub-overlay { display: block; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding-top: 12px; }
   .hub-mobile-toolbar { display: flex; justify-content: flex-end; position: sticky; top: -12px; z-index: 30; background: var(--g-alt); padding: 8px 0; margin-bottom: 12px; }
@@ -210,7 +223,7 @@ header.nav {
     position: absolute;
     z-index: 19;
     left: max(156px, calc(env(safe-area-inset-left) + 140px));
-    right: max(108px, calc(env(safe-area-inset-right) + 96px));
+    right: max(120px, calc(env(safe-area-inset-right) + 108px));
     bottom: max(20px, env(safe-area-inset-bottom));
     max-width: 540px;
     margin: 0 auto;
@@ -246,7 +259,7 @@ header.nav {
   body.flyby-scene #mobile-game-controls {
     position: absolute;
     left: max(48px, calc(env(safe-area-inset-left) + 32px));
-    right: max(12px, env(safe-area-inset-right));
+    right: max(24px, calc(env(safe-area-inset-right) + 12px));
     bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 20;
     display: flex;
@@ -304,6 +317,7 @@ header.nav {
   }
 
   .mobile-joystick-label::before { content: 'MOVE'; }
+  body.site-scene .mobile-joystick-label { visibility: hidden; }
   body.laser-scene .mobile-joystick-label::before,
   body.flyby-scene .mobile-joystick-label::before { content: 'AIM'; }
 
@@ -943,6 +957,7 @@ header.nav {
 }
 
 /* In-game Reduced Motion setting */
+
 #title-overlay.is-still *,
 #title-overlay.is-still *::before,
 #title-overlay.is-still *::after {
@@ -1242,6 +1257,22 @@ header.nav {
   .briefing__dialogue { min-height: 116px; }
   .briefing__hint { display: none; }
 }
+@media (pointer: coarse) {
+  #entry-overlay.briefing-mode { overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+  .briefing { position: relative; min-height: 100%; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  .briefing__stage { flex: none; }
+  .briefing__card { max-height: none; overflow: visible; }
+  .briefing__top, .briefing__dialogue { flex-shrink: 0; }
+  .briefing__actions, .briefing__name, .briefing__card-head { flex-wrap: wrap; }
+  .briefing__hint { display: none; }
+  .briefing__text, .briefing__p, .briefing__facts li, .briefing__hook p,
+  .briefing__loc, .briefing-single__note p { font-size: 16px; line-height: 1.7; }
+  .briefing__muted, .briefing__meta, .briefing__byline,
+  .briefing__card a, .briefing-single a { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+  .briefing__controls { grid-column: 1 / -1; }
+}
+
+
 /* In-game Reduced Motion setting */
 .briefing--still .briefing__card { animation: none !important; }
 .briefing--still .quiz-choice { transition: none; }

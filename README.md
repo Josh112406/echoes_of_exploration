@@ -41,7 +41,7 @@ npm run build             # Production build to dist/
 
 ## NASA Official Super Intelligence (SI) & AI Disclosure
 
-- **Code, Procedural Art & Audio:** Parts of the codebase, procedural pixel-art generators, Web Audio API synthesizer routines, and dataset normalization were developed with the assistance of AI coding tools (Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The mobile controls, title layout, and graphics compatibility changes were also AI-assisted.
+- **Code, Procedural Art & Audio:** Parts of the codebase, procedural pixel-art generators, Web Audio API synthesizer routines, and dataset normalization were developed with the assistance of AI coding tools (Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The mobile controls, exploration location map, briefing readability, title layout, and graphics compatibility changes were also AI-assisted.
 - **Human Verification:** The new mobile controls await human team review before release. Historical dates, coordinates, statuses, and scientific claims require human verification against official NASA, JPL, NSSDCA, ILRS, and PDS primary sources (see [docs/submission-references.md](docs/submission-references.md)).
 - **Visual Watermarking & No NASA Branding:** Authentic mission photographs are official public-domain NASA imagery credited with their NASA ID. Any team/SI-generated illustration or schematic map is visibly watermarked (`SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH`) and contains zero NASA logos, insignias, or mission patches.
 

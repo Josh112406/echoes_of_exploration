@@ -1,8 +1,9 @@
 import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
-import { ArtifactEntry } from '../data/schema.ts';
-import { ALL_ENTRIES } from '../data/entries.ts';
+import { ArtifactEntry, WorldId } from '../data/schema.ts';
+import { ALL_ENTRIES, MOON_WORLD_COORDS, MARS_WORLD_COORDS, ELSEWHERE_WORLD_COORDS } from '../data/entries.ts';
+import { CONSTANTS } from '../core/Constants.ts';
 import { getMinigameMetaForSite } from '../data/minigames.ts';
 
 export { ALL_ENTRIES };
@@ -45,6 +46,7 @@ export class HubMap {
 
     this.container.innerHTML = `
       <div class="hub-mobile-toolbar"><button id="btn-close-hub-mobile" class="btn">CLOSE MAP</button></div>
+      ${this.renderExplorationMap(currentWorld)}
       <!-- Editorial Hero Header Entrance -->
       <div class="hero-intro">
         <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:4px; flex-wrap:wrap;">
@@ -117,6 +119,27 @@ export class HubMap {
     if (!this.isListView) {
       this.showMarkerCard(this.activeEntryId);
     }
+  }
+
+  private renderExplorationMap(world: WorldId): string {
+    const coords = world === 'moon' ? MOON_WORLD_COORDS : world === 'mars' ? MARS_WORLD_COORDS : ELSEWHERE_WORLD_COORDS;
+    const position = GameState.getRobotPosition(world);
+    const target = GameState.getNextTarget(world);
+    const { WORLD_WIDTH, WORLD_HEIGHT } = CONSTANTS.CANVAS;
+    // Exploration positions are independent of the real geographic coordinates below.
+    return `
+      <section class="exploration-nav" aria-label="Your exploration location">
+        <h2>${world.toUpperCase()} · EXPLORATION MAP</h2>
+        <p>${position ? '◆ YOU · Numbers match the sites below.' : 'Start exploring this sector to show your location.'} Game layout; edges wrap.</p>
+        <div class="exploration-nav__layout">
+          <div class="exploration-nav__map" role="img" aria-label="Game area with numbered mission sites${position ? ' and your current position' : ''}">
+            ${coords.map((coord, index) => `<span class="exploration-nav__site ${coord.id === target ? 'is-target' : ''}" title="${coord.name}" style="left:${coord.x / WORLD_WIDTH * 100}%;top:${coord.y / WORLD_HEIGHT * 100}%"><span style="${index % 2 ? 'top:8px' : 'bottom:8px'}">${index + 1}</span></span>`).join('')}
+            ${position ? `<span class="exploration-nav__you" style="left:${Math.max(0, Math.min(100, position.x / WORLD_WIDTH * 100))}%;top:${Math.max(0, Math.min(100, position.y / WORLD_HEIGHT * 100))}%">◆<b style="${position.x > WORLD_WIDTH / 2 ? 'right:12px' : 'left:12px'};${position.y < WORLD_HEIGHT / 2 ? 'top:12px' : 'bottom:12px'}">YOU</b></span>` : ''}
+          </div>
+          <ol class="exploration-nav__legend">${coords.map(coord => `<li class="${coord.id === target ? 'is-target' : ''}">${coord.name}${coord.id === target ? ' (NEXT)' : ''}</li>`).join('')}</ol>
+        </div>
+      </section>
+    `;
   }
 
   private renderMapView(entries: ArtifactEntry[], currentWorld: string): string {

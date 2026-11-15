@@ -72,8 +72,8 @@ const HOVER_LIFT = 6;
 const NOZZLE_ROW = 20;
 
 export class SiteScene extends Phaser.Scene {
-  private readonly worldWidth: number = 2400;
-  private readonly worldHeight: number = 1600;
+  private readonly worldWidth: number = CONSTANTS.CANVAS.WORLD_WIDTH;
+  private readonly worldHeight: number = CONSTANTS.CANVAS.WORLD_HEIGHT;
 
   private robot!: Phaser.GameObjects.Sprite;
   private robotShadow!: Phaser.GameObjects.Ellipse;

@@ -272,6 +272,7 @@ export class EntryReaderModal {
     const swap = () => {
       this.renderCard(dir);
       this.renderTop();
+      this.container.scrollTop = 0;
       this.lines = this.linesFor(page);
       // Every visit, UNIT-7 talks the page through again (as in the finale).
       this.startLine(0);

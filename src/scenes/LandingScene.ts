@@ -464,35 +464,40 @@ export class LandingScene extends Phaser.Scene {
     exitZone.on('pointerover', () => exitText.setColor(PALETTE.cyanLaser));
     exitZone.on('pointerout', () => exitText.setColor(PALETTE.lunarHighlight));
 
-    const btnY = H - 32;
-    const hitH = Math.max(24, hit);
-    const hitY = Phaser.Math.Clamp(btnY + 12, hitH / 2, H - hitH / 2);
+    const mobile = window.matchMedia('(pointer: coarse)').matches;
+    const buttonH = mobile ? Math.max(32, hit * 1.2) : 24;
+    const steerW = mobile ? Math.max(84, hit * 1.2) : 68;
+    const thrustW = mobile ? 180 : 150;
+    const inset = mobile ? 24 : 12;
+    const btnY = H - buttonH - (mobile ? 16 : 8);
+    const hitH = Math.max(buttonH, hit);
+    const hitY = Phaser.Math.Clamp(btnY + buttonH / 2, hitH / 2, H - hitH / 2);
 
     const makeSteer = (x: number, dir: -1 | 1, label: string) => {
       const bg = this.ui(this.add.graphics().setDepth(100));
-      NineSliceHUD.drawFrame(bg, x, btnY, 68, 24, 'ghost');
-      const zone = this.ui(this.add.zone(x + 34, hitY, Math.max(68, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
+      NineSliceHUD.drawFrame(bg, x, btnY, steerW, buttonH, 'ghost');
+      const zone = this.ui(this.add.zone(x + steerW / 2, hitY, Math.max(steerW, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
       zone.on('pointerdown', () => { this.touchSteer = dir; });
       zone.on('pointerup', () => { this.touchSteer = 0; });
       zone.on('pointerout', () => { this.touchSteer = 0; });
-      this.ui(this.add.text(x + 34, btnY + 12, label, {
-        fontSize: '7px',
+      this.ui(this.add.text(x + steerW / 2, btnY + buttonH / 2, label, {
+        fontSize: mobile ? '9px' : '7px',
         fontFamily: HUD_FONT,
-        color: PALETTE.slateMuted,
+        color: mobile ? PALETTE.lunarHighlight : PALETTE.slateMuted,
         letterSpacing: 2,
       }).setOrigin(0.5).setDepth(102));
     };
-    makeSteer(12, -1, '◀ STEER');
-    makeSteer(W - 80, 1, 'STEER ▶');
+    makeSteer(inset, -1, '◀ STEER');
+    makeSteer(W - inset - steerW, 1, 'STEER ▶');
 
     const thrustBg = this.ui(this.add.graphics().setDepth(100));
-    NineSliceHUD.drawFrame(thrustBg, W / 2 - 75, btnY, 150, 24, 'primary');
-    const thrustZone = this.ui(this.add.zone(W / 2, hitY, Math.max(150, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
+    NineSliceHUD.drawFrame(thrustBg, W / 2 - thrustW / 2, btnY, thrustW, buttonH, 'primary');
+    const thrustZone = this.ui(this.add.zone(W / 2, hitY, Math.max(thrustW, hit), hitH).setDepth(101).setInteractive({ cursor: 'pointer' }));
     thrustZone.on('pointerdown', () => { this.touchThrust = true; });
     thrustZone.on('pointerup', () => { this.touchThrust = false; });
     thrustZone.on('pointerout', () => { this.touchThrust = false; });
-    this.ui(this.add.text(W / 2, btnY + 12, 'THRUST [SPACE / W]', {
-      fontSize: '7px',
+    this.ui(this.add.text(W / 2, btnY + buttonH / 2, mobile ? 'THRUST' : 'THRUST [SPACE / W]', {
+      fontSize: mobile ? '9px' : '7px',
       fontFamily: HUD_FONT,
       color: PALETTE.spaceBlack,
       letterSpacing: 2,
