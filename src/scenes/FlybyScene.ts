@@ -195,12 +195,14 @@ export class FlybyScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT,E') as FlybyScene['keys'];
     kb.on('keydown-SPACE', () => this.shutter());
-    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-      this.pointerAim = p.y > 40 && p.y < H - 40 ? { x: p.x, y: p.y } : null;
-    });
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      if (p.y > 40 && p.y < H - 40) this.shutter();
-    });
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+        this.pointerAim = p.y > 40 && p.y < H - 40 ? { x: p.x, y: p.y } : null;
+      });
+      this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+        if (p.y > 40 && p.y < H - 40) this.shutter();
+      });
+    }
 
     showBriefing(this, {
       title: `${this.theme.title} // ${missionName(this.siteId).toUpperCase()}`,

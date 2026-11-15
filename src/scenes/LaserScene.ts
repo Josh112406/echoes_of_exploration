@@ -168,13 +168,15 @@ export class LaserScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT') as LaserScene['keys'];
     kb.on('keydown-SPACE', () => this.fire());
-    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-      const dx = p.x - VX, dy = p.y - VY;
-      this.pointerAim = Math.hypot(dx, dy) < VR ? { x: dx, y: dy } : null;
-    });
-    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      if (Math.hypot(p.x - VX, p.y - VY) < VR) this.fire();
-    });
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+        const dx = p.x - VX, dy = p.y - VY;
+        this.pointerAim = Math.hypot(dx, dy) < VR ? { x: dx, y: dy } : null;
+      });
+      this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+        if (Math.hypot(p.x - VX, p.y - VY) < VR) this.fire();
+      });
+    }
 
     showBriefing(this, {
       title: `${this.theme.title} // ${missionName(this.siteId).toUpperCase()}`,

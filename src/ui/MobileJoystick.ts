@@ -35,6 +35,7 @@ export class MobileJoystick {
   }
 
   private onDown = (event: PointerEvent): void => {
+    event.stopPropagation();
     if (this.pointerId !== null) return;
     event.preventDefault();
     this.pointerId = event.pointerId;
@@ -43,6 +44,7 @@ export class MobileJoystick {
   };
 
   private onMove = (event: PointerEvent): void => {
+    event.stopPropagation();
     if (event.pointerId !== this.pointerId) return;
     const bounds = this.pad.getBoundingClientRect();
     const radius = Math.min(bounds.width, bounds.height) / 2;
@@ -56,6 +58,7 @@ export class MobileJoystick {
   };
 
   private onEnd = (event: PointerEvent): void => {
+    event.stopPropagation();
     if (event.pointerId === this.pointerId) this.reset();
   };
 

@@ -949,11 +949,11 @@ export class SiteScene extends Phaser.Scene {
       if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
       if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
 
-      // Touch joystick, with canvas drag as an alternate input.
+      // Touch uses the dedicated joystick; keep canvas drag steer for desktop pointer users.
       if (this.mobileJoystick?.active) {
         ix = this.mobileJoystick.x;
         iy = this.mobileJoystick.y;
-      } else if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
+      } else if (!window.matchMedia('(pointer: coarse)').matches && this.input.activePointer.isDown && this.input.activePointer.y > 36) {
         const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
         const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
         const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);
