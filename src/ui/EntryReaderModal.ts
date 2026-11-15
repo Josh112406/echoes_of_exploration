@@ -7,6 +7,7 @@ import { SoundFX } from '../audio/SoundEffects.ts';
 import { TalkClock } from './Talk.ts';
 import { buildRobotCanvas } from '../systems/SpriteArt.ts';
 import { missionsForEntry, sourcesForMission, encountersForEntry, MISSION_STATUS_LABEL } from '../data/catalog.ts';
+import { REVIEW_STATUS_LABEL } from '../data/credits.ts';
 
 /** How the reader was opened: the post-landing briefing, or browsing from the Archive. */
 export type EntryOpenMode = 'briefing' | 'browse';
@@ -38,6 +39,12 @@ const PAGE_TITLES = [
 /** Generated stand-in art (no public-domain photo in the repo yet): never credited to NASA. */
 function isIllustration(nasaId: string): boolean {
   return nasaId === 'SI-ILLUSTRATION';
+}
+
+function verifiedBadgeHtml(e: ArtifactEntry): string {
+  const label = e.last_verified ? `${REVIEW_STATUS_LABEL} // ${e.last_verified}` : 'DRAFT, NOT YET VERIFIED';
+  const color = e.last_verified ? 'var(--verified)' : 'var(--muted)';
+  return `<span class="briefing__verified" style="color:${color};">${label}</span>`;
 }
 
 /** Card 6 reads as deep-space telemetry for the Elsewhere sector. */
@@ -464,7 +471,6 @@ export class EntryReaderModal {
     const top = this.container.querySelector<HTMLElement>('.briefing__top');
     const e = this.entry;
     if (!top || !e) return;
-    const verifiedLabel = e.last_verified ? `VERIFIED ARCHIVE RECORD // ${e.last_verified}` : 'DRAFT, NOT YET VERIFIED';
     const total = this.lastPage + 1;
     const dots = Array.from({ length: total }, (_v, i) => {
       const reachable = i <= this.maxSeen && i !== this.page && !(this.page === QUIZ_PAGE && this.quizState !== 'ask');
@@ -473,7 +479,7 @@ export class EntryReaderModal {
     }).join('');
     const showSkipToQuiz = this.page < QUIZ_PAGE && this.hasQuiz && !this.canClose;
     top.innerHTML = `
-      <span class="briefing__verified" style="color:${e.last_verified ? 'var(--verified)' : 'var(--muted)'};">${verifiedLabel}</span>
+      ${verifiedBadgeHtml(e)}
       <div class="briefing__dots" role="group" aria-label="Reel progress">${dots}</div>
       <div class="briefing__actions">
         ${showSkipToQuiz ? '<button id="btn-skip-to-quiz" class="btn">SKIP TO QUIZ ➔</button>' : ''}
@@ -580,11 +586,11 @@ export class EntryReaderModal {
           ${e.locations.map((l) => `
             <div class="briefing__loc">
               <strong>${l.label}</strong>
-              <div class="briefing__muted">LAT: ${l.lat.toFixed(4)}° · LON: ${l.lon.toFixed(4)}° ${l.approximate ? '[APPROXIMATE]' : '[VERIFIED]'}</div>
+              <div class="briefing__muted">LAT: ${l.lat.toFixed(4)}° · LON: ${l.lon.toFixed(4)}° ${l.approximate ? '[APPROXIMATE]' : '[SOURCE COORDINATES]'}</div>
               <a href="${l.source_url}" target="_blank" rel="noreferrer">[NASA LOCATION SOURCE ↗]</a>
             </div>`).join('')}
           ${this.catalogHtml(e)}
-          <div class="briefing__muted briefing__byline">CATALOGUED BY: ${e.written_by} // VERIFIED BY: ${e.verified_by}</div>`;
+          <div class="briefing__muted briefing__byline">CATALOGUED BY: ${e.written_by} // REVIEW ROLE: ${e.verified_by}</div>`;
     }
   }
 
@@ -692,11 +698,10 @@ export class EntryReaderModal {
     const e = this.entry;
     if (!e) return;
     const story = getSiteStory(e.id);
-    const verifiedLabel = e.last_verified ? `VERIFIED ARCHIVE RECORD // ${e.last_verified}` : 'DRAFT, NOT YET VERIFIED';
     this.container.innerHTML = `
       <div class="briefing-single">
         <div class="briefing__top">
-          <span class="briefing__verified" style="color:${e.last_verified ? 'var(--verified)' : 'var(--muted)'};">${verifiedLabel}</span>
+          ${verifiedBadgeHtml(e)}
           <div class="briefing__actions">
             <button id="btn-toggle-reel" class="btn">BACK TO BRIEFING</button>
             <button id="btn-close-entry" class="btn">CLOSE [X]</button>

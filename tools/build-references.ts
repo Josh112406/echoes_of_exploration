@@ -9,7 +9,7 @@ import { ALL_ENTRIES } from '../src/data/entries.ts';
 import { MISSIONS, SOURCES, ENCOUNTERS } from '../src/data/catalog.ts';
 import { FIELD_TASKS } from '../src/data/fieldTasks.ts';
 import {
-  SOFTWARE, MAPS, FONT_CREDIT, ART_CREDIT, AUDIO_CREDIT, AI_DISCLOSURE, MEDIA_GUIDELINES_URL, NON_ENDORSEMENT,
+  SOFTWARE, MAPS, FONT_CREDIT, ART_CREDIT, AUDIO_CREDIT, AI_DISCLOSURE, MEDIA_GUIDELINES_URL, NON_ENDORSEMENT, HUMAN_REVIEW_STATEMENT,
 } from '../src/data/credits.ts';
 
 const host = (u: string) => new URL(u).hostname.replace(/^www\./, '');
@@ -53,6 +53,10 @@ const out: string[] = [
   '## Use of artificial intelligence',
   '',
   AI_DISCLOSURE,
+  '',
+  '## Human verification',
+  '',
+  HUMAN_REVIEW_STATEMENT,
   '',
   '## NASA non-endorsement',
   '',

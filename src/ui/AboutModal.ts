@@ -3,7 +3,7 @@ import { PALETTE } from './theme.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { MISSIONS, SOURCES } from '../data/catalog.ts';
 import { sourceHost } from '../data/story.ts';
-import { SOFTWARE, MAPS, FONT_CREDIT, ART_CREDIT, AUDIO_CREDIT, AI_DISCLOSURE, MEDIA_GUIDELINES_URL } from '../data/credits.ts';
+import { SOFTWARE, MAPS, FONT_CREDIT, ART_CREDIT, AUDIO_CREDIT, AI_DISCLOSURE, MEDIA_GUIDELINES_URL, HUMAN_REVIEW_STATEMENT } from '../data/credits.ts';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const link = (url: string, label: string) => `<a href="${esc(url)}" target="_blank" rel="noreferrer">${esc(label)} ↗</a>`;
@@ -50,7 +50,8 @@ export class AboutModal {
 
           <section>
             ${h('HOW WE KEEP IT ACCURATE', PALETTE.beaconGold)}
-            <p>Every date, location, status and factual claim links to an official source: NASA, JPL, NSSDCA or the Planetary Data System. Each echo lists who wrote it and a different team member who verified it.</p>
+            <p>Mission records link to source material from NASA, JPL, NSSDCA and other scientific archives. Author and reviewer roles are recorded for each echo.</p>
+            <p>${esc(HUMAN_REVIEW_STATEMENT)}</p>
             <p>The robot UNIT-7, its "echoes", and the story hooks written in a machine's voice are <strong>fiction</strong>. They are always marked as story or dramatized. Real spacecraft are not conscious, and dormant hardware does not transmit. The minigames simplify how the missions worked; the archive says how.</p>
           </section>
 

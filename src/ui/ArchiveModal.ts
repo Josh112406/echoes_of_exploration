@@ -1,3 +1,4 @@
+import { REVIEW_STATUS_LABEL } from '../data/credits.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
@@ -81,7 +82,9 @@ export class ArchiveModal {
         `;
       }
 
-      const verifiedStatus = entry.last_verified ? `[VERIFIED ARCHIVAL RECORD // ${entry.last_verified}]` : '[DRAFT, NOT YET VERIFIED]';
+      const verifiedStatus = entry.last_verified
+        ? `[${REVIEW_STATUS_LABEL} // ${entry.last_verified}]`
+        : '[DRAFT, NOT YET VERIFIED]';
       const statusColor = entry.last_verified ? PALETTE.beaconGold : PALETTE.slateMuted;
 
       return `
@@ -154,7 +157,7 @@ export class ArchiveModal {
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:14px; gap:8px; flex-wrap:wrap;">
         <div>
           <h2 style="font-size:18px; font-weight:700; letter-spacing:0.02em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">NASA MISSION CATALOG</h2>
-          <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.cyanGlow}; margin-top:2px;">${MISSIONS.length} MISSIONS WHOSE HARDWARE IS STILL OUT THERE · REVIEWED ${MISSION_CATALOG.reviewed_on}</p>
+          <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.cyanGlow}; margin-top:2px;">${MISSIONS.length} MISSIONS WHOSE HARDWARE IS STILL OUT THERE · ${REVIEW_STATUS_LABEL} ${MISSION_CATALOG.reviewed_on}</p>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           ${this.tabsHtml()}

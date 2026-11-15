@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "dataset_id": "echoes-of-exploration-missions",
-  "reviewed_on": "2026-11-09",
+  "reviewed_on": "2026-11-14",
   "scope": "Coverage-driven catalog of major NASA mission groups whose hardware remains on a surface, impacted a body, remains in orbit, or continues into deep space. Mission components are grouped unless featured separately.",
   "records": [
     {
@@ -104,7 +104,7 @@
       "story_hook": "A mirror with no power can still answer Earth.",
       "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nssdca-apollo11-lm"],
       "media_page_url": "https://ilrs.gsfc.nasa.gov/missions/satellite_missions/current_missions/ap11_general.html",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "apollo-12-surface",
@@ -144,7 +144,7 @@
       "story_hook": "Geology and a returning beam of light at Fra Mauro.",
       "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nssdca-apollo11-lm"],
       "media_page_url": "https://science.nasa.gov/moon/missions/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "apollo-15-surface",
@@ -164,7 +164,7 @@
       "story_hook": "The first wheels that carried people across the Moon.",
       "source_ids": ["nasa-moon-missions", "ilrs-apollo11", "nssdca-apollo11-lm"],
       "media_page_url": "https://science.nasa.gov/moon/missions/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "apollo-16-surface",
@@ -347,7 +347,7 @@
       "story_hook": "A rolling laboratory climbs through layers of Martian time.",
       "source_ids": ["nasa-curiosity"],
       "media_page_url": "https://science.nasa.gov/mission/msl-curiosity/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "insight",
@@ -387,7 +387,7 @@
       "story_hook": "A rover stores carefully chosen pieces of Mars for a possible journey home.",
       "source_ids": ["nasa-perseverance"],
       "media_page_url": "https://science.nasa.gov/mission/mars-2020-perseverance/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "ingenuity",
@@ -469,7 +469,7 @@
       "story_hook": "A planetary explorer became an interstellar weather station.",
       "source_ids": ["nasa-voyager1"],
       "media_page_url": "https://science.nasa.gov/mission/voyager/voyager-1/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "voyager-2",
@@ -489,7 +489,7 @@
       "story_hook": "One spacecraft completed the grand tour of the giant planets.",
       "source_ids": ["nasa-voyager2"],
       "media_page_url": "https://science.nasa.gov/mission/voyager/voyager-2/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "galileo",
@@ -611,7 +611,7 @@
       "story_hook": "Years of planning for a few fast hours beside Pluto.",
       "source_ids": ["nasa-new-horizons"],
       "media_page_url": "https://science.nasa.gov/mission/new-horizons/",
-      "status_review_required_before_release": true
+      "status_review_required_before_release": false
     },
     {
       "id": "kepler",

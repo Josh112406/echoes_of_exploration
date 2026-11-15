@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "reviewed_on": "2026-11-09",
+  "reviewed_on": "2026-11-14",
   "sources": [
     {"id":"nasa-moon-missions","title":"Moon Missions","organization":"NASA Science","url":"https://science.nasa.gov/moon/missions/","tier":"primary-mission-authority","local_snapshot":"science.nasa.gov-moon-missions.md"},
     {"id":"nasa-ranger-surveyor","title":"Lunar Ranger and Surveyor Programs","organization":"NASA Science","url":"https://science.nasa.gov/mission/lunar-rangers-and-surveyors/","tier":"primary-mission-authority","local_snapshot":"science.nasa.gov-mission-lunar-rangers-and-surveyors.md"},
