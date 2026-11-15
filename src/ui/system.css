@@ -192,6 +192,41 @@ header.nav {
 
 #mobile-game-controls, .mobile-action-buttons { display: none; }
 
+.unit7-mobile { display: none; }
+
+@media (pointer: coarse) {
+  .unit7-mobile {
+    position: absolute;
+    z-index: 19;
+    left: max(156px, calc(env(safe-area-inset-left) + 140px));
+    right: max(108px, calc(env(safe-area-inset-right) + 96px));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--accent);
+    background: rgba(11, 15, 29, 0.96);
+    color: var(--ink);
+    font: 14px/1.6 var(--font-pixel);
+    text-align: left;
+    touch-action: pan-y;
+  }
+  .unit7-mobile[hidden] { display: none; }
+  .unit7-mobile__header { display: flex; justify-content: space-between; gap: 12px; color: var(--accent-laser); font-size: 10px; }
+  .unit7-mobile__tag { text-align: right; overflow-wrap: anywhere; }
+  .unit7-mobile__body { max-height: 36dvh; overflow-y: auto; }
+  .unit7-mobile__hint { font-size: 10px; color: var(--accent-laser); text-align: right; }
+  .unit7-mobile.is-record { border-color: var(--verified); }
+  .unit7-mobile.is-record .unit7-mobile__header { color: var(--verified); }
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  .unit7-mobile { left: 16px; right: 16px; bottom: max(144px, calc(env(safe-area-inset-bottom) + 132px)); }
+}
+
 @media (pointer: coarse) {
   .btn, .archive-select, body .menu-btn { min-height: 44px; touch-action: manipulation; }
 
@@ -820,6 +855,11 @@ header.nav {
 
 #title-overlay.is-compact .tmenu-keys,
 #title-overlay.is-compact .tmenu-credit { display: none; }
+
+@media (pointer: coarse) {
+  #title-overlay.is-compact .tmenu-say { text-align: center; }
+  #title-overlay.is-compact .tmenu-hud { left: 0; right: 0; width: max-content; margin-inline: auto; white-space: nowrap; }
+}
 
 @media (max-width: 720px) {
   .tmenu-credit { display: none; }

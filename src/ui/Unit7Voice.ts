@@ -24,6 +24,10 @@ export class Unit7Voice {
   private hint: Phaser.GameObjects.Text;
   private zone: Phaser.GameObjects.Zone;
   private live: HTMLElement | null = null;
+  private mobilePanel: HTMLButtonElement | null = null;
+  private mobileBody: HTMLElement | null = null;
+  private mobileTag: HTMLElement | null = null;
+  private mobileHint: HTMLElement | null = null;
 
   private queue: VoiceLine[] = [];
   private current: VoiceLine | null = null;
@@ -55,6 +59,22 @@ export class Unit7Voice {
       this.advance();
     });
     this.container.add([this.frame, this.portrait, this.nameText, this.tagText, this.body, this.hint, this.zone]);
+
+    // DOM text stays readable when the game canvas shrinks on phones.
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      const panel = document.createElement('button');
+      panel.type = 'button';
+      panel.className = 'unit7-mobile';
+      panel.hidden = true;
+      panel.innerHTML = '<span class="unit7-mobile__header"><span>UNIT-7</span><span class="unit7-mobile__tag"></span></span><span class="unit7-mobile__body"></span><span class="unit7-mobile__hint"></span>';
+      panel.addEventListener('click', () => this.advance());
+      document.getElementById('game-stage')?.appendChild(panel);
+      this.mobilePanel = panel;
+      this.mobileBody = panel.querySelector('.unit7-mobile__body');
+      this.mobileTag = panel.querySelector('.unit7-mobile__tag');
+      this.mobileHint = panel.querySelector('.unit7-mobile__hint');
+      scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => panel.remove());
+    }
 
     // Screen-reader mirror
     this.live = document.getElementById('unit7-live');
@@ -106,6 +126,7 @@ export class Unit7Voice {
     if (this.talking) {
       this.talk.finish();
       this.body.setText(this.talk.visible);
+      this.syncMobileText();
       this.hold = this.holdTime(this.current.text);
       this.hint.setText('[SPACE]').setAlpha(1);
       return true;
@@ -125,6 +146,13 @@ export class Unit7Voice {
       this.hint.setText('[SPACE]').setAlpha(Math.floor(this.scene.time.now / 450) % 2 ? 1 : 0.35);
       if (this.hold <= 0) this.hide();
     }
+    this.syncMobileText();
+  }
+
+  private syncMobileText(): void {
+    if (this.mobileBody && this.mobileBody.textContent !== this.talk.visible) this.mobileBody.textContent = this.talk.visible;
+    const hint = this.talk.done ? 'TAP TO CONTINUE' : 'TAP TO REVEAL';
+    if (this.mobileHint && this.mobileHint.textContent !== hint) this.mobileHint.textContent = hint;
   }
 
   private holdTime(text: string): number {
@@ -136,6 +164,7 @@ export class Unit7Voice {
     if (!line) {
       this.current = null;
       this.container.setVisible(false);
+      if (this.mobilePanel) this.mobilePanel.hidden = true;
       return;
     }
     this.current = line;
@@ -144,13 +173,19 @@ export class Unit7Voice {
     this.talk.start(line.text, { instant: reduced, record: line.kind === 'record' });
     this.layout(line);
     this.body.setText(reduced ? line.text : '');
+    if (this.mobilePanel) {
+      this.mobilePanel.hidden = false;
+      this.mobilePanel.classList.toggle('is-record', line.kind === 'record');
+      if (this.mobileTag) this.mobileTag.textContent = this.tagText.text;
+      this.syncMobileText();
+    }
     if (reduced) this.hold = this.holdTime(line.text);
     if (this.live) {
       const prefix = line.kind === 'record' ? `Verified record, ${line.title ?? 'NASA'}: ` : 'UNIT-7: ';
       this.live.textContent = prefix + line.text;
     }
     this.scene.tweens.killTweensOf(this.container);
-    this.container.setVisible(true).setAlpha(reduced ? 1 : 0);
+    this.container.setVisible(!this.mobilePanel).setAlpha(reduced ? 1 : 0);
     if (!reduced) this.scene.tweens.add({ targets: this.container, alpha: 1, duration: 180 });
   }
 
