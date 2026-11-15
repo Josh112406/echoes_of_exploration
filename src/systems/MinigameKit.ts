@@ -4,7 +4,7 @@ import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, fitText } from '../ui/NineSliceHUD.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { Practice } from './Practice.ts';
 import { fieldTaskForEntry } from '../data/fieldTasks.ts';
@@ -163,15 +163,19 @@ export function hudText(scene: Phaser.Scene, x: number, y: number, text: string,
   return scene.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: `${size}px`, color, letterSpacing: 1 }).setDepth(101).setScrollFactor(0);
 }
 
-/** Truncate a HUD text with an ellipsis until it fits within maxW pixels. */
-export function fitText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
-  const full = t.text;
-  let n = full.length;
-  while (t.width > maxW && n > 4) {
-    n--;
-    t.setText(full.slice(0, n).trimEnd() + '…');
+export { fitText };
+
+/**
+ * Fits a centered header or subtitle inside maxW: eases wide tracking first, then
+ * wraps across lines so long mission names stay readable inside fixed panels.
+ */
+export function fitHeaderText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
+  if (t.width > maxW) t.setLetterSpacing(1);
+  if (t.width > maxW) {
+    t.setLineSpacing(3);
+    t.setWordWrapWidth(maxW, true);
   }
-  return t;
+  return fitText(t, maxW);
 }
 
 export interface TouchButton {
@@ -312,22 +316,33 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
     return;
   }
   const c = scene.add.container(W / 2, H / 2).setDepth(150).setScrollFactor(0);
+  const title = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
+  const titleText = fitHeaderText(scene.add.text(0, 0, title, {
+    fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3, align: 'center',
+  }).setOrigin(0.5, 0), 328);
+  const subText = fitHeaderText(scene.add.text(0, 0, spec.subtitle, {
+    fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.beaconGold, letterSpacing: 2, align: 'center',
+  }).setOrigin(0.5, 0), 328);
   // Lines are laid out by their wrapped height, so long notes never overlap
   const texts = lines.map((line) => scene.add.text(-164, 0, line, {
     fontFamily: HUD_FONT, fontSize: '7px', color: line.startsWith('• TRUE STORY') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
     wordWrap: { width: 328, useAdvancedWrap: true },
   }));
+  const yTitle = 10;
+  const ySub = yTitle + titleText.height + 5;
+  const yDiv = ySub + subText.height + 7;
+  const yBody = yDiv + 10;
   const body = texts.reduce((sum, t) => sum + Math.max(15, t.height + 5), 0);
-  const hgt = Math.min(H - 16, 105 + body);
-  const top = -hgt / 2;
+  const hgt = Math.min(H - 16, yBody + body + 51);
+  const top = Math.round(-hgt / 2);
   const bg = scene.add.graphics();
   NineSliceHUD.drawFrame(bg, -180, top, 360, hgt, 'panel');
-  bg.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(-168, top + 44, 336, 1);
+  bg.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(-168, top + yDiv, 336, 1);
   c.add(bg);
-  const title = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
-  c.add(fitText(scene.add.text(0, top + 16, title, { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3 }).setOrigin(0.5), 340));
-  c.add(scene.add.text(0, top + 32, spec.subtitle, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.beaconGold, letterSpacing: 2 }).setOrigin(0.5));
-  let ly = top + 54;
+  titleText.setY(top + yTitle);
+  subText.setY(top + ySub);
+  c.add([titleText, subText]);
+  let ly = top + yBody;
   for (const t of texts) {
     t.setY(ly);
     c.add(t);
@@ -337,7 +352,7 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
   const btn = scene.add.graphics();
   NineSliceHUD.drawFrame(btn, -110, by, 220, 22, 'primary');
   c.add(btn);
-  c.add(scene.add.text(0, by + 11, spec.cta, { fontFamily: HUD_FONT, fontSize: '8px', color: PALETTE.spaceBlack, letterSpacing: 3 }).setOrigin(0.5));
+  c.add(fitText(scene.add.text(0, by + 11, spec.cta, { fontFamily: HUD_FONT, fontSize: '8px', color: PALETTE.spaceBlack, letterSpacing: 3 }).setOrigin(0.5), 204));
   const zone = scene.add.zone(0, by + 11, 220, Math.max(22, minTouchTarget(scene))).setInteractive({ cursor: 'pointer' });
   c.add(zone);
 

@@ -14,6 +14,17 @@ export type FrameVariant = 'panel' | 'primary' | 'secondary' | 'ghost' | 'amber'
 /** Shared pixel font + spacing used by every in-canvas label (matches the title screen). */
 export const HUD_FONT = 'StillOutTherePixel, monospace';
 
+/** Truncate a single-line HUD text with an ellipsis until it fits within maxW pixels. */
+export function fitText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
+  const full = t.text;
+  let n = full.length;
+  while (t.width > maxW && n > 4) {
+    n--;
+    t.setText(full.slice(0, n).trimEnd() + '…');
+  }
+  return t;
+}
+
 export class NineSliceHUD {
   /**
    * Draws a crisp title-screen style frame: dark translucent fill, 1px hairline
@@ -161,6 +172,7 @@ export class NineSliceHUD {
 
     const site = txt(13, 3, siteId.toUpperCase(), PALETTE.cyanLaser);
     site.setLetterSpacing(2);
+    fitText(site, 194);
     const altLabel = txt(214, 3, 'ALT', PALETTE.slateMuted);
     const altValue = txt(panelW - 8, 3, '0.0M', PALETTE.lunarHighlight).setOrigin(1, 0);
     const vyLabel = txt(8, 19, 'VY', PALETTE.slateMuted);

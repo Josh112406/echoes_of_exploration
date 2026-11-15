@@ -10,7 +10,7 @@ import { PALETTE } from '../ui/theme.ts';
 import { NineSliceHUD, HUDGauges, HUD_FONT } from '../ui/NineSliceHUD.ts';
 import { CIN_MARGIN, buildLandingTerrain } from '../systems/TitleArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
-import { completeMinigame, failMinigame, leaveMinigame, minTouchTarget, missionName, showBriefing } from '../systems/MinigameKit.ts';
+import { completeMinigame, failMinigame, fitHeaderText, fitText, leaveMinigame, minTouchTarget, missionName, showBriefing } from '../systems/MinigameKit.ts';
 import { Practice } from '../systems/Practice.ts';
 
 interface Particle {
@@ -361,28 +361,21 @@ export class LandingScene extends Phaser.Scene {
 
     this.tutorialContainer = this.ui(this.add.container(W / 2, H / 2).setDepth(150));
 
-    const bg = this.add.graphics();
-    NineSliceHUD.drawFrame(bg, -170, -85, 340, 170, 'panel');
-    bg.fillStyle(PALETTE.atmosphericDuskHex, 1);
-    bg.fillRect(-158, -40, 316, 1);
-    bg.fillRect(-158, 42, 316, 1);
-    this.tutorialContainer.add(bg);
-
-    const title = this.add.text(0, -68, `${Practice.run ? 'PRACTICE RUN' : 'PRE-FLIGHT AVIONICS'} // ${missionName(this.siteId).toUpperCase()}`, {
+    const title = fitHeaderText(this.add.text(0, 0, `${Practice.run ? 'PRACTICE RUN' : 'PRE-FLIGHT AVIONICS'} // ${missionName(this.siteId).toUpperCase()}`, {
       fontSize: '9px',
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 3,
-    }).setOrigin(0.5);
-    this.tutorialContainer.add(title);
+      align: 'center',
+    }).setOrigin(0.5, 0), 316);
 
-    const diff = this.add.text(0, -53, `DIFFICULTY: ${this.config.difficulty.toUpperCase()} · GRAVITY: ${this.config.world === 'moon' ? '1.62 m/s² (MOON)' : '3.71 m/s² (MARS)'}`, {
+    const diff = fitHeaderText(this.add.text(0, 0, `DIFFICULTY: ${this.config.difficulty.toUpperCase()} · GRAVITY: ${this.config.world === 'moon' ? '1.62 m/s² (MOON)' : '3.71 m/s² (MARS)'}`, {
       fontSize: '7px',
       fontFamily: HUD_FONT,
       color: PALETTE.beaconGold,
       letterSpacing: 2,
-    }).setOrigin(0.5);
-    this.tutorialContainer.add(diff);
+      align: 'center',
+    }).setOrigin(0.5, 0), 316);
 
     const lines = [
       '• [SPACE / W / UP / TAP SCREEN]: FIRE MAIN RETRO-THRUSTERS',
@@ -391,39 +384,53 @@ export class LandingScene extends Phaser.Scene {
       '• WATCH FUEL: RESERVE BURNS RAPIDLY UNDER CONTINUOUS FIRING',
       ...(Practice.run ? ['• PRACTICE RUN: NO ECHO IS RECOVERED. ' + Practice.run.note.toUpperCase()] : []),
     ];
-    let ly = -30;
-    lines.forEach((line) => {
-      const t = this.add.text(-150, ly, line, {
-        fontSize: '7px',
-        fontFamily: HUD_FONT,
-        color: line.startsWith('• PRACTICE') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
-        wordWrap: { width: 300, useAdvancedWrap: true },
-      });
-      this.tutorialContainer.add(t);
+    const lineTexts = lines.map((line) => this.add.text(-150, 0, line, {
+      fontSize: '7px',
+      fontFamily: HUD_FONT,
+      color: line.startsWith('• PRACTICE') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
+      wordWrap: { width: 300, useAdvancedWrap: true },
+    }));
+
+    const titleY = 12;
+    const diffY = titleY + title.height + 5;
+    const topDivY = diffY + diff.height + 7;
+    let ly = topDivY + 10;
+    const lineYs = lineTexts.map((t) => {
+      const y = ly;
       ly += Math.max(17, t.height + 6);
+      return y;
     });
-    // A long practice note pushes the panel taller
-    const extra = Math.max(0, ly - 38);
-    if (extra > 0) {
-      bg.clear();
-      NineSliceHUD.drawFrame(bg, -170, -85, 340, 170 + extra, 'panel');
-      bg.fillStyle(PALETTE.atmosphericDuskHex, 1);
-      bg.fillRect(-158, -40, 316, 1);
-      bg.fillRect(-158, 42 + extra, 316, 1);
-      this.tutorialContainer.setY(this.tutorialContainer.y - extra / 2);
-    }
+    const botDivY = ly + 3;
+    const btnY = botDivY + 10;
+    const totalH = Math.max(170, btnY + 22 + 12);
+    const top = Math.round(-totalH / 2);
+
+    const bg = this.add.graphics();
+    NineSliceHUD.drawFrame(bg, -170, top, 340, totalH, 'panel');
+    bg.fillStyle(PALETTE.atmosphericDuskHex, 1);
+    bg.fillRect(-158, top + topDivY, 316, 1);
+    bg.fillRect(-158, top + botDivY, 316, 1);
+    this.tutorialContainer.add(bg);
+
+    title.setY(top + titleY);
+    diff.setY(top + diffY);
+    this.tutorialContainer.add([title, diff]);
+    lineTexts.forEach((t, i) => {
+      t.setY(top + lineYs[i]);
+      this.tutorialContainer.add(t);
+    });
 
     const btnBg = this.add.graphics();
-    NineSliceHUD.drawFrame(btnBg, -110, 52 + extra, 220, 22, 'primary');
+    NineSliceHUD.drawFrame(btnBg, -110, top + btnY, 220, 22, 'primary');
     this.tutorialContainer.add(btnBg);
-    this.tutorialContainer.add(this.add.text(0, 63 + extra, 'ENGAGE DESCENT ➔', {
+    this.tutorialContainer.add(fitText(this.add.text(0, top + btnY + 11, 'ENGAGE DESCENT ➔', {
       fontSize: '8px',
       fontFamily: HUD_FONT,
       color: PALETTE.spaceBlack,
       letterSpacing: 3,
-    }).setOrigin(0.5));
+    }).setOrigin(0.5), 204));
 
-    const zone = this.add.zone(0, 63 + extra, 220, Math.max(22, minTouchTarget(this))).setInteractive({ cursor: 'pointer' });
+    const zone = this.add.zone(0, top + btnY + 11, 220, Math.max(22, minTouchTarget(this))).setInteractive({ cursor: 'pointer' });
     zone.on('pointerdown', () => {
       SoundFX.playClick();
       this.closeTutorial();
