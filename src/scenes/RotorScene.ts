@@ -261,7 +261,7 @@ export class RotorScene extends Phaser.Scene {
     this.banner = new Banner(this, 82, this.reduced);
     exitButton(this, 'SURFACE MAP', () => this.scene.start('SiteScene'));
     touchButton(this, 14, H - 32, 68, 24, '◀ TILT', 'ghost', () => { this.touchTilt = -1; }, () => { if (this.touchTilt === -1) this.touchTilt = 0; });
-    touchButton(this, 88, H - 32, 68, 24, 'TILT ▶', 'ghost', () => { this.touchTilt = 1; }, () => { if (this.touchTilt === 1) this.touchTilt = 0; });
+    touchButton(this, 126, H - 32, 68, 24, 'TILT ▶', 'ghost', () => { this.touchTilt = 1; }, () => { if (this.touchTilt === 1) this.touchTilt = 0; });
     touchButton(this, W - 154, H - 32, 140, 24, 'COLLECTIVE [W]', 'primary', () => { this.touchLift = true; }, () => { this.touchLift = false; });
   }
 

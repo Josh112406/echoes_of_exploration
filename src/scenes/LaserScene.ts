@@ -310,9 +310,10 @@ export class LaserScene extends Phaser.Scene {
     const k = this.keys;
     const ix = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
     const iy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
+    if (ix !== 0 || iy !== 0 || this.mobileJoystick?.active) this.pointerAim = null;
     ax += (this.mobileJoystick?.active ? this.mobileJoystick.x : ix) * 420;
     ay += (this.mobileJoystick?.active ? this.mobileJoystick.y : iy) * 420;
-    if (this.pointerAim && ix === 0 && iy === 0 && !this.mobileJoystick?.active) {
+    if (this.pointerAim) {
       ax += (this.pointerAim.x - this.rx) * 22;
       ay += (this.pointerAim.y - this.ry) * 22;
     }

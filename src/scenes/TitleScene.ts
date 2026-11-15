@@ -415,7 +415,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    const compactTitle = window.matchMedia('(pointer: coarse)').matches && document.getElementById('title-overlay')?.classList.contains('is-compact');
+    const compactTitle = !!document.getElementById('title-overlay')?.classList.contains('is-compact');
     this.logoText.setVisible(!compactTitle);
     this.cursorText.setVisible(!compactTitle);
     this.taglineText.setVisible(!compactTitle);

@@ -194,6 +194,9 @@ header.nav {
 
 .unit7-mobile { display: none; }
 .hub-mobile-toolbar { display: none; }
+#hub-overlay { display: block; overflow-y: auto; }
+#hub-overlay .telemetry-deck { padding: 16px; border: 1px solid var(--accent); font-size: 12px; line-height: 1.6; background: var(--g-alt); }
+#hub-overlay .telemetry-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 .exploration-nav { flex-shrink: 0; padding: 16px; margin-bottom: 24px; border: 1px solid var(--accent); background: var(--g-card); }
 .exploration-nav h2 { margin: 0 0 12px; font: 12px/1.5 var(--font-pixel); }
@@ -209,13 +212,11 @@ header.nav {
 .exploration-nav__legend { flex: 1 1 200px; margin: 0; padding-left: 24px; font: 13px/1.8 var(--font-mono); }
 
 @media (pointer: coarse) {
-  #hub-overlay { display: block; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding-top: 12px; }
+  #hub-overlay { touch-action: pan-y; overscroll-behavior: contain; padding-top: 12px; }
   .hub-mobile-toolbar { display: flex; justify-content: flex-end; position: sticky; top: -12px; z-index: 30; background: var(--g-alt); padding: 8px 0; margin-bottom: 12px; }
   #btn-close-hub-mobile { min-height: 44px; }
   #hub-overlay #btn-close-hub { display: none; }
   #hub-overlay .hub-surface { max-height: none !important; min-height: 280px; }
-  #hub-overlay .telemetry-deck { padding: 16px; border: 1px solid var(--accent); font-size: 12px; line-height: 1.6; }
-  #hub-overlay .telemetry-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 }
 
 @media (pointer: coarse) {
@@ -861,12 +862,34 @@ header.nav {
   color: var(--accent-laser);
 }
 
-/* Phone held upright: the canvas is a short strip, so it lays out like a handheld:
-   menu above the scene, UNIT-7's dialogue box below it */
-#title-overlay.is-compact .tmenu {
-  top: auto;
-  bottom: calc(100% - var(--cv-y, 0px) + 14px);
+/* Phone held upright (or narrow portrait desktop window): the canvas is a short strip,
+   so it lays out like a handheld: menu above the scene, UNIT-7's dialogue box below it. */
+#title-overlay.is-compact {
+  --mobile-title-top: max(60px, calc(var(--cv-y, 0px) + var(--cv-h, 0px) / 2 - (60px + var(--mobile-menu-h, 180px)) / 2));
 }
+
+#title-overlay.is-compact .tmenu-title {
+  position: absolute;
+  top: var(--mobile-title-top);
+  left: 16px;
+  right: 16px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  text-align: center;
+  font: 16px/1.5 var(--font-pixel);
+  letter-spacing: 0.08em;
+}
+#title-overlay.is-compact .tmenu-title span { display: block; font-size: 10px; color: var(--verified); }
+
+#title-overlay.is-compact .tmenu {
+  top: calc(var(--mobile-title-top) + 60px);
+  bottom: auto;
+}
+#title-overlay.is-compact .tmenu__row { background: rgba(5, 7, 15, 0.8); }
 
 #title-overlay.is-compact .tmenu-hud {
   top: 16px;
@@ -875,34 +898,13 @@ header.nav {
 
 #title-overlay.is-compact .tmenu-say {
   display: block;
-  top: calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px);
+  top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px));
 }
 
 #title-overlay.is-compact .tmenu-keys,
 #title-overlay.is-compact .tmenu-credit { display: none; }
 
 @media (pointer: coarse) {
-  #title-overlay.is-compact .tmenu-title {
-    position: absolute;
-    top: var(--mobile-title-top);
-    left: 16px;
-    right: 16px;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-    text-align: center;
-    font: 16px/1.5 var(--font-pixel);
-    letter-spacing: 0.08em;
-  }
-  .tmenu-title span { display: block; font-size: 10px; color: var(--verified); }
-  #title-overlay.is-compact { --mobile-title-top: max(60px, calc(var(--cv-y, 0px) + var(--cv-h, 0px) / 2 - (60px + var(--mobile-menu-h, 180px)) / 2)); }
-  #title-overlay.is-compact .tmenu { top: calc(var(--mobile-title-top) + 60px); bottom: auto; }
-  #title-overlay.is-compact .tmenu__row { background: rgba(5, 7, 15, 0.8); }
-  #title-overlay.is-compact .tmenu-say { top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px)); }
-
   .mobile-briefing {
     position: absolute;
     inset: 0;
@@ -1458,4 +1460,84 @@ header.nav {
   .ft-panel { padding: 14px; width: calc(100% - 16px); max-height: calc(100vh - 16px); }
   .ft-head h2 { font-size: 14px; }
   .ft-cards { grid-template-columns: 1fr; }
+}
+
+/* Accessibility settings applied from GameState settings on <html> */
+html.high-contrast {
+  --g-main: #000000;
+  --g-alt: #050812;
+  --g-card: #0c1224;
+  --ink: #ffffff;
+  --muted: #dbe4ff;
+  --hairline: #94a3b8;
+  --accent: #38bdf8;
+  --accent-laser: #e0f2fe;
+  --verified: #fbbf24;
+}
+
+html.high-contrast .overlay-pane:not(#title-overlay) {
+  background: rgba(0, 0, 0, 0.96) !important;
+}
+
+html.high-contrast :is(
+  .btn,
+  .artifact-card,
+  .catalog-card,
+  .briefing__card,
+  .briefing-single__card,
+  .briefing__say,
+  .about-panel,
+  .ft-panel,
+  .ft-card,
+  .tmenu__row,
+  .tmenu-say,
+  .telemetry-deck,
+  .unit7-mobile__box,
+  .quiz-choice
+) {
+  border-color: #e2e8f0;
+  color: #ffffff;
+}
+
+html.high-contrast :is(
+  .briefing__p,
+  .briefing__facts li,
+  .briefing__loc,
+  .briefing-single__note p,
+  .about-body p,
+  .catalog-note,
+  .catalog-summary,
+  .ft-card p,
+  .telemetry-summary
+) {
+  color: #ffffff;
+}
+
+html.high-contrast :is(button, a, input, select, summary):focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+html.text-large {
+  --ui-zoom: 1.14;
+}
+
+html.text-xlarge {
+  --ui-zoom: 1.26;
+}
+
+:is(html.text-large, html.text-xlarge) :is(
+  .overlay-pane:not(#title-overlay) > *,
+  #title-overlay .tmenu-say,
+  .mobile-briefing__card,
+  .unit7-mobile__box
+) {
+  zoom: var(--ui-zoom);
+}
+
+#settings-overlay,
+#about-overlay,
+#failure-overlay,
+#fieldtask-overlay {
+  justify-content: safe center !important;
 }

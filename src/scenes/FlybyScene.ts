@@ -563,9 +563,10 @@ export class FlybyScene extends Phaser.Scene {
     const k = this.keys;
     const ix = (k.D.isDown || k.RIGHT.isDown ? 1 : 0) - (k.A.isDown || k.LEFT.isDown ? 1 : 0);
     const iy = (k.S.isDown || k.DOWN.isDown ? 1 : 0) - (k.W.isDown || k.UP.isDown ? 1 : 0);
+    if (ix !== 0 || iy !== 0 || this.mobileJoystick?.active) this.pointerAim = null;
     let ax = (this.mobileJoystick?.active ? this.mobileJoystick.x : ix) * 900;
     let ay = (this.mobileJoystick?.active ? this.mobileJoystick.y : iy) * 900;
-    if (this.pointerAim && ix === 0 && iy === 0 && !this.mobileJoystick?.active) {
+    if (this.pointerAim) {
       ax += (this.pointerAim.x - this.fx) * 26;
       ay += (this.pointerAim.y - this.fy) * 26;
     }

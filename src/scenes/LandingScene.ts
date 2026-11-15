@@ -96,6 +96,7 @@ export class LandingScene extends Phaser.Scene {
   // Touch control states
   private touchThrust: boolean = false;
   private touchSteer: -1 | 0 | 1 = 0;
+  private controlStripTop: number = CONSTANTS.CANVAS.HEIGHT - 40;
 
   // Pre-flight tutorial overlay state
   private isTutorialActive: boolean = false;
@@ -472,6 +473,7 @@ export class LandingScene extends Phaser.Scene {
     const btnY = H - buttonH - (mobile ? 16 : 8);
     const hitH = Math.max(buttonH, hit);
     const hitY = Phaser.Math.Clamp(btnY + buttonH / 2, hitH / 2, H - hitH / 2);
+    this.controlStripTop = Math.min(H - 40, hitY - hitH / 2);
 
     const makeSteer = (x: number, dir: -1 | 1, label: string) => {
       const bg = this.ui(this.add.graphics().setDepth(100));
@@ -480,6 +482,7 @@ export class LandingScene extends Phaser.Scene {
       zone.on('pointerdown', () => { this.touchSteer = dir; });
       zone.on('pointerup', () => { this.touchSteer = 0; });
       zone.on('pointerout', () => { this.touchSteer = 0; });
+      zone.on('pointercancel', () => { this.touchSteer = 0; });
       this.ui(this.add.text(x + steerW / 2, btnY + buttonH / 2, label, {
         fontSize: mobile ? '9px' : '7px',
         fontFamily: HUD_FONT,
@@ -496,6 +499,7 @@ export class LandingScene extends Phaser.Scene {
     thrustZone.on('pointerdown', () => { this.touchThrust = true; });
     thrustZone.on('pointerup', () => { this.touchThrust = false; });
     thrustZone.on('pointerout', () => { this.touchThrust = false; });
+    thrustZone.on('pointercancel', () => { this.touchThrust = false; });
     this.ui(this.add.text(W / 2, btnY + buttonH / 2, mobile ? 'THRUST' : 'THRUST [SPACE / W]', {
       fontSize: mobile ? '9px' : '7px',
       fontFamily: HUD_FONT,
@@ -539,7 +543,7 @@ export class LandingScene extends Phaser.Scene {
         this.keySpace.isDown ||
         this.keysWASD?.W?.isDown ||
         this.touchThrust ||
-        (this.input.activePointer.isDown && this.input.activePointer.y < CONSTANTS.CANVAS.HEIGHT - 40);
+        (this.input.activePointer.isDown && this.input.activePointer.y < this.controlStripTop);
 
       if (this.cursors.left.isDown || this.keysWASD?.A?.isDown || this.touchSteer === -1) steer = -1;
       if (this.cursors.right.isDown || this.keysWASD?.D?.isDown || this.touchSteer === 1) steer = 1;

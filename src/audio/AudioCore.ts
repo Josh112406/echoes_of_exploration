@@ -37,6 +37,7 @@ class AudioCoreSystem {
   private duckGain: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   private runningListeners: (() => void)[] = [];
+  private unlockCleanup: (() => void) | null = null;
   private installed = false;
 
   /** True when this browser can make sound at all. */
@@ -59,7 +60,7 @@ class AudioCoreSystem {
       this.ctx = new Ctor({ latencyHint: 'playback' });
       this.build(this.ctx);
       this.ctx.addEventListener('statechange', () => {
-        if (this.running) this.runningListeners.forEach((fn) => fn());
+        if (this.running) this.notifyRunning();
       });
     }
     if (this.ctx && this.ctx.state === 'suspended' && !document.hidden) this.ctx.resume().catch(() => {});
@@ -114,6 +115,12 @@ class AudioCoreSystem {
     }
   }
 
+  private notifyRunning(): void {
+    this.unlockCleanup?.();
+    this.unlockCleanup = null;
+    this.runningListeners.forEach((fn) => fn());
+  }
+
   /**
    * Starts audio on the first click, tap or key press (browsers require a gesture),
    * and pauses it while the tab is hidden.
@@ -124,11 +131,16 @@ class AudioCoreSystem {
     const events = ['pointerdown', 'keydown', 'touchend'] as const;
     const unlock = () => {
       if (!this.supported) return;
+      const wasRunning = this.running;
       this.context();
-      if (!this.running) return;
-      // Once audio runs, stop listening: otherwise every key press re-applies the soundscape.
+      // If construction/resume succeeded synchronously (not transitioning later via statechange),
+      // stop listening and notify runningListeners once.
+      if (!wasRunning && this.running) {
+        this.notifyRunning();
+      }
+    };
+    this.unlockCleanup = () => {
       for (const ev of events) window.removeEventListener(ev, unlock, { capture: true });
-      this.runningListeners.forEach((fn) => fn());
     };
     for (const ev of events) window.addEventListener(ev, unlock, { capture: true, passive: true });
     document.addEventListener('visibilitychange', () => {

@@ -193,6 +193,7 @@ export function touchButton(
   zone.on('pointerdown', onDown);
   zone.on('pointerup', onUp);
   zone.on('pointerout', onUp);
+  zone.on('pointercancel', onUp);
   const text = scene.add.text(x + w / 2, y + h / 2, label, {
     fontFamily: HUD_FONT, fontSize: '7px', letterSpacing: 1,
     color: variant === 'primary' ? PALETTE.spaceBlack : PALETTE.lunarCrustCream,

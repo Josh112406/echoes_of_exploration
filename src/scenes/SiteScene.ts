@@ -152,6 +152,8 @@ export class SiteScene extends Phaser.Scene {
     super('SiteScene');
   }
 
+  private shutdownCleanups: (() => void)[] = [];
+
   init(data?: { siteId?: string }): void {
     this.returnedFromSiteId = data?.siteId ?? null;
   }
@@ -159,13 +161,28 @@ export class SiteScene extends Phaser.Scene {
   create(): void {
     document.body.classList.add('in-game');
     document.body.classList.add('site-scene');
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => document.body.classList.remove('site-scene'));
-    this.mobileJoystick = MobileJoystick.fromPage();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.mobileJoystick?.destroy();
-      this.mobileJoystick = null;
-    });
     const world = GameState.getWorld();
+    this.mobileJoystick = MobileJoystick.fromPage();
+    this.shutdownCleanups = [
+      () => {
+        document.body.classList.remove('site-scene');
+        this.mobileJoystick?.destroy();
+        this.mobileJoystick = null;
+        SoundFX.setRover(0);
+        if (this.robot) {
+          GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+        }
+      },
+    ];
+    let cleaned = false;
+    const runCleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      for (const fn of this.shutdownCleanups) fn();
+      this.shutdownCleanups = [];
+    };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, runCleanup);
+    this.events.once(Phaser.Scenes.Events.DESTROY, runCleanup);
     // Each world has its own exploration music and its own air (or lack of it)
     const music = world === 'moon' ? 'explore_moon' : world === 'mars' ? 'explore_mars' : 'transition';
     const ambience = world === 'elsewhere' ? 'space' : world;
@@ -325,7 +342,7 @@ export class SiteScene extends Phaser.Scene {
     this.keyQ.on('down', talk);
     const mobileTalk = document.getElementById('mobile-talk');
     const unbindTalk = mobileTalk ? bindPressAction(mobileTalk, talk) : () => {};
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindTalk);
+    this.shutdownCleanups.push(unbindTalk);
     this.input.keyboard?.on('keydown-M', () => {
       if (this.isUiBlocked()) return;
       if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
@@ -338,12 +355,12 @@ export class SiteScene extends Phaser.Scene {
       if (id && id === this.returnedFromSiteId) this.story.queueAfterthought(id);
     };
     EventBus.on(EVENTS.ENTRY_CLOSED, onEntryClosed);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => EventBus.off(EVENTS.ENTRY_CLOSED, onEntryClosed));
+    this.shutdownCleanups.push(() => EventBus.off(EVENTS.ENTRY_CLOSED, onEntryClosed));
 
     // Pointer steer & touch interact
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      // Ignore HUD touches
-      if (pointer.y <= 36) return;
+      // Ignore HUD touches and clicks while a DOM overlay is covering the stage
+      if (this.isUiBlocked() || pointer.y <= 36) return;
 
       if (this.nearestMarker && this.nearestDist <= 56) {
         this.interact(this.nearestMarker.id);
@@ -355,20 +372,7 @@ export class SiteScene extends Phaser.Scene {
       this.refreshMarkerStates();
     };
     EventBus.on(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      SoundFX.setRover(0);
-      EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-      if (this.robot) {
-        GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
-      }
-    });
-    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
-      EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-      if (this.robot) {
-        GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
-      }
-    });
+    this.shutdownCleanups.push(() => EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked));
   }
 
   private createGeologicFeatures(world: WorldId): void {
@@ -845,7 +849,7 @@ export class SiteScene extends Phaser.Scene {
     mapBtn.on('pointerdown', openMap);
     const mobileMap = document.getElementById('mobile-map');
     const unbindMap = mobileMap ? bindPressAction(mobileMap, openMap) : () => {};
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindMap);
+    this.shutdownCleanups.push(unbindMap);
 
     const mapText = this.add.text(W - 88, 22, 'MAP', {
       fontSize: '7px',
@@ -869,7 +873,7 @@ export class SiteScene extends Phaser.Scene {
     menuBtn.on('pointerdown', openMenu);
     const mobileMenu = document.getElementById('mobile-menu');
     const unbindMenu = mobileMenu ? bindPressAction(mobileMenu, openMenu) : () => {};
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unbindMenu);
+    this.shutdownCleanups.push(unbindMenu);
 
     const menuText = this.add.text(W - 37, 22, 'MENU', {
       fontSize: '7px',
@@ -934,29 +938,32 @@ export class SiteScene extends Phaser.Scene {
       }
     }
 
+    const blocked = this.isUiBlocked();
     let ix = 0;
     let iy = 0;
 
-    // Keyboard controls: Arrow Keys + WASD
-    if (this.cursors.left.isDown || this.keysWASD?.A?.isDown) ix -= 1;
-    if (this.cursors.right.isDown || this.keysWASD?.D?.isDown) ix += 1;
-    if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
-    if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
+    if (!blocked) {
+      // Keyboard controls: Arrow Keys + WASD
+      if (this.cursors.left.isDown || this.keysWASD?.A?.isDown) ix -= 1;
+      if (this.cursors.right.isDown || this.keysWASD?.D?.isDown) ix += 1;
+      if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
+      if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
 
-    // Touch joystick, with canvas drag as an alternate input.
-    if (this.mobileJoystick?.active) {
-      ix = this.mobileJoystick.x;
-      iy = this.mobileJoystick.y;
-    } else if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
-      const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
-      const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
-      const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);
-      const distToPointer = Math.hypot(dx, dy);
+      // Touch joystick, with canvas drag as an alternate input.
+      if (this.mobileJoystick?.active) {
+        ix = this.mobileJoystick.x;
+        iy = this.mobileJoystick.y;
+      } else if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
+        const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
+        const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
+        const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);
+        const distToPointer = Math.hypot(dx, dy);
 
-      if (distToPointer > 14) {
-        const angle = Math.atan2(dy, dx);
-        ix = Math.cos(angle);
-        iy = Math.sin(angle);
+        if (distToPointer > 14) {
+          const angle = Math.atan2(dy, dx);
+          ix = Math.cos(angle);
+          iy = Math.sin(angle);
+        }
       }
     }
 
@@ -1201,7 +1208,7 @@ export class SiteScene extends Phaser.Scene {
       this.promptBg.setPosition(px, py);
       NineSliceHUD.drawFrame(this.promptBg, -boxW / 2, -7, boxW, 16, variant);
 
-      if (Phaser.Input.Keyboard.JustDown(this.keyE)) {
+      if (!blocked && Phaser.Input.Keyboard.JustDown(this.keyE)) {
         this.interact(this.nearestMarker.id);
       }
     } else {
@@ -1315,12 +1322,9 @@ export class SiteScene extends Phaser.Scene {
     }
   }
 
-  /** A DOM overlay (entry reader, archive, settings…) is covering the game. */
+  /** A DOM overlay (entry reader, archive, field task, settings…) is covering the game. */
   private isUiBlocked(): boolean {
-    return !!document.querySelector(
-      '#entry-overlay:not(.hidden), #archive-overlay:not(.hidden), #failure-overlay:not(.hidden), ' +
-      '#settings-overlay:not(.hidden), #about-overlay:not(.hidden), #title-overlay:not(.hidden), #hub-overlay:not(.hidden)'
-    );
+    return !!document.querySelector('.overlay-pane:not(.hidden)');
   }
 
   /** Name of the next echo in launch order in this sector. */

@@ -299,27 +299,6 @@ class SoundEffectsSystem {
     osc.stop(ctx.currentTime + 0.09);
   }
 
-  public playTypewriter(): void {
-    if (!this.isAudioAllowed()) return;
-    const ctx = this.initContext();
-    if (!ctx) return;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(800 + Math.random() * 200, ctx.currentTime);
-
-    gain.gain.setValueAtTime(0.015, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0005, ctx.currentTime + 0.018);
-
-    osc.connect(gain);
-    gain.connect(this.out(ctx));
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.02);
-  }
-
   /**
    * UNIT-7's talking voice: a short robotic chirp per syllable. The pitch is
    * derived from the character so the same word sounds the same each time,
@@ -468,11 +447,6 @@ class SoundEffectsSystem {
     const v = Math.max(0.1, Math.min(1, intensity));
     this.tone(90 + v * 40, 0.14 + v * 0.1, 0.06 + v * 0.08, 'sine', 40);
     this.noiseBurst(0.08 + v * 0.1, 0.03 + v * 0.05, 'lowpass', 500 + v * 600);
-  }
-
-  /** Spring creak of a rover suspension. */
-  public playCreak(): void {
-    this.tone(320 + Math.random() * 80, 0.12, 0.012, 'sawtooth', 210);
   }
 
   /** Q-switched laser pulse: a short bright zap. */

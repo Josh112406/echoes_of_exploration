@@ -19,8 +19,8 @@ export class SettingsModal {
     const s = GameState.getState().settings;
 
     this.container.innerHTML = `
-      <div style="max-width:500px; margin:auto; background:${PALETTE.deepIndigo}; border:1px solid ${PALETTE.cyanGlow}; padding:24px; box-shadow:0 12px 36px rgba(5,7,15,0.95);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:12px;">
+      <div style="width:100%; max-width:500px; box-sizing:border-box; margin:auto; background:${PALETTE.deepIndigo}; border:1px solid ${PALETTE.cyanGlow}; padding:20px; box-shadow:0 12px 36px rgba(5,7,15,0.95);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:20px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:12px;">
           <h2 style="font-size:15px; font-weight:700; letter-spacing:0.04em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">SYSTEM & ACCESSIBILITY SETTINGS</h2>
           <button id="btn-close-settings" class="btn">CLOSE [X]</button>
         </div>
@@ -37,6 +37,14 @@ export class SettingsModal {
 
           <hr style="border:none; border-top:1px solid ${PALETTE.shadowNavy}; margin:4px 0;" />
           <div style="font-size:11px; letter-spacing:0.12em; color:${PALETTE.cyanGlow};">ACCESSIBILITY</div>
+          <label style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 12px; cursor:pointer;">
+            <span>Text Size:</span>
+            <select id="sel-text-size" style="max-width:100%; min-width:0; background:${PALETTE.shadowNavy}; color:${PALETTE.lunarHighlight}; border:1px solid ${PALETTE.cyanGlow}; padding:4px 8px; font-family:var(--font-mono); font-size:12px; cursor:pointer;">
+              <option value="normal"${s.textSize === 'normal' ? ' selected' : ''}>Normal</option>
+              <option value="large"${s.textSize === 'large' ? ' selected' : ''}>Large</option>
+              <option value="xlarge"${s.textSize === 'xlarge' ? ' selected' : ''}>Extra Large</option>
+            </select>
+          </label>
           <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
             <span>High Contrast Mode:</span>
             <input type="checkbox" id="chk-contrast" ${s.highContrast ? 'checked' : ''} style="accent-color:${PALETTE.cyanGlow}; cursor:pointer;" />
@@ -59,7 +67,7 @@ export class SettingsModal {
 
           <hr style="border:none; border-top:1px solid ${PALETTE.shadowNavy}; margin:8px 0;" />
 
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <span style="color:${PALETTE.thrusterOrange};">Reset Mission Progress:</span>
             <button id="btn-reset-progress" class="btn" style="border-color:${PALETTE.thrusterOrange}; color:${PALETTE.thrusterOrange};">RESET PROGRESS</button>
           </div>
@@ -73,10 +81,12 @@ export class SettingsModal {
   private slider(id: string, label: string, value: number): string {
     const pct = Math.round(value * 100);
     return `
-          <label style="display:grid; grid-template-columns:1fr 140px 38px; gap:10px; align-items:center;">
-            <span>${label}:</span>
-            <input type="range" id="${id}" min="0" max="100" step="5" value="${pct}" aria-valuetext="${pct}%" style="accent-color:${PALETTE.cyanGlow}; cursor:pointer; width:100%;" />
-            <output for="${id}" style="text-align:right; color:${PALETTE.lunarHighlight};">${pct}%</output>
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <span>${label}:</span>
+              <output for="${id}" style="text-align:right; color:${PALETTE.lunarHighlight};">${pct}%</output>
+            </span>
+            <input type="range" id="${id}" min="0" max="100" step="5" value="${pct}" aria-valuetext="${pct}%" style="accent-color:${PALETTE.cyanGlow}; cursor:pointer; width:100%; min-width:0;" />
           </label>`;
   }
 
@@ -104,6 +114,11 @@ export class SettingsModal {
 
     this.container.querySelector('#btn-close-settings')?.addEventListener('click', () => {
       this.container.classList.add('hidden');
+    });
+
+    this.container.querySelector('#sel-text-size')?.addEventListener('change', (e) => {
+      const value = (e.target as HTMLSelectElement).value as 'normal' | 'large' | 'xlarge';
+      GameState.updateSettings({ textSize: value });
     });
 
     this.container.querySelector('#chk-contrast')?.addEventListener('change', (e) => {

@@ -91,7 +91,7 @@ export class HubMap {
           <button id="btn-close-quick-land" class="btn" style="padding:2px 8px; font-size:10px; font-family:var(--font-mono);">CLOSE [X]</button>
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px;">
-          ${Object.values(ALL_ENTRIES).filter(e => GameState.isWorldUnlocked(e.world)).map(e => {
+          ${Object.values(ALL_ENTRIES).filter(e => GameState.isSiteActive(e.id)).map(e => {
             const mg = getMinigameMetaForSite(e.id);
             const sectorColor = e.world === 'moon' ? '#cbd5e1' : e.world === 'mars' ? '#f97316' : '#38bdf8';
             return `
@@ -105,15 +105,12 @@ export class HubMap {
         </div>
       </div>
 
+      <div id="hub-notice" role="status" aria-live="polite" style="display:none; margin-bottom:12px; padding:8px 12px; background:#1c120d; border:1px solid #f59e0b; color:#fbbf24; font-family:var(--font-mono); font-size:11px;"></div>
+
       <!-- Main Surface Display -->
       ${this.isListView ? this.renderListView(entries) : this.renderMapView(entries, currentWorld)}
     `;
 
-    if (window.matchMedia('(pointer: coarse)').matches) {
-      const surface = this.container.querySelector('.hub-surface');
-      const details = this.container.querySelector('#marker-card-popover');
-      if (surface && details) surface.after(details);
-    }
     this.bindEvents();
 
     if (!this.isListView) {
@@ -172,7 +169,7 @@ export class HubMap {
     }).join('');
 
     return `
-      <div class="hub-surface" style="position:relative; width:100%; aspect-ratio:2/1; max-height:calc(100vh - 210px); background:#0e121a; border:1px solid rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+      <div class="hub-surface" style="position:relative; width:100%; aspect-ratio:2/1; min-height:280px; max-height:calc(100vh - 210px); background:#0e121a; border:1px solid rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
         <img src="${mapSrc}" alt="${currentWorld} Surface Map" style="width:100%; height:100%; object-fit:cover; opacity:0.85;" />
         
         <!-- Celestial Graticule Coordinate Grid -->
@@ -182,7 +179,7 @@ export class HubMap {
           <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" stroke-dasharray="2 2" />
           <line x1="0" y1="90" x2="360" y2="90" stroke="rgba(6,182,212,0.25)" stroke-width="0.75" />
           <line x1="0" y1="120" x2="360" y2="120" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" stroke-dasharray="2 2" />
-          <line x1="150" y1="150" x2="360" y2="150" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" stroke-dasharray="2 2" />
+          <line x1="0" y1="150" x2="360" y2="150" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" stroke-dasharray="2 2" />
 
           <!-- Meridians -->
           <line x1="60" y1="0" x2="60" y2="180" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" stroke-dasharray="2 2" />
@@ -206,10 +203,10 @@ export class HubMap {
 
         <!-- Map credit (RULES.md §3: real NASA data vs team illustration, clearly labelled) -->
         <div class="map-credit">${MAP_CREDIT[currentWorld] ?? ''}</div>
-
-        <!-- Docked Telemetry Deck -->
-        <div id="marker-card-popover"></div>
       </div>
+
+      <!-- Docked Telemetry Deck -->
+      <div id="marker-card-popover" style="margin-top:12px;"></div>
     `;
   }
 
@@ -228,9 +225,7 @@ export class HubMap {
           <td style="padding:10px 8px;">
             <div style="display:flex; gap:6px;">
               <button class="btn btn-fly-here" data-entry-id="${entry.id}">VISIT</button>
-              ${GameState.isSiteActive(entry.id)
-            ? `<button class="btn btn--primary btn-direct-land" data-entry-id="${entry.id}">PLAY ${mg.code} (60Hz)</button>`
-            : `<button class="btn" disabled title="Echoes are recovered in launch order">LOCKED · RECOVER ${(ALL_ENTRIES[GameState.getNextTarget(entry.world) ?? '']?.name ?? 'THE PREVIOUS SECTOR').toUpperCase()} FIRST</button>`}
+              ${this.renderPlayButton(entry, mg.code)}
             </div>
           </td>
         </tr>
@@ -275,7 +270,7 @@ export class HubMap {
     btnMars?.addEventListener('click', () => {
       if (!GameState.isWorldUnlocked('mars')) {
         SoundFX.playCrash();
-        alert('Out of range. Recover all 8 Moon echoes to ignite the Mars transfer stage.');
+        this.showNotice('Out of range. Recover all 8 Moon echoes to ignite the Mars transfer stage.');
         return;
       }
       SoundFX.playWhoosh();
@@ -286,7 +281,7 @@ export class HubMap {
     btnElsewhere?.addEventListener('click', () => {
       if (!GameState.isWorldUnlocked('elsewhere')) {
         SoundFX.playCrash();
-        alert('Deep space telemetry offline. Recover all 9 Mars echoes to ignite the outer-system ion drive.');
+        this.showNotice('Deep space telemetry offline. Recover all 9 Mars echoes to ignite the outer-system ion drive.');
         return;
       }
       SoundFX.playWhoosh();
@@ -383,7 +378,7 @@ export class HubMap {
         </div>
         <div class="telemetry-actions">
           <button class="btn btn-fly-here" data-entry-id="${entry.id}">VISIT SECTOR</button>
-          <button class="btn btn--primary btn-direct-land" data-entry-id="${entry.id}">PLAY ${mg.code} (60Hz)</button>
+          ${this.renderPlayButton(entry, mg.code)}
         </div>
       </div>
     `;
@@ -394,6 +389,22 @@ export class HubMap {
     cardContainer.querySelector('.btn-direct-land')?.addEventListener('click', () => {
       this.directLand(entry.id);
     });
+  }
+
+  private renderPlayButton(entry: (typeof ALL_ENTRIES)[string], code: string): string {
+    if (GameState.isSiteActive(entry.id)) {
+      return `<button class="btn btn--primary btn-direct-land" data-entry-id="${entry.id}">PLAY ${code} (60Hz)</button>`;
+    }
+    const nextId = GameState.getNextTarget(entry.world);
+    const nextName = (nextId && ALL_ENTRIES[nextId]?.name) || 'THE PREVIOUS SECTOR';
+    return `<button class="btn" disabled title="Echoes are recovered in launch order">LOCKED · RECOVER ${nextName.toUpperCase()} FIRST</button>`;
+  }
+
+  private showNotice(message: string): void {
+    const notice = this.container.querySelector<HTMLElement>('#hub-notice');
+    if (!notice) return;
+    notice.textContent = message;
+    notice.style.display = 'block';
   }
 
   private flyToSite(siteId: string): void {
@@ -409,10 +420,8 @@ export class HubMap {
 
   private directLand(siteId: string): void {
     const entry = ALL_ENTRIES[siteId];
-    if (entry) {
-      if (!GameState.isWorldUnlocked(entry.world)) return;
-      GameState.setWorld(entry.world);
-    }
+    if (!entry || !GameState.isSiteActive(siteId)) return;
+    GameState.setWorld(entry.world);
     GameState.setCurrentSiteId(siteId);
     this.container.classList.add('hidden');
     EventBus.emit(EVENTS.START_LANDING, siteId);
