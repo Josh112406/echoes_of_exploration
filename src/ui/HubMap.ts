@@ -80,9 +80,6 @@ export class HubMap {
           <button id="btn-toggle-view" class="btn">
             ${this.isListView ? '[VIEW: PROJECTION MAP]' : '[VIEW: ROSTER TABLE]'}
           </button>
-          <button id="btn-close-hub" class="btn">
-            CLOSE [X]
-          </button>
         </div>
       </div>
 
@@ -128,7 +125,10 @@ export class HubMap {
     // Exploration positions are independent of the real geographic coordinates below.
     return `
       <section class="exploration-nav" aria-label="Your exploration location">
-        <h2>${world.toUpperCase()} · EXPLORATION MAP</h2>
+        <div class="exploration-nav__head">
+          <h2>${world.toUpperCase()} · EXPLORATION MAP</h2>
+          <button id="btn-close-hub" class="btn">CLOSE [X]</button>
+        </div>
         <p>${position ? '◆ YOU · Numbers match the sites below.' : 'Start exploring this sector to show your location.'} Game layout; edges wrap.</p>
         <div class="exploration-nav__layout">
           <div class="exploration-nav__map" role="img" aria-label="Game area with numbered mission sites${position ? ' and your current position' : ''}">

@@ -199,7 +199,8 @@ header.nav {
 #hub-overlay .telemetry-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 .exploration-nav { flex-shrink: 0; padding: 16px; margin-bottom: 24px; border: 1px solid var(--accent); background: var(--g-card); }
-.exploration-nav h2 { margin: 0 0 12px; font: 12px/1.5 var(--font-pixel); }
+.exploration-nav__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.exploration-nav h2 { margin: 0; font: 12px/1.5 var(--font-pixel); }
 .exploration-nav p { font: 13px/1.5 var(--font-mono); margin: 0 0 12px; }
 .exploration-nav__layout { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
 .exploration-nav__map { position: relative; flex: 1 1 260px; max-width: 540px; aspect-ratio: 3 / 2; border: 1px solid var(--muted); background: repeating-linear-gradient(0deg, transparent 0 24%, #ffffff0a 25%), repeating-linear-gradient(90deg, #05070f 0 24%, #ffffff0a 25%); }
