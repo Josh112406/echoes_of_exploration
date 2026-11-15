@@ -4,7 +4,7 @@ import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, TOUCH_UI } from '../ui/NineSliceHUD.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
 import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
@@ -81,6 +81,8 @@ export class RotorScene extends Phaser.Scene {
   private windMotes!: Particles;
   private hud!: Phaser.GameObjects.Graphics;
   private readout!: Phaser.GameObjects.Text;
+  private gatePipsX = 214;
+  private hullPipsX = 264;
   private banner!: Banner;
 
   constructor() {
@@ -252,7 +254,12 @@ export class RotorScene extends Phaser.Scene {
     fitText(hudText(this, 28, 12, `MARS ROTOR FLIGHT // ${name.toUpperCase()}`, PALETTE.cyanLaser), 288);
     hudText(this, 20, 26, 'BAT', PALETTE.lunarDustLight);
     hudText(this, 20, 40, 'RPM', PALETTE.lunarDustLight);
-    hudText(this, 176, 40, 'GATES', PALETTE.lunarDustLight);
+    const gatesLabel = hudText(this, 176, 40, 'GATES', PALETTE.lunarDustLight);
+    if (TOUCH_UI) {
+      // Touch labels are bigger, so the pips start right after the label
+      this.gatePipsX = Math.ceil(gatesLabel.x + gatesLabel.width + 5);
+      this.hullPipsX = this.gatePipsX + this.gates.length * 9 + 8;
+    }
     hudText(this, W - 120, 42, 'VSI', PALETTE.lunarDustLight);
     hudText(this, W - 80, 42, 'WIND', PALETTE.lunarDustLight);
     this.readout = hudText(this, W - 120, 118, '', PALETTE.lunarHighlight);
@@ -261,7 +268,7 @@ export class RotorScene extends Phaser.Scene {
     this.banner = new Banner(this, 82, this.reduced);
     exitButton(this, 'SURFACE MAP', () => this.scene.start('SiteScene'));
     touchButton(this, 14, H - 32, 68, 24, '◀ TILT', 'ghost', () => { this.touchTilt = -1; }, () => { if (this.touchTilt === -1) this.touchTilt = 0; });
-    touchButton(this, 88, H - 32, 68, 24, 'TILT ▶', 'ghost', () => { this.touchTilt = 1; }, () => { if (this.touchTilt === 1) this.touchTilt = 0; });
+    touchButton(this, 126, H - 32, 68, 24, 'TILT ▶', 'ghost', () => { this.touchTilt = 1; }, () => { if (this.touchTilt === 1) this.touchTilt = 0; });
     touchButton(this, W - 154, H - 32, 140, 24, 'COLLECTIVE [W]', 'primary', () => { this.touchLift = true; }, () => { this.touchLift = false; });
   }
 
@@ -270,8 +277,8 @@ export class RotorScene extends Phaser.Scene {
     g.clear();
     drawSegBar(g, 46, 25, 270, 9, this.battery / 100, PALETTE.cyanGlowHex, { segments: 20, warnBelow: 0.25 });
     drawSegBar(g, 46, 39, 120, 9, this.rpm, this.rpm > 0.92 ? PALETTE.beaconGoldHex : PALETTE.lunarCrustCreamHex, { segments: 10 });
-    drawPips(g, 214, 40, this.gates.length, this.nextGate, PALETTE.cyanLaserHex);
-    drawPips(g, 264, 40, this.maxHull, this.hull, this.hull <= 1 ? PALETTE.thrusterOrangeHex : PALETTE.lunarCrustCreamHex, 5, 2);
+    drawPips(g, this.gatePipsX, 40, this.gates.length, this.nextGate, PALETTE.cyanLaserHex);
+    drawPips(g, this.hullPipsX, 40, this.maxHull, this.hull, this.hull <= 1 ? PALETTE.thrusterOrangeHex : PALETTE.lunarCrustCreamHex, 5, 2);
 
     // Vertical speed indicator: needle on a tall scale, safe band highlighted
     const vx0 = W - 118, vy0 = 54, vh = 58;

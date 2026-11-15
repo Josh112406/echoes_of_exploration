@@ -23,6 +23,7 @@ const ROBOT_SCALE = 2;
 export class TitleScene extends Phaser.Scene {
   private logoText!: Phaser.GameObjects.Text;
   private cursorText!: Phaser.GameObjects.Text;
+  private taglineText!: Phaser.GameObjects.Text;
   private typedChars: number = 0;
   private typingTimer: number = 0;
   private readonly fullLogo: string = 'ECHOES OF EXPLORATION';
@@ -49,6 +50,7 @@ export class TitleScene extends Phaser.Scene {
   private bubbleText!: Phaser.GameObjects.Text;
   private talk = new TalkClock();
   private talking = false;
+  private activeHint = '';
 
   constructor() {
     super('TitleScene');
@@ -108,8 +110,18 @@ export class TitleScene extends Phaser.Scene {
 
     this.createBubble();
     const onHint = (text: string) => this.say(text);
+    const onResize = () => {
+      if (this.activeHint && this.bubble?.visible) {
+        this.layoutBubble(this.activeHint);
+        if (this.talking) this.bubbleText.setText(this.talk.visible);
+      }
+    };
     EventBus.on(EVENTS.TITLE_HINT, onHint);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => EventBus.off(EVENTS.TITLE_HINT, onHint));
+    this.scale.on(Phaser.Scale.Events.RESIZE, onResize);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      EventBus.off(EVENTS.TITLE_HINT, onHint);
+      this.scale.off(Phaser.Scale.Events.RESIZE, onResize);
+    });
     // The menu may already be showing (it renders before this scene starts)
     if (TitleScreen.currentHint) this.time.delayedCall(this.reducedMotion ? 0 : 700, () => this.say(TitleScreen.currentHint));
 
@@ -286,11 +298,34 @@ export class TitleScene extends Phaser.Scene {
     this.bubble = c;
   }
 
+  private layoutBubble(text: string): number {
+    this.bubbleText.setText(text);
+    const h = Math.max(36, Math.ceil(this.bubbleText.height) + 28);
+    const w = this.bubbleW;
+    const x = Math.max(28, this.robotX - 52);
+    const touchLandscape = window.matchMedia('(pointer: coarse) and (orientation: landscape)').matches;
+    const y = touchLandscape
+      ? Math.max(38, Math.min(Math.round(this.robotTop - 10 - h), Math.round(CONSTANTS.CANVAS.HEIGHT * 0.41 - h - 10)))
+      : Math.round(this.robotTop - 10 - h);
+    const g = this.bubbleGfx;
+    g.clear();
+    NineSliceHUD.drawFrame(g, 0, 0, w, h, 'panel');
+    if (!touchLandscape) {
+      // Pixel tail pointing down at the robot's head
+      const tx = this.robotX - x;
+      g.fillStyle(PALETTE.deepIndigoHex, 1).fillRect(tx - 4, h - 1, 8, 2).fillRect(tx - 3, h + 1, 6, 2).fillRect(tx - 2, h + 3, 4, 2).fillRect(tx - 1, h + 5, 2, 2);
+      g.fillStyle(PALETTE.cyanGlowHex, 1).fillRect(tx - 5, h + 1, 1, 2).fillRect(tx + 4, h + 1, 1, 2).fillRect(tx - 4, h + 3, 1, 2).fillRect(tx + 3, h + 3, 1, 2).fillRect(tx - 3, h + 5, 1, 2).fillRect(tx + 2, h + 5, 1, 2).fillRect(tx - 2, h + 7, 4, 1);
+    }
+    this.bubble?.setPosition(x, y);
+    return y;
+  }
+
   /** UNIT-7 says a line in its bubble, typed at the shared talking pace with its voice. */
   private say(text: string): void {
     const c = this.bubble;
     if (!c || !c.active) return;
     this.tweens.killTweensOf(c);
+    this.activeHint = text;
     if (!text) {
       this.talking = false;
       this.tweens.add({ targets: c, alpha: 0, duration: this.reducedMotion ? 0 : 160, onComplete: () => c.setVisible(false) });
@@ -298,19 +333,8 @@ export class TitleScene extends Phaser.Scene {
     }
 
     // Size the frame to the full line, then type it out
-    this.bubbleText.setText(text);
-    const h = Math.max(36, Math.ceil(this.bubbleText.height) + 28);
-    const w = this.bubbleW;
-    const x = Math.max(28, this.robotX - 52);
-    const y = Math.round(this.robotTop - 10 - h);
-    const g = this.bubbleGfx;
-    g.clear();
-    NineSliceHUD.drawFrame(g, 0, 0, w, h, 'panel');
-    // Pixel tail pointing down at the robot's head
-    const tx = this.robotX - x;
-    g.fillStyle(PALETTE.deepIndigoHex, 1).fillRect(tx - 4, h - 1, 8, 2).fillRect(tx - 3, h + 1, 6, 2).fillRect(tx - 2, h + 3, 4, 2).fillRect(tx - 1, h + 5, 2, 2);
-    g.fillStyle(PALETTE.cyanGlowHex, 1).fillRect(tx - 5, h + 1, 1, 2).fillRect(tx + 4, h + 1, 1, 2).fillRect(tx - 4, h + 3, 1, 2).fillRect(tx + 3, h + 3, 1, 2).fillRect(tx - 3, h + 5, 1, 2).fillRect(tx + 2, h + 5, 1, 2).fillRect(tx - 2, h + 7, 4, 1);
-    c.setPosition(x, y).setVisible(true);
+    const y = this.layoutBubble(text);
+    c.setVisible(true);
 
     this.talk.start(text, { instant: this.reducedMotion });
     this.bubbleText.setText(this.talk.visible);
@@ -382,6 +406,7 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0)
       .setShadow(0, 1, PALETTE.emberShadow, 0, false, true);
 
+    this.taglineText = tagline;
     this.tweens.add({ targets: tagline, alpha: 1, duration: 1000, delay: 1400 });
   }
 
@@ -408,6 +433,10 @@ export class TitleScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    const compactTitle = !!document.getElementById('title-overlay')?.classList.contains('is-compact');
+    this.logoText.setVisible(!compactTitle);
+    this.cursorText.setVisible(!compactTitle);
+    this.taglineText.setVisible(!compactTitle);
     const dt = delta / 1000;
     if (this.talking && this.bubbleText?.active) {
       if (this.talk.tick(dt)) this.bubbleText.setText(this.talk.visible);

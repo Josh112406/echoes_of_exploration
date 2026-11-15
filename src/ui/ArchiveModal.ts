@@ -71,11 +71,11 @@ export class ArchiveModal {
               [ECHO NOT YET RECOVERED]
             </div>
             <div style="margin-top:12px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <h4 style="font-size:14px; color:${PALETTE.slateMuted}; font-family:var(--font-mono);">${entry.name}</h4>
                 <span class="badge ${badgeClass}">${entry.status}</span>
               </div>
-              <p style="font-size:10px; font-family:var(--font-mono); color:${PALETTE.shadowNavy}; margin-top:6px;">SECTOR // ${entry.world.toUpperCase()}</p>
+              <p style="font-size:10px; font-family:var(--font-mono); color:var(--muted); margin-top:6px;">SECTOR // ${entry.world.toUpperCase()}</p>
             </div>
           </div>
         `;
@@ -90,7 +90,7 @@ export class ArchiveModal {
             <img src="${entry.image.file}" alt="${entry.image.alt}" style="width:100%; height:100%; object-fit:cover;" />
           </div>
           <div style="margin-top:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <h4 style="font-size:14px; font-weight:700; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">${entry.name}</h4>
               <span class="badge ${badgeClass}">${entry.status}</span>
             </div>
@@ -102,7 +102,7 @@ export class ArchiveModal {
     }).join('');
 
     this.container.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; border-bottom:1px solid ${PALETTE.shadowNavy}; padding-bottom:14px;">
         <div>
           <h2 style="font-size:18px; font-weight:700; letter-spacing:0.02em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">ECHOES OF EXPLORATION // MISSION ARCHIVE</h2>
           <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.cyanGlow}; margin-top:2px;">${Object.keys(ALL_ENTRIES).length} PLAYABLE ECHOES // MOON, MARS &amp; DEEP SPACE</p>
@@ -288,7 +288,7 @@ export class ArchiveModal {
           <h2 style="font-size:18px; font-weight:700; letter-spacing:0.02em; color:${PALETTE.lunarHighlight}; font-family:var(--font-mono);">UNIT-7 JOURNAL</h2>
           <p style="font-size:11px; font-family:var(--font-mono); color:${PALETTE.cyanGlow}; margin-top:2px;">WHAT THE ROBOT THINKS · SHAPED BY YOUR ANSWERS</p>
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
           ${this.tabsHtml()}
           <button id="btn-close-archive" class="btn">CLOSE [X]</button>
         </div>

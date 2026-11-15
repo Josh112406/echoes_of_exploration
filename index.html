@@ -18,6 +18,12 @@
       <main id="game-stage">
         <!-- Persistent Phaser Canvas Mount -->
         <div id="game-container"></div>
+        <div id="graphics-fallback" hidden role="status" aria-live="polite">
+          <img src="/assets/sprites/earth.png" alt="Pixel-art Earth" />
+          <small>SI-GENERATED ILLUSTRATION</small>
+          <p>GRAPHICS INTERRUPTED</p>
+          <button type="button" id="retry-graphics" class="btn">RELOAD GAME</button>
+        </div>
 
         <!-- Accessible DOM Overlays -->
         <div id="title-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: transparent;"></div>
@@ -28,6 +34,26 @@
         <div id="settings-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.85);"></div>
         <div id="about-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.85);"></div>
         <div id="fieldtask-overlay" class="overlay-pane hidden" style="justify-content: center; align-items: center; background: rgba(7, 9, 14, 0.9);"></div>
+        <div id="mobile-game-controls" role="group" aria-label="Touch controls">
+          <div class="mobile-joystick-group">
+            <div id="mobile-joystick" role="group" aria-label="Drag to move or aim">
+              <span class="mobile-joystick__thumb" aria-hidden="true"></span>
+            </div>
+            <span class="mobile-joystick-label" aria-hidden="true"></span>
+          </div>
+          <div id="mobile-site-actions" class="mobile-action-buttons">
+            <button type="button" id="mobile-talk" class="btn">TALK</button>
+            <button type="button" id="mobile-map" class="btn">MAP</button>
+            <button type="button" id="mobile-menu" class="btn">MENU</button>
+          </div>
+          <div id="mobile-laser-actions" class="mobile-action-buttons">
+            <button type="button" id="mobile-laser-fire" class="btn btn--primary">FIRE</button>
+          </div>
+          <div id="mobile-flyby-actions" class="mobile-action-buttons">
+            <button type="button" id="mobile-flyby-shield" class="btn">SHIELD</button>
+            <button type="button" id="mobile-flyby-shutter" class="btn btn--primary">SHUTTER</button>
+          </div>
+        </div>
       </main>
     </div>
 

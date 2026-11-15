@@ -6,7 +6,7 @@ import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape, TrackId } from '../audio/Soundscape.ts';
 import { CONSTANTS } from '../core/Constants.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, TOUCH_UI, hudPx, fitText } from '../ui/NineSliceHUD.ts';
 import { BackdropKind, CIN_MARGIN, getCinematicBackdrop, buildPlanet, buildRingedPlanet, buildBoosterSprite } from '../systems/TitleArt.ts';
 import { buildNebulaTile, buildStarTile, buildSunFlare, buildPeanutAsteroid } from '../systems/SpaceArt.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
@@ -399,13 +399,15 @@ export class EndingScene extends Phaser.Scene {
     const variant: FrameVariant = c.kind === 'story' ? 'panel' : 'amber';
     this.tweens.killTweensOf(this.capLayer);
     this.tweens.killTweensOf(this.capTag);
-    if (variant !== this.capVariant || !this.capShown) {
+    const resized = TOUCH_UI && this.fitCaptionBox(c.text);
+    if (resized || variant !== this.capVariant || !this.capShown) {
       this.capBox.clear();
       this.drawCaptionBox(variant);
       this.capVariant = variant;
     }
-    this.capTag.setText(c.tag).setColor(CAPTION_COLOR[c.kind]);
     this.capPart.setText(part).setVisible(true);
+    this.capTag.setText(c.tag).setColor(CAPTION_COLOR[c.kind]);
+    fitText(this.capTag, this.box.w - 27 - this.capPart.width - 12);
     if (this.live) this.live.textContent = `${c.tag}: ${c.text}`;
 
     if (!this.capShown) {
@@ -754,7 +756,7 @@ export class EndingScene extends Phaser.Scene {
         g.fillRect(sx < 0 ? -s : s, sy < 0 ? -s : s - l + 1, 1, l);
       }
     }
-    const label = this.add.text(0, 11, 'EARTH', { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanLaser, letterSpacing: 3 }).setOrigin(0.5, 0);
+    const label = this.add.text(0, 11, 'EARTH', { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.cyanLaser, letterSpacing: 3 }).setOrigin(0.5, 0);
     c.add([g, label]);
     this.earthMark = c;
     SoundFX.playRadarPing(0.2);
@@ -798,12 +800,12 @@ export class EndingScene extends Phaser.Scene {
     const c = this.add.container(W / 2, H / 2 - 30).setDepth(60);
     const barTop = this.add.rectangle(0, -26, 80, 1, PALETTE.cyanGlowHex).setScale(this.reducedMotion ? 1 : 0, 1);
     const barBot = this.add.rectangle(0, 30, 80, 1, PALETTE.cyanGlowHex).setScale(this.reducedMotion ? 1 : 0, 1);
-    const k = this.add.text(0, -20, kicker, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0);
+    const k = this.add.text(0, -20, kicker, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0);
     const t = this.add.text(0, -6, title, { fontFamily: HUD_FONT, fontSize: '21px', color: PALETTE.lunarHighlight, letterSpacing: 6 }).setOrigin(0.5, 0);
     c.add([barTop, barBot, k, t]);
     let s: Phaser.GameObjects.Text | null = null;
     if (sub) {
-      s = this.add.text(0, 36, sub, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0);
+      s = this.add.text(0, 36, sub, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0);
       c.add(s);
     }
     this.section = c;
@@ -911,7 +913,8 @@ export class EndingScene extends Phaser.Scene {
 
     // Photo, framed and masked: rendered via native-resolution DOM <img> so NASA archival
     // photographs are crisp at 1080p/4K instead of quantized to the 640×360 pixel canvas.
-    const fx = 30, fy = 56, fw = 304, fh = 196;
+    // Phones: a shorter photo so its credit line stays above the taller caption console
+    const fx = 30, fy = 56, fw = 304, fh = TOUCH_UI ? 140 : 196;
     const frame = this.add.graphics();
     frame.fillStyle(PALETTE.spaceBlackHex, 0.9).fillRect(fx - 4, fy - 4, fw + 8, fh + 8);
     frame.lineStyle(1, PALETTE.beaconGoldHex, 0.7).strokeRect(fx - 4.5, fy - 4.5, fw + 9, fh + 9);
@@ -950,7 +953,7 @@ export class EndingScene extends Phaser.Scene {
       ? 'SI-GENERATED ILLUSTRATION · NOT A NASA PHOTOGRAPH'
       : `NASA ${entry.image.nasa_id} · ${entry.image.credit}`.toUpperCase();
     const credit = this.add.text(fx, fy + fh + 8, creditLine, {
-      fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 1,
+      fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarDustLight, letterSpacing: 1,
       wordWrap: { width: fw, useAdvancedWrap: true },
     });
     c.add(credit);
@@ -961,7 +964,7 @@ export class EndingScene extends Phaser.Scene {
     const accent = entry.world === 'moon' ? PALETTE.lunarCrustCream : entry.world === 'mars' ? PALETTE.marsHazePeach : PALETTE.cyanLaser;
     const worldName = entry.world === 'moon' ? 'THE MOON' : entry.world === 'mars' ? 'MARS' : 'DEEP SPACE // ELSEWHERE';
     const yearText = this.add.text(px, 52, String(fromYear), { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.beaconGold, letterSpacing: 2 });
-    const worldText = this.add.text(px, 84, worldName, { fontFamily: HUD_FONT, fontSize: '7px', color: accent, letterSpacing: 4 });
+    const worldText = this.add.text(px, 84, worldName, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: accent, letterSpacing: 4 });
     panel.push(yearText, worldText);
 
     const hwKey = `hw_${entry.id}`;
@@ -988,16 +991,16 @@ export class EndingScene extends Phaser.Scene {
     let y = 102 + name.height + 8;
 
     const status = this.add.container(0, 0);
-    const statusText = this.add.text(px + 6, y + 3, entry.status.toUpperCase(), { fontFamily: HUD_FONT, fontSize: '7px', color: '#' + STATUS_COLOR[entry.status].toString(16).padStart(6, '0'), letterSpacing: 2 });
+    const statusText = this.add.text(px + 6, y + 3, entry.status.toUpperCase(), { fontFamily: HUD_FONT, fontSize: hudPx(7), color: '#' + STATUS_COLOR[entry.status].toString(16).padStart(6, '0'), letterSpacing: 2 });
     const badge = this.add.graphics();
     badge.lineStyle(1, STATUS_COLOR[entry.status], 1).strokeRect(px + 0.5, y + 0.5, statusText.width + 12, 13);
     status.add([badge, statusText]);
-    status.add(this.add.text(px + statusText.width + 20, y + 3, `LAUNCHED ${entry.launch_date}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 1 }));
+    status.add(this.add.text(px + statusText.width + 20, y + 3, `LAUNCHED ${entry.launch_date}`, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarDustLight, letterSpacing: 1 }));
     panel.push(status);
     y += 22;
 
     panel.push(this.add.text(px, y, entry.summary, {
-      fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarCrustCream, letterSpacing: 1,
+      fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarCrustCream, letterSpacing: 1,
       wordWrap: { width: pw, useAdvancedWrap: true }, lineSpacing: 4,
     }));
     c.add(panel);
@@ -1029,7 +1032,7 @@ export class EndingScene extends Phaser.Scene {
   private createRuler(): void {
     this.rulerLayer = this.add.container(0, 0).setDepth(40).setAlpha(0);
     this.ruler = this.add.graphics();
-    const style = { fontFamily: HUD_FONT, fontSize: '7px', letterSpacing: 1 };
+    const style = { fontFamily: HUD_FONT, fontSize: hudPx(7), letterSpacing: 1 };
     this.rulerFirst = this.add.text(0, 0, '', { ...style, color: PALETTE.lunarDustLight }).setOrigin(0, 0);
     this.rulerLast = this.add.text(0, 0, '', { ...style, color: PALETTE.lunarDustLight }).setOrigin(1, 0);
     this.rulerCur = this.add.text(0, 0, '', { ...style, color: PALETTE.beaconGold }).setOrigin(0.5, 0);
@@ -1171,7 +1174,7 @@ export class EndingScene extends Phaser.Scene {
       return g;
     };
     const label = (x: number, y: number, text: string, color: string) =>
-      this.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: '7px', color, letterSpacing: 3 }).setOrigin(0.5, 0);
+      this.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: hudPx(7), color, letterSpacing: 3 }).setOrigin(0.5, 0);
 
     const earthGlow = this.add.image(earth.x, earth.y, 'glow_disk').setBlendMode(Phaser.BlendModes.ADD).setScale(1.8).setAlpha(0.16);
     const earthSprite = this.add.sprite(earth.x, earth.y, 'earth_spin', 0).setScale(0.6);
@@ -1225,7 +1228,7 @@ export class EndingScene extends Phaser.Scene {
       const x = (k - 1) * 150;
       const num = this.add.text(x, 0, rm ? String(value) : '0', { fontFamily: HUD_FONT, fontSize: '28px', color: PALETTE.lunarHighlight, letterSpacing: 2 }).setOrigin(0.5, 0);
       st.add(num);
-      st.add(this.add.text(x, 34, unit, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0));
+      st.add(this.add.text(x, 34, unit, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.cyanGlow, letterSpacing: 4 }).setOrigin(0.5, 0));
       if (rm) return;
       const counter = { v: 0 };
       this.tweens.add({
@@ -1239,7 +1242,7 @@ export class EndingScene extends Phaser.Scene {
         },
       });
     });
-    st.add(this.add.text(0, 50, `${s.machines} MACHINES · ${s.worlds} SECTORS · ${s.firstYear} – ${s.lastYear}`, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0));
+    st.add(this.add.text(0, 50, `${s.machines} MACHINES · ${s.worlds} SECTORS · ${s.firstYear} – ${s.lastYear}`, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarDustLight, letterSpacing: 3 }).setOrigin(0.5, 0));
     this.stats = st;
     this.tweens.add({ targets: st, alpha: 1, y: 46, duration: this.ms(800), delay: this.ms(300), ease: 'Cubic.easeOut' });
   }
@@ -1260,9 +1263,9 @@ export class EndingScene extends Phaser.Scene {
     this.track = c;
     this.trackGfx = this.add.graphics();
     c.add(this.trackGfx);
-    c.add(this.add.text(W / 2, 16, 'HOW FAR NEXT', { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarDustLight, letterSpacing: 4 }).setOrigin(0.5, 0));
+    c.add(this.add.text(W / 2, 16, 'HOW FAR NEXT', { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarDustLight, letterSpacing: 4 }).setOrigin(0.5, 0));
     this.trackLabels = this.trackNodes.map((name, i) => {
-      const t = this.add.text(Math.round(this.trackX(i)), 43, name, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarRegolithMid, letterSpacing: 2 }).setOrigin(0.5, 0);
+      const t = this.add.text(Math.round(this.trackX(i)), 43, name, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarRegolithMid, letterSpacing: 2 }).setOrigin(0.5, 0);
       c.add(t);
       return t;
     });
@@ -1418,7 +1421,7 @@ export class EndingScene extends Phaser.Scene {
     const total = this.reel.length;
     const ax = r.x, ay = r.y - 62;
     const label = (n: number) => `UPLINK · ECHO ${String(n).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
-    this.uplink = this.add.text(ax, ay - 22, label(0), { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5, 1).setDepth(23).setAlpha(0);
+    this.uplink = this.add.text(ax, ay - 22, label(0), { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5, 1).setDepth(23).setAlpha(0);
     this.tweens.add({ targets: this.uplink, alpha: 1, duration: 400 });
     const antenna = this.add.image(ax, ay, 'glow_thruster').setBlendMode(Phaser.BlendModes.ADD).setTint(PALETTE.cyanLaserHex).setScale(0.16).setDepth(21).setAlpha(0);
     this.tweens.add({ targets: antenna, alpha: 0.95, duration: 140, yoyo: true, repeat: -1, repeatDelay: 120 });
@@ -1534,27 +1537,53 @@ export class EndingScene extends Phaser.Scene {
     if (this.textures.exists('vignette_overlay')) this.add.image(W / 2, H / 2, 'vignette_overlay').setDepth(95).setAlpha(0.7);
   }
 
-  private readonly box = { x: 24, y: H - 72, w: W - 48, h: 58 };
-  private readonly nextBox = { w: 62, h: 16 };
+  // Phones: a taller console and bigger NEXT button so captions can be read and tapped
+  // On phones the console grows upward to fit each caption (see fitCaptionBox)
+  private box = TOUCH_UI ? { x: 24, y: H - 86, w: W - 48, h: 80 } : { x: 24, y: H - 72, w: W - 48, h: 58 };
+  private readonly nextBox = TOUCH_UI ? { w: 80, h: 26 } : { w: 62, h: 16 };
+  private readonly capHead = TOUCH_UI ? 22 : 18;
+
+  /**
+   * Phones: sizes the console to the caption's full text (2 to 4 lines) so it never
+   * spills out, and moves the labels and NEXT button with it. Returns true if it changed.
+   */
+  private fitCaptionBox(text: string): boolean {
+    const shown = this.capText.text;
+    this.capText.setText(text);
+    const textH = this.capText.height;
+    this.capText.setText(shown);
+    const h = Math.max(64, Math.ceil(this.capHead + 7 + textH + 8));
+    if (h === this.box.h) return false;
+    const y = H - 6 - h;
+    this.box = { ...this.box, y, h };
+    this.capTag.setY(y + 6);
+    this.capPart.setY(y + 6);
+    this.capText.setY(y + this.capHead + 7);
+    const by = y + h - this.nextBox.h - 7;
+    this.nextTxt.setY(by + this.nextBox.h / 2);
+    this.nextZone.setY(by + this.nextBox.h / 2);
+    this.nextReady = null;
+    return true;
+  }
 
   private drawCaptionBox(variant: FrameVariant): void {
     const { x, y, w, h } = this.box;
     const g = this.capBox;
     NineSliceHUD.drawFrame(g, x, y, w, h, variant);
-    NineSliceHUD.drawStatusDot(g, x + 10, y + 9, variant === 'amber' ? PALETTE.beaconGoldHex : PALETTE.cyanGlowHex);
-    g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(x + 8, y + 18, w - 16, 1);
+    NineSliceHUD.drawStatusDot(g, x + 10, y + (TOUCH_UI ? 11 : 9), variant === 'amber' ? PALETTE.beaconGoldHex : PALETTE.cyanGlowHex);
+    g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(x + 8, y + this.capHead, w - 16, 1);
   }
 
   private createCaptionConsole(): void {
     const { x, y, w } = this.box;
     this.capLayer = this.add.container(0, 0).setDepth(100).setAlpha(0);
     this.capBox = this.add.graphics();
-    this.capTag = this.add.text(x + 17, y + 6, '', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 });
-    this.capPart = this.add.text(x + w - 10, y + 6, '', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.slateMuted, letterSpacing: 2 }).setOrigin(1, 0);
+    this.capTag = this.add.text(x + 17, y + 6, '', { fontSize: hudPx(7), fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 });
+    this.capPart = this.add.text(x + w - 10, y + 6, '', { fontSize: hudPx(7), fontFamily: HUD_FONT, color: PALETTE.slateMuted, letterSpacing: 2 }).setOrigin(1, 0);
     // Text wraps short of the NEXT button in the bottom-right corner
-    this.capText = this.add.text(x + 10, y + 25, '', {
-      fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.lunarHighlight, letterSpacing: 1,
-      wordWrap: { width: w - this.nextBox.w - 32, useAdvancedWrap: true }, lineSpacing: 4,
+    this.capText = this.add.text(x + 10, y + this.capHead + 7, '', {
+      fontSize: TOUCH_UI ? '12px' : '7px', fontFamily: HUD_FONT, color: PALETTE.lunarHighlight, letterSpacing: 1,
+      wordWrap: { width: w - this.nextBox.w - 32, useAdvancedWrap: true }, lineSpacing: TOUCH_UI ? 5 : 4,
     });
     this.capLayer.add([this.capBox, this.capTag, this.capPart, this.capText]);
   }
@@ -1565,7 +1594,7 @@ export class EndingScene extends Phaser.Scene {
     const { w: bw, h: bh } = this.nextBox;
     const bx = x + w - bw - 8, by = y + h - bh - 7;
     this.nextBg = this.add.graphics().setDepth(102);
-    this.nextTxt = this.add.text(bx + bw / 2, by + bh / 2, 'NEXT ▶', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5).setDepth(103);
+    this.nextTxt = this.add.text(bx + bw / 2, by + bh / 2, 'NEXT ▶', { fontSize: hudPx(7), fontFamily: HUD_FONT, color: PALETTE.cyanLaser, letterSpacing: 2 }).setOrigin(0.5).setDepth(103);
     this.nextZone = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setDepth(104).setInteractive({ cursor: 'pointer' });
     this.nextZone.on('pointerdown', (_p: Phaser.Input.Pointer, _x: number, _y: number, ev: Phaser.Types.Input.EventData) => {
       ev.stopPropagation();
@@ -1603,10 +1632,10 @@ export class EndingScene extends Phaser.Scene {
   }
 
   private createSkipButton(): void {
-    const bw = 104, bh = 20, bx = W - bw - 14, by = 8;
+    const bw = TOUCH_UI ? 124 : 104, bh = TOUCH_UI ? 30 : 20, bx = W - bw - 14, by = 8;
     const bg = this.add.graphics().setDepth(100);
     NineSliceHUD.drawFrame(bg, bx, by, bw, bh, 'secondary');
-    const txt = this.add.text(bx + bw / 2, by + bh / 2, 'SKIP TO END ▶▶', { fontSize: '7px', fontFamily: HUD_FONT, color: PALETTE.lunarCrustCream, letterSpacing: 2 }).setOrigin(0.5).setDepth(101);
+    const txt = this.add.text(bx + bw / 2, by + bh / 2, 'SKIP TO END ▶▶', { fontSize: hudPx(7), fontFamily: HUD_FONT, color: PALETTE.lunarCrustCream, letterSpacing: 2 }).setOrigin(0.5).setDepth(101);
     const zone = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setDepth(102).setInteractive({ cursor: 'pointer' });
     const hide = () => {
       zone.disableInteractive();

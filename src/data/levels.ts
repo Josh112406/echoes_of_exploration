@@ -18,7 +18,3 @@ export function getLevelConfig(id: string): LevelConfig | undefined {
   return ALL_LEVELS[id];
 }
 
-export function hasLevelConfig(id: string): boolean {
-  return id in ALL_LEVELS;
-}
-

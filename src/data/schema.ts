@@ -262,7 +262,6 @@ export const SaveStateV1Schema = z.object({
       bestLandingSpeed: z.number().nullable(),
     })
   ),
-  achievements: z.array(z.string()),
   /** UNIT-7 journal: site id → index of the answer the player chose. */
   journal: z.record(z.string(), z.number().int().nonnegative()).optional(),
   robotPositions: z.record(
@@ -276,7 +275,6 @@ export const SaveStateV1Schema = z.object({
     textSize: z.enum(['normal', 'large', 'xlarge']),
     highContrast: z.boolean(),
     reducedMotion: z.boolean(),
-    reducedEffects: z.boolean(),
     audioEnabled: z.boolean(),
     /** Mixer levels, 0..1. Saves from before the soundtrack get these defaults. */
     musicVolume: z.number().min(0).max(1).default(0.9),

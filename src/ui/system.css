@@ -58,6 +58,8 @@ html, body {
 #app {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
+  height: var(--visible-viewport-height, 100dvh);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -161,14 +163,406 @@ header.nav {
 #game-container {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 #game-container canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+#graphics-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--g-main);
+  color: var(--accent-laser);
+  font: 12px var(--font-pixel);
+  text-align: center;
+}
+
+#graphics-fallback[hidden] { display: none; }
+#graphics-fallback img { width: min(45vw, 180px); image-rendering: pixelated; }
+#graphics-fallback small { font-size: 8px; color: var(--muted); }
+
+#mobile-game-controls, .mobile-action-buttons { display: none; }
+
+.unit7-mobile { display: none; }
+
+/* ==========================================================================
+   Sector map (src/ui/HubMap.ts): one map drawn with the game's own terrain and sprites
+   ========================================================================== */
+#hub-overlay {
+  display: block;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: rgba(5, 7, 15, 0.9);
+  backdrop-filter: blur(3px);
+}
+
+.hub {
+  --hub-vh: var(--visible-viewport-height, 100dvh);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--font-pixel);
+}
+
+.hub__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 6px 6px 12px;
+  background: rgba(11, 15, 29, 0.96);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px #05070f, inset 0 -2px 0 rgba(5, 7, 15, 0.8);
+}
+.hub__title { display: flex; align-items: center; gap: 8px; margin: 0; font: 12px/1 var(--font-pixel); letter-spacing: 0.2em; color: var(--accent-laser); white-space: nowrap; }
+.hub__dot { width: 6px; height: 6px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.hub__tabs { display: flex; gap: 4px; flex: 1 1 auto; justify-content: center; flex-wrap: wrap; }
+.hub-tab {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 7px 12px;
+  font: 12px/1 var(--font-pixel); letter-spacing: 0.14em;
+  color: var(--moon-dust); background: rgba(5, 7, 15, 0.6);
+  border: 1px solid #1d263f; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hub-tab small { font-size: 9px; color: var(--muted); letter-spacing: 0.08em; }
+.hub-tab:hover, .hub-tab:focus-visible { border-color: var(--accent); color: var(--accent-laser); outline: none; }
+.hub-tab.is-current { color: #05070f; background: var(--accent); border-color: var(--accent); }
+.hub-tab.is-current small { color: #05070f; }
+.hub-tab--mars.is-current { background: var(--mars); border-color: var(--mars); }
+.hub-tab.is-locked { color: #4a4f6e; }
+.hub__close { margin-left: auto; }
+.hub__notice { margin: 0; padding: 8px 12px; border: 1px solid var(--verified); background: #1c120d; color: #fbbf24; font: 12px/1.5 var(--font-pixel); }
+.hub__notice[hidden] { display: none; }
+
+.hub__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 10px;
+  align-items: start;
+}
+
+/* The map keeps the sector's 3:2 shape and fits the visible height */
+.hub-map {
+  position: relative;
+  width: min(100%, (var(--hub-vh) - 96px) * 1.5);
+  aspect-ratio: 3 / 2;
+  justify-self: center;
+  overflow: hidden;
+  background-image: linear-gradient(rgba(5, 7, 15, 0.28), rgba(5, 7, 15, 0.28)), var(--tile);
+  background-size: 100% 100%, var(--tile-w) var(--tile-h);
+  background-color: var(--g-main);
+  image-rendering: pixelated;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px #05070f, 0 0 24px rgba(14, 195, 220, 0.12), inset 0 0 60px rgba(5, 7, 15, 0.75);
+  container-type: inline-size;
+}
+/* Soft vignette like the in-game view */
+.hub-map::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(5, 7, 15, 0.55) 100%); }
+
+.hub-map__route { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.hub-map__route line { stroke: var(--accent-laser); stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: square; opacity: 0.85; animation: hub-route 1.2s linear infinite; }
+@keyframes hub-route { to { stroke-dashoffset: -16; } }
+
+.hub-pin {
+  --pin: clamp(28px, 7cqw, 64px);
+  position: absolute;
+  z-index: 2;
+  width: var(--pin);
+  height: var(--pin);
+  padding: 0;
+  transform: translate(-50%, -78%);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hub-pin img { width: 100%; height: 100%; image-rendering: pixelated; filter: drop-shadow(0 2px 0 rgba(5, 7, 15, 0.8)); pointer-events: none; }
+/* Ground ring under each machine (same language as the site view) */
+.hub-pin::before {
+  content: ''; position: absolute; left: 50%; bottom: 8%; width: 110%; height: 34%;
+  transform: translate(-50%, 50%); border-radius: 50%; pointer-events: none;
+  border: 2px dashed transparent;
+}
+.hub-pin.is-next::before { border-color: var(--accent-laser); box-shadow: 0 0 12px rgba(126, 241, 255, 0.55); animation: hub-pulse 1s steps(2, end) infinite; }
+.hub-pin.is-done::before { border-color: rgba(245, 158, 11, 0.7); }
+.hub-pin.is-locked img { filter: grayscale(0.8) brightness(0.6) drop-shadow(0 2px 0 rgba(5, 7, 15, 0.8)); }
+@keyframes hub-pulse { 50% { opacity: 0.35; } }
+.hub-pin__num {
+  position: absolute; left: 50%; top: -4px; transform: translate(-50%, -100%);
+  min-width: 18px; padding: 3px 4px 2px;
+  font: 9px/1 var(--font-pixel); color: var(--ink); text-align: center;
+  background: rgba(11, 15, 29, 0.92); border: 1px solid #1d263f;
+}
+.hub-pin.is-next .hub-pin__num { color: #05070f; background: var(--accent-laser); border-color: var(--accent-laser); }
+.hub-pin.is-done .hub-pin__num { color: var(--verified); border-color: rgba(245, 158, 11, 0.6); }
+.hub-pin.is-selected { z-index: 4; }
+.hub-pin.is-selected .hub-pin__num { outline: 2px solid var(--ink); outline-offset: 1px; }
+.hub-pin:focus-visible { outline: 2px solid var(--accent-laser); outline-offset: 2px; }
+
+.hub-you {
+  position: absolute; z-index: 3;
+  width: clamp(24px, 5cqw, 48px); height: clamp(24px, 5cqw, 48px);
+  transform: translate(-50%, -88%); pointer-events: none;
+}
+.hub-you img { width: 100%; height: 100%; image-rendering: pixelated; filter: drop-shadow(0 0 6px rgba(126, 241, 255, 0.8)); }
+.hub-you b { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); padding: 2px 4px; font: 9px/1 var(--font-pixel); letter-spacing: 0.12em; color: #05070f; background: var(--ink); }
+
+.hub-map__legend {
+  position: absolute; left: 6px; bottom: 6px; z-index: 5;
+  display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+  font: 9px/1 var(--font-pixel); letter-spacing: 0.1em; color: var(--moon-dust);
+  background: rgba(5, 7, 15, 0.8); border: 1px solid #1d263f; pointer-events: none;
+}
+.hub-map__legend i { width: 7px; height: 7px; margin-left: 4px; }
+.hub-map__legend i:first-child { margin-left: 0; }
+.hub-map__legend .is-next { background: var(--accent-laser); }
+.hub-map__legend .is-done { background: var(--verified); }
+.hub-map__legend .is-locked { background: #4a4f6e; }
+
+.hub__side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.hub-card {
+  padding: 12px 14px;
+  background: rgba(11, 15, 29, 0.96);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px #05070f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.hub-card.is-done { border-color: rgba(245, 158, 11, 0.6); }
+.hub-card.is-locked { border-color: #2a3352; }
+.hub-card__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.hub-card__game { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); }
+.hub-chip--locked { color: var(--muted); border-color: #3b3e59; }
+.hub-card__name { margin: 0 0 6px; font: 15px/1.35 var(--font-pixel); letter-spacing: 0.06em; color: var(--ink); }
+.hub-card__summary { margin: 0 0 8px; color: #cbd5e1; }
+.hub-card__where { margin: 0 0 8px; font-size: 12px; color: var(--moon-dust); }
+.hub-card__where span { display: block; font-size: 9px; letter-spacing: 0.12em; color: var(--verified); }
+.hub-card__note { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.hub-card__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hub-card__actions .btn { flex: 1 1 auto; justify-content: center; }
+
+.hub__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.hub-row {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 8px;
+  font: 12px/1.3 var(--font-pixel); letter-spacing: 0.06em; text-align: left;
+  color: var(--moon-dust); background: rgba(5, 7, 15, 0.65);
+  border: 1px solid #131a2e; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hub-row:hover, .hub-row:focus-visible { border-color: var(--accent); outline: none; }
+.hub-row.is-selected { border-color: var(--accent-laser); background: rgba(3, 38, 48, 0.75); color: var(--ink); }
+.hub-row__num { flex: none; width: 20px; text-align: center; color: var(--muted); }
+.hub-row__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-row__tag { flex: none; font-size: 9px; color: var(--muted); }
+.hub-row.is-next .hub-row__num, .hub-row.is-next .hub-row__tag { color: var(--accent-laser); }
+.hub-row.is-done .hub-row__num, .hub-row.is-done .hub-row__tag { color: var(--verified); }
+.hub-row.is-locked { color: #6b7194; }
+
+/* Upright or very narrow screens: map on top, then the card and the list */
+@media (max-aspect-ratio: 1/1), (max-width: 480px) {
+  .hub__body { grid-template-columns: minmax(0, 1fr); }
+  .hub-map { width: 100%; }
+  .hub__tabs { order: 3; flex-basis: 100%; justify-content: stretch; }
+  .hub-tab { flex: 1; justify-content: center; }
+}
+/* Phones on their side: short and wide, so the side panel scrolls on its own */
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) and (min-width: 481px) {
+  .hub { gap: 6px; }
+  .hub__title { display: none; }
+  .hub__tabs { justify-content: flex-start; flex-wrap: nowrap; }
+  .hub-tab { padding: 7px 10px; }
+  .hub__bar { padding: 4px 4px 4px 10px; }
+  .hub__body { grid-template-columns: minmax(0, 1fr) minmax(250px, 320px); }
+  .hub-map { width: min(100%, (var(--hub-vh) - 74px) * 1.5); }
+  .hub__side { max-height: calc(var(--hub-vh) - 74px); overflow-y: auto; overscroll-behavior: contain; }
+}
+@media (pointer: coarse) {
+  /* Pixel font sizes 10-11px draw C like O, so touch sizes jump from 9 to 12 */
+  .hub-tab, .hub-row { min-height: 44px; }
+  .hub-tab { font-size: 13px; }
+  .hub-row { font-size: 13px; }
+  .hub-row__tag { font-size: 12px; }
+  .hub-card { font-size: 14px; }
+  .hub-card__name { font-size: 17px; }
+  .hub-card__where, .hub-card__note { font-size: 13px; }
+  .hub-card__where span, .hub-card__game { font-size: 12px; }
+  .hub-pin__num { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-map__route line, .hub-pin.is-next::before { animation: none; }
+}
+
+@media (pointer: coarse) {
+  .unit7-mobile {
+    position: absolute;
+    z-index: 19;
+    left: max(156px, calc(env(safe-area-inset-left) + 140px));
+    right: max(120px, calc(env(safe-area-inset-right) + 108px));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--accent);
+    background: rgba(11, 15, 29, 0.96);
+    color: var(--ink);
+    font: 14px/1.6 var(--font-pixel);
+    text-align: left;
+    touch-action: pan-y;
+  }
+  .unit7-mobile[hidden] { display: none; }
+  .unit7-mobile__header { display: flex; justify-content: space-between; gap: 12px; color: var(--accent-laser); font-size: 10px; }
+  .unit7-mobile__tag { text-align: right; overflow-wrap: anywhere; }
+  .unit7-mobile__body { max-height: 36dvh; overflow-y: auto; }
+  .unit7-mobile__hint { font-size: 10px; color: var(--accent-laser); text-align: right; }
+  .unit7-mobile.is-record { border-color: var(--verified); }
+  .unit7-mobile.is-record .unit7-mobile__header { color: var(--verified); }
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  .unit7-mobile { left: 16px; right: 16px; bottom: max(144px, calc(env(safe-area-inset-bottom) + 132px)); }
+}
+
+@media (pointer: coarse) {
+  .btn, .archive-select, body .menu-btn { min-height: 44px; touch-action: manipulation; }
+
+  body.site-scene #mobile-game-controls,
+  body.laser-scene #mobile-game-controls,
+  body.flyby-scene #mobile-game-controls {
+    position: absolute;
+    left: max(48px, calc(env(safe-area-inset-left) + 32px));
+    right: max(24px, calc(env(safe-area-inset-right) + 12px));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .mobile-joystick-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: auto;
+  }
+
+  #mobile-joystick {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: rgba(11, 15, 29, 0.76);
+    box-shadow: inset 0 0 0 12px rgba(14, 195, 220, 0.08);
+    touch-action: none;
+  }
+
+  #mobile-joystick::before {
+    content: '';
+    position: absolute;
+    inset: 24px;
+    border: 1px solid rgba(126, 241, 255, 0.45);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .mobile-joystick__thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--accent-laser);
+    border-radius: 50%;
+    background: var(--g-card);
+    box-shadow: 0 0 10px rgba(14, 195, 220, 0.55);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .mobile-joystick-label {
+    color: var(--accent-laser);
+    font: 10px var(--font-pixel);
+    letter-spacing: 0.1em;
+  }
+
+  .mobile-joystick-label::before { content: 'MOVE'; }
+  body.site-scene .mobile-joystick-label { visibility: hidden; }
+  body.laser-scene .mobile-joystick-label::before,
+  body.flyby-scene .mobile-joystick-label::before { content: 'AIM'; }
+
+  .mobile-action-buttons {
+    grid-template-columns: repeat(2, 68px);
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  body.site-scene #mobile-site-actions,
+  body.laser-scene #mobile-laser-actions,
+  body.flyby-scene #mobile-flyby-actions { display: grid; }
+
+  .mobile-action-buttons .btn {
+    min-height: 44px;
+    justify-content: center;
+    padding: 8px;
+    touch-action: none;
+  }
+
+  #mobile-talk, #mobile-laser-fire { grid-column: 1 / -1; }
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  /* Hidden while a panel is open on top (it would show through the panel's backdrop) */
+  body.in-game #game-stage:not(:has(.overlay-pane:not(.hidden):not(#title-overlay), .mobile-briefing))::before {
+    content: 'TURN SIDEWAYS FOR A BIGGER VIEW';
+    position: absolute;
+    top: max(20px, env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    z-index: 10;
+    color: var(--accent-laser);
+    font: 10px var(--font-pixel);
+    letter-spacing: 0.08em;
+    text-align: center;
+    pointer-events: none;
+  }
+
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  body.site-scene #mobile-site-actions,
+  body.laser-scene #mobile-laser-actions,
+  body.flyby-scene #mobile-flyby-actions {
+    display: flex;
+    flex-direction: column;
+    width: 84px;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) and (max-width: 640px) {
+  body.flyby-scene .mobile-joystick-group {
+    transform: translateY(calc(-1 * min(110px, 30dvh)));
+  }
 }
 
 /* Modals & Full-Screen Overlays (Dark translucent with thin cyan edge) */
@@ -202,7 +596,7 @@ header.nav {
 /* Cards & Archive Grid */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -213,6 +607,8 @@ header.nav {
   border-radius: 0px; /* Square corners */
   padding: 16px;
   cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
   transition: all 0.2s var(--m-ease-ui);
 }
 
@@ -378,7 +774,7 @@ header.nav {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  margin-top: clamp(10px, 2.4vh, 24px);
+  margin-top: clamp(4px, calc(var(--cv-h, 100vh) * 0.025), 24px);
 }
 
 /* Separator pixels between the small options */
@@ -408,9 +804,9 @@ header.nav {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(5px, 0.9vh, 9px) clamp(36px, 4vw, 56px);
+  padding: clamp(4px, calc(var(--cv-h, 100vh) * 0.012), 9px) clamp(18px, calc(var(--cv-w, 100vw) * 0.04), 56px);
   font-family: var(--font-pixel);
-  font-size: clamp(13px, 1.75vw, 22px);
+  font-size: clamp(11px, calc(var(--cv-w, 100vw) * 0.0175), 22px);
   letter-spacing: 0.28em;
   color: var(--moon-dust);
   background: none;
@@ -424,13 +820,13 @@ header.nav {
 }
 
 .tmenu__item--first {
-  font-size: clamp(15px, 2.15vw, 28px);
+  font-size: clamp(12px, calc(var(--cv-w, 100vw) * 0.0215), 28px);
   color: var(--ink);
 }
 
 .tmenu__item--small {
-  padding: 6px clamp(14px, 1.6vw, 22px);
-  font-size: clamp(9px, 0.95vw, 12px);
+  padding: 6px clamp(10px, calc(var(--cv-w, 100vw) * 0.016), 22px);
+  font-size: clamp(8px, calc(var(--cv-w, 100vw) * 0.0095), 12px);
   letter-spacing: 0.24em;
   color: var(--muted);
 }
@@ -597,6 +993,10 @@ header.nav {
 
 .tmenu-hud .pips i { width: clamp(5px, 0.4vw, 8px); height: clamp(8px, 0.75vw, 13px); }
 
+@media (pointer: coarse) and (orientation: landscape) {
+  .tmenu-hud .pips { display: none; }
+}
+
 .tmenu-keys,
 .tmenu-credit {
   position: absolute;
@@ -654,12 +1054,34 @@ header.nav {
   color: var(--accent-laser);
 }
 
-/* Phone held upright: the canvas is a short strip, so it lays out like a handheld:
-   menu above the scene, UNIT-7's dialogue box below it */
-#title-overlay.is-compact .tmenu {
-  top: auto;
-  bottom: calc(100% - var(--cv-y, 0px) + 14px);
+/* Phone held upright (or narrow portrait desktop window): the canvas is a short strip,
+   so it lays out like a handheld: menu above the scene, UNIT-7's dialogue box below it. */
+#title-overlay.is-compact {
+  --mobile-title-top: max(60px, calc(var(--cv-y, 0px) + var(--cv-h, 0px) / 2 - (60px + var(--mobile-menu-h, 180px)) / 2));
 }
+
+#title-overlay.is-compact .tmenu-title {
+  position: absolute;
+  top: var(--mobile-title-top);
+  left: 16px;
+  right: 16px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  text-align: center;
+  font: 16px/1.5 var(--font-pixel);
+  letter-spacing: 0.08em;
+}
+#title-overlay.is-compact .tmenu-title span { display: block; font-size: 10px; color: var(--verified); }
+
+#title-overlay.is-compact .tmenu {
+  top: calc(var(--mobile-title-top) + 60px);
+  bottom: auto;
+}
+#title-overlay.is-compact .tmenu__row { background: rgba(5, 7, 15, 0.8); }
 
 #title-overlay.is-compact .tmenu-hud {
   top: 16px;
@@ -668,11 +1090,60 @@ header.nav {
 
 #title-overlay.is-compact .tmenu-say {
   display: block;
-  top: calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px);
+  --say-top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px));
+  /* Divide viewport pixel offsets by --ui-zoom so CSS zoom on .tmenu-say does not push it off bottom. */
+  top: calc(var(--say-top) / var(--ui-zoom, 1));
+  max-height: calc((100vh - var(--say-top) - 12px) / var(--ui-zoom, 1));
+  overflow-y: auto;
 }
 
 #title-overlay.is-compact .tmenu-keys,
 #title-overlay.is-compact .tmenu-credit { display: none; }
+
+@media (pointer: coarse) {
+  .mobile-briefing {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 7, 15, 0.7);
+  }
+  .mobile-briefing__card {
+    width: min(600px, 100%);
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--g-alt);
+    border: 1px solid var(--accent);
+    font: 14px/1.6 var(--font-pixel);
+  }
+  .mobile-briefing h2 { font-size: 16px; text-align: center; flex-shrink: 0; }
+  .mobile-briefing__subtitle { font-size: 11px; color: var(--verified); text-align: center; flex-shrink: 0; }
+  .mobile-briefing__body { overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+  .mobile-briefing__body p + p { margin-top: 10px; }
+  .mobile-briefing .btn { flex-shrink: 0; justify-content: center; font-size: 13px; }
+
+  #failure-overlay { justify-content: flex-start !important; padding: 12px max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  #failure-overlay .failure-card { flex: 0 0 auto; width: 100%; padding: 16px !important; }
+  #failure-overlay .btn { white-space: normal; font-size: 12px; line-height: 1.5; }
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  #failure-overlay .failure-card { max-width: 700px !important; }
+  #failure-overlay .failure-actions { display: grid !important; grid-template-columns: 1fr 1fr; }
+}
+
+@media (pointer: coarse) {
+  #title-overlay.is-compact .tmenu-say { text-align: center; }
+  #title-overlay.is-compact .tmenu-hud { left: 0; right: 0; width: max-content; margin-inline: auto; white-space: nowrap; }
+  .tmenu-keys { display: none; }
+  .tmenu__item { letter-spacing: 0.16em; }
+}
 
 @media (max-width: 720px) {
   .tmenu-credit { display: none; }
@@ -686,6 +1157,7 @@ header.nav {
 }
 
 /* In-game Reduced Motion setting */
+
 #title-overlay.is-still *,
 #title-overlay.is-still *::before,
 #title-overlay.is-still *::after {
@@ -985,6 +1457,74 @@ header.nav {
   .briefing__dialogue { min-height: 116px; }
   .briefing__hint { display: none; }
 }
+@media (pointer: coarse) {
+  #entry-overlay.briefing-mode { overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+  .briefing { position: relative; min-height: 100%; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  .briefing__stage { flex: none; }
+  .briefing__card { max-height: none; overflow: visible; }
+  .briefing__top, .briefing__dialogue { flex-shrink: 0; }
+  .briefing__actions, .briefing__name, .briefing__card-head { flex-wrap: wrap; }
+  .briefing__hint { display: none; }
+  .briefing__text, .briefing__p, .briefing__facts li, .briefing__hook p,
+  .briefing__loc, .briefing-single__note p { font-size: 16px; line-height: 1.7; }
+  .briefing__muted, .briefing__meta, .briefing__byline,
+  .briefing__card a, .briefing-single a { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+  .briefing__controls { grid-column: 1 / -1; }
+}
+
+/* Touch screens: the panel always fits the screen. Only the record card scrolls (inside its
+   frame), so UNIT-7's box and its NEXT button never end up below the fold. */
+@media (pointer: coarse) {
+  #entry-overlay.briefing-mode { overflow: hidden; }
+  .briefing {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+  .briefing .briefing__stage { flex: 1 1 auto; min-height: 0; }
+  .briefing .briefing__card {
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+  .briefing__top .btn { min-height: 38px; padding: 6px 10px; font-size: 12px; }
+}
+
+/* Phones on their side (and fullscreen): short screens, so the card and UNIT-7 sit side by side */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .briefing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 36%);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px 10px;
+  }
+  .briefing__top { grid-column: 1 / -1; max-width: none; flex-wrap: nowrap; }
+  .briefing__verified { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .briefing__actions { flex-wrap: nowrap; flex-shrink: 0; }
+  .briefing .briefing__stage { grid-column: 1; grid-row: 2; align-items: stretch; }
+  .briefing .briefing__card { max-width: none; padding: 12px 14px; }
+  .briefing .briefing__dialogue {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+    max-width: none;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 10px;
+    padding: 10px;
+  }
+  .briefing__portrait { grid-row: 1; width: 40px; height: 40px; }
+  .briefing__speech { grid-row: 1 / span 2; }
+  .briefing .briefing__controls { grid-row: 3; grid-column: 1 / -1; flex-wrap: wrap; }
+  .briefing__controls .btn { flex: 1 1 auto; justify-content: center; }
+}
+
+
 /* In-game Reduced Motion setting */
 .briefing--still .briefing__card { animation: none !important; }
 .briefing--still .quiz-choice { transition: none; }
@@ -1059,8 +1599,16 @@ header.nav {
   max-width: calc(100% - 12px);
 }
 
+.hero-title {
+  font-size: clamp(16px, 4.5vw, 24px);
+  font-family: var(--font-mono);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 /* About & References */
 .about-panel {
+  width: 100%;
   max-width: 720px;
   margin: auto;
   padding: 24px;
@@ -1170,4 +1718,292 @@ header.nav {
   .ft-panel { padding: 14px; width: calc(100% - 16px); max-height: calc(100vh - 16px); }
   .ft-head h2 { font-size: 14px; }
   .ft-cards { grid-template-columns: 1fr; }
+}
+
+/* Accessibility settings applied from GameState settings on <html> */
+html.high-contrast {
+  --g-main: #000000;
+  --g-alt: #050812;
+  --g-card: #0c1224;
+  --ink: #ffffff;
+  --muted: #dbe4ff;
+  --hairline: #94a3b8;
+  --accent: #38bdf8;
+  --accent-laser: #e0f2fe;
+  --verified: #fbbf24;
+}
+
+html.high-contrast .overlay-pane:not(#title-overlay) {
+  background: rgba(0, 0, 0, 0.96) !important;
+}
+
+html.high-contrast :is(
+  .btn,
+  .artifact-card,
+  .catalog-card,
+  .briefing__card,
+  .briefing-single__card,
+  .briefing__say,
+  .about-panel,
+  .ft-panel,
+  .ft-card,
+  .tmenu__row,
+  .tmenu-say,
+  .telemetry-deck,
+  .unit7-mobile__box,
+  .quiz-choice
+) {
+  border-color: #e2e8f0;
+  color: #ffffff;
+}
+
+html.high-contrast .btn.btn--primary,
+html.high-contrast .btn.btn--primary:hover {
+  color: #000000;
+}
+
+html.high-contrast .artifact-card.locked {
+  opacity: 0.85;
+  border-color: #94a3b8;
+}
+
+html.high-contrast .tmenu__item[aria-disabled="true"] {
+  color: #94a3b8;
+}
+
+html.high-contrast :is(
+  .briefing__p,
+  .briefing__facts li,
+  .briefing__loc,
+  .briefing-single__note p,
+  .about-body p,
+  .catalog-note,
+  .catalog-summary,
+  .ft-card p,
+  .telemetry-summary
+) {
+  color: #ffffff;
+}
+
+html.high-contrast :is(button, a, input, select, summary):focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+html.text-large {
+  --ui-zoom: 1.14;
+}
+
+html.text-xlarge {
+  --ui-zoom: 1.26;
+}
+
+:is(html.text-large, html.text-xlarge) :is(
+  .overlay-pane:not(#title-overlay) > *,
+  #title-overlay .tmenu-say,
+  .mobile-briefing__card,
+  .unit7-mobile__box
+) {
+  zoom: calc(var(--ui-zoom) * var(--touch-zoom, 1));
+}
+
+#settings-overlay,
+#about-overlay,
+#failure-overlay,
+#fieldtask-overlay {
+  justify-content: safe center !important;
+}
+
+/* ==========================================================================
+   Rotate prompt (src/ui/DeviceFit.ts): phones held upright
+   ========================================================================== */
+.rotate-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(5, 7, 15, 0.82);
+  backdrop-filter: blur(6px);
+}
+.rotate-prompt[hidden] { display: none; }
+.rotate-prompt__card {
+  width: min(360px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 20px 20px;
+  text-align: center;
+  background: rgba(11, 15, 29, 0.97);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px #05070f, 0 0 32px rgba(14, 195, 220, 0.18);
+  font-family: var(--font-pixel);
+}
+.rotate-prompt h2 { margin: 0; font-size: 17px; line-height: 1.4; letter-spacing: 0.1em; color: var(--accent-laser); }
+.rotate-prompt p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); }
+.rotate-prompt .rotate-prompt__tip { font-size: 12px; color: var(--muted); }
+.rotate-prompt__actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.rotate-prompt__actions .btn { justify-content: center; width: 100%; min-height: 48px; font-size: 14px; }
+.rotate-prompt__art { height: 110px; display: flex; align-items: center; justify-content: center; }
+/* A pixel phone that turns on its side, with UNIT-7 on its screen */
+.rotate-prompt__phone {
+  position: relative;
+  width: 56px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--moon-dust);
+  background: #0b1a2a;
+  box-shadow: inset 0 0 0 3px #05070f, 0 0 16px rgba(126, 241, 255, 0.25);
+  animation: rotate-phone 2.4s steps(1, end) infinite;
+}
+.rotate-prompt__phone::after { content: ''; position: absolute; bottom: 4px; left: 50%; width: 10px; height: 3px; transform: translateX(-50%); background: var(--moon-dust); }
+.rotate-prompt__phone img { width: 48px; height: 48px; image-rendering: pixelated; animation: rotate-robot 2.4s steps(1, end) infinite; }
+@keyframes rotate-phone {
+  0%, 40% { transform: rotate(0deg); }
+  45% { transform: rotate(-30deg); }
+  50% { transform: rotate(-60deg); }
+  55%, 95% { transform: rotate(-90deg); }
+}
+@keyframes rotate-robot {
+  0%, 50% { transform: rotate(0deg); }
+  55%, 95% { transform: rotate(90deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rotate-prompt__phone, .rotate-prompt__phone img { animation: none; }
+}
+
+/* "Tap for sound" (DeviceFit.installSoundPrompt): only when the browser has stopped audio */
+.sound-prompt {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 95;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  font: 13px/1 var(--font-pixel);
+  letter-spacing: 0.12em;
+  color: #05070f;
+  background: var(--accent-laser);
+  border: 1px solid var(--accent-laser);
+  box-shadow: 0 0 0 1px #05070f, 0 0 18px rgba(126, 241, 255, 0.45);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: sound-prompt-in 240ms ease-out;
+}
+.sound-prompt[hidden] { display: none; }
+.sound-prompt:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@keyframes sound-prompt-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+@media (prefers-reduced-motion: reduce) { .sound-prompt { animation: none; } }
+
+/* ==========================================================================
+   Touch screens: larger, roomier text everywhere
+   ========================================================================== */
+@media (pointer: coarse) {
+  /* Dialogs (archive, about, settings, field tasks, retry) scale up as a whole, so
+     their inline sizes grow too. Map and records have their own touch sizes. */
+  :root { --touch-zoom: 1.2; }
+  #hub-overlay, #entry-overlay, #title-overlay, .mobile-briefing, .unit7-mobile { --touch-zoom: 1; }
+  .overlay-pane:not(#title-overlay):not(#hub-overlay):not(#entry-overlay) > * {
+    zoom: calc(var(--ui-zoom, 1) * var(--touch-zoom));
+  }
+
+  .btn { font-size: 13px; }
+  .badge, .chip { font-size: 12px; }
+
+  /* Title menu */
+  .tmenu__item { font-size: max(15px, calc(var(--cv-w, 100vw) * 0.0175)); }
+  .tmenu__item--first { font-size: max(17px, calc(var(--cv-w, 100vw) * 0.0215)); }
+  .tmenu__item--small { font-size: 12px; letter-spacing: 0.14em; padding: 10px 10px; }
+  .tmenu__heading { font-size: 12px; }
+  .tmenu__meta { font-size: 12px; }
+  .tmenu-hud__label { font-size: 12px; }
+  .tmenu-credit { display: none; }
+  .tmenu-hud__count { font-size: 18px; }
+  .tmenu-say { font-size: 13px; }
+  .tmenu-say__who { font-size: 9px; }
+  /* Landscape: UNIT-7's line sits under the menu, in the room that is left
+     (measured by TitleScreen.placeSay, so it never covers an option) */
+  #title-overlay:not(.is-compact) .tmenu-say {
+    display: block;
+    top: var(--say-top, auto);
+    bottom: auto;
+    width: min(440px, calc(var(--cv-w, 100%) - 32px));
+    min-height: 0;
+    max-height: calc(var(--say-max, 25vh) - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    padding: 8px 12px;
+    text-align: center;
+    background: rgba(11, 15, 29, 0.88);
+  }
+  #title-overlay.say-off .tmenu-say { display: none !important; }
+
+  /* Every option is a full-size tap target */
+  .tmenu__item { min-height: 44px; justify-content: center; }
+  .tmenu__item--small { min-height: 44px; }
+
+  /* In-game touch controls and UNIT-7's dialogue */
+  .unit7-mobile { font-size: 15px; }
+  .unit7-mobile__header, .unit7-mobile__hint { font-size: 12px; }
+  .mobile-joystick-label { font-size: 12px; }
+  .mobile-action-buttons .btn { font-size: 13px; }
+  .mobile-briefing__card { font-size: 15px; }
+  .mobile-briefing__subtitle { font-size: 13px; }
+  .mobile-briefing h2 { font-size: 17px; }
+}
+
+/* Touch: the last small labels (12px minimum; the pixel font skips 10-11px) and
+   full-size tap targets on the map and in the records */
+@media (pointer: coarse) {
+  .tmenu-hud__count small { font-size: 12px; }
+  #title-overlay .tmenu-say__who { font-size: 12px; }
+
+  .hub-tab small { font-size: 12px; }
+  .hub-you b { font-size: 12px; padding: 3px 5px 2px; }
+  .hub-map__legend { font-size: 12px; gap: 8px; padding: 5px 8px; }
+  .hub-map__legend i { width: 9px; height: 9px; }
+  .hub-pin { --pin: clamp(38px, 8cqw, 64px); }
+  /* Invisible 48px finger area around each machine */
+  .hub-pin::after { content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 48px); height: max(100%, 48px); transform: translate(-50%, -50%); }
+
+  .briefing__verified, .briefing__name { font-size: 12px; }
+  .briefing .briefing__actions .btn, .briefing .briefing__controls .btn, .briefing__top .btn { font-size: 13px; min-height: 44px; }
+  /* Source links: inline padding grows the finger area without moving the text */
+  .briefing__card a, .briefing-single a { padding: 12px 4px; margin: 0 -4px; }
+  /* Page dots: the dot stays small, the button around it is finger-sized */
+  .briefing__dots { gap: 0; }
+  .briefing__dots .reel-dot { position: relative; width: 28px; height: 44px; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  .briefing__dots .reel-dot::before {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
+    transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid #475569;
+  }
+  .briefing__dots .reel-dot.seen, .briefing__dots .reel-dot.active { background: none; box-shadow: none; }
+  .briefing__dots .reel-dot.seen::before { border-color: var(--accent); background: rgba(14, 195, 220, 0.25); }
+  .briefing__dots .reel-dot.active::before { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .briefing__dots .reel-dot:focus-visible { outline: 2px solid var(--accent-laser); outline-offset: -6px; }
+
+  .ft-label { font-size: 12px; }
+}
+
+/* Touch, short landscape screens (phones on their side): the menu starts right under
+   the logo so every option and UNIT-7's line fit on screen */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  #title-overlay:not(.is-compact) .tmenu { top: calc(var(--cv-y, 0px) + var(--cv-h, 100%) * 0.2); }
+  .tmenu__list { gap: 0; }
+  .tmenu__item { padding-top: 2px; padding-bottom: 2px; }
+  .tmenu__row { margin-top: 0; }
+  .tmenu__heading { margin-bottom: 2px; }
+  .tmenu--worlds .tmenu__item { padding-bottom: 4px; }
+  .tmenu__meta { margin-top: 3px; }
 }

@@ -14,6 +14,41 @@ export type FrameVariant = 'panel' | 'primary' | 'secondary' | 'ghost' | 'amber'
 /** Shared pixel font + spacing used by every in-canvas label (matches the title screen). */
 export const HUD_FONT = 'StillOutTherePixel, monospace';
 
+/** Touch screens (phones, tablets): the canvas is shown small, so HUD text is drawn larger. */
+export const TOUCH_UI = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
+/**
+ * HUD font size: as designed on desktop, larger on touch screens. The pixel font
+ * draws "C" like "O" at 10-11px, so touch sizes skip those (7 -> 9, 9 -> 12).
+ */
+export function hudPx(px: number): string {
+  if (!TOUCH_UI) return `${px}px`;
+  const up = px <= 8 ? 9 : Math.max(12, px + 3);
+  return `${up}px`;
+}
+
+/** Steps a label's font size down (not below minPx) until it fits maxW, then truncates as a last resort. */
+export function shrinkToFit(t: Phaser.GameObjects.Text, maxW: number, minPx = 7): Phaser.GameObjects.Text {
+  let px = parseInt(String(t.style.fontSize), 10) || minPx;
+  while (t.width > maxW && px > minPx) {
+    px--;
+    if (px === 11 || px === 10) px = Math.max(minPx, 9); // pixel font: C reads as O at 10-11px
+    t.setFontSize(px);
+  }
+  return fitText(t, maxW);
+}
+
+/** Truncate a single-line HUD text with an ellipsis until it fits within maxW pixels. */
+export function fitText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
+  const full = t.text;
+  let n = full.length;
+  while (t.width > maxW && n > 4) {
+    n--;
+    t.setText(full.slice(0, n).trimEnd() + '…');
+  }
+  return t;
+}
+
 export class NineSliceHUD {
   /**
    * Draws a crisp title-screen style frame: dark translucent fill, 1px hairline
@@ -145,34 +180,42 @@ export class NineSliceHUD {
     _world: 'moon' | 'mars' | 'elsewhere',
     maxFuel: number
   ): HUDGauges {
-    const panelW = 300;
-    const panelH = 31;
+    // Phones get a wider, taller strip so the readouts can use a bigger font
+    const big = TOUCH_UI;
+    const panelW = big ? 388 : 300;
+    const panelH = big ? 41 : 31;
+    const fs = big ? 9 : 7;
+    const row2 = big ? 25 : 19;
     const container = scene.add.container(Math.round((640 - panelW) / 2), 6).setScrollFactor(0).setDepth(100);
 
     const bg = scene.add.graphics();
     this.drawFrame(bg, 0, 0, panelW, panelH, 'panel');
-    this.drawStatusDot(bg, 7, 6);
+    this.drawStatusDot(bg, 7, big ? 8 : 6);
     bg.fillStyle(PALETTE.atmosphericDuskHex, 1);
-    bg.fillRect(6, 15, panelW - 12, 1);
+    bg.fillRect(6, big ? 20 : 15, panelW - 12, 1);
     container.add(bg);
 
-    const txt = (x: number, y: number, t: string, color: string, size = 7) =>
-      scene.add.text(x, y, t, { fontSize: `${size}px`, fontFamily: HUD_FONT, color, letterSpacing: 1 });
+    const txt = (x: number, y: number, t: string, color: string) =>
+      scene.add.text(x, y, t, { fontSize: `${fs}px`, fontFamily: HUD_FONT, color, letterSpacing: 1 });
 
-    const site = txt(13, 3, siteId.toUpperCase(), PALETTE.cyanLaser);
+    const X = big
+      ? { site: 252, alt: 274, vy: 8, vyV: 30, vx: 108, vxV: 130, fuel: 208, bar: 246 }
+      : { site: 194, alt: 214, vy: 8, vyV: 24, vx: 84, vxV: 100, fuel: 164, bar: 192 };
+    const site = txt(13, big ? 5 : 3, siteId.toUpperCase(), PALETTE.cyanLaser);
     site.setLetterSpacing(2);
-    const altLabel = txt(214, 3, 'ALT', PALETTE.slateMuted);
-    const altValue = txt(panelW - 8, 3, '0.0M', PALETTE.lunarHighlight).setOrigin(1, 0);
-    const vyLabel = txt(8, 19, 'VY', PALETTE.slateMuted);
-    const vyValue = txt(24, 19, '0.00', PALETTE.cyanGlow);
-    const vxLabel = txt(84, 19, 'VX', PALETTE.slateMuted);
-    const vxValue = txt(100, 19, '0.00', PALETTE.cyanGlow);
-    const fuelLabel = txt(164, 19, 'FUEL', PALETTE.slateMuted);
+    fitText(site, X.site);
+    const altLabel = txt(X.alt, big ? 5 : 3, 'ALT', PALETTE.slateMuted);
+    const altValue = txt(panelW - 8, big ? 5 : 3, '0.0M', PALETTE.lunarHighlight).setOrigin(1, 0);
+    const vyLabel = txt(X.vy, row2, 'VY', PALETTE.slateMuted);
+    const vyValue = txt(X.vyV, row2, '0.00', PALETTE.cyanGlow);
+    const vxLabel = txt(X.vx, row2, 'VX', PALETTE.slateMuted);
+    const vxValue = txt(X.vxV, row2, '0.00', PALETTE.cyanGlow);
+    const fuelLabel = txt(X.fuel, row2, 'FUEL', PALETTE.slateMuted);
     const fuelGfx = scene.add.graphics();
     container.add([site, altLabel, altValue, vyLabel, vyValue, vxLabel, vxValue, fuelLabel, fuelGfx]);
 
-    const barX = 192;
-    const barY = 19;
+    const barX = X.bar;
+    const barY = row2 + (big ? 1 : 0);
     const barW = panelW - barX - 8;
     const barH = 8;
     const drawFuelBar = (current: number, max: number) => {

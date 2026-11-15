@@ -5,7 +5,7 @@ import { GameState } from '../core/GameState.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, TOUCH_UI } from '../ui/NineSliceHUD.ts';
 import { ensureBackdropTextures } from '../systems/BackdropTextures.ts';
 import { bayer, hash } from '../systems/SpriteArt.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
@@ -70,7 +70,7 @@ export class RoverScene extends Phaser.Scene {
   private hull = 3;
   private maxHull = 3;
   private required = 3;
-  private taken = 0;
+  private get taken(): number { return this.cores.filter((core) => core.taken).length; }
   private hitCooldown = 0;
   private padNag = 0;
   private started = false;
@@ -90,6 +90,9 @@ export class RoverScene extends Phaser.Scene {
   private hud!: Phaser.GameObjects.Graphics;
   private incl!: Phaser.GameObjects.Graphics;
   private readout!: Phaser.GameObjects.Text;
+  private coreCount!: Phaser.GameObjects.Text;
+  private hullPipsX = 46;
+  private corePipsX = 196;
   private banner!: Banner;
   private beacon!: Phaser.GameObjects.Graphics;
 
@@ -118,7 +121,6 @@ export class RoverScene extends Phaser.Scene {
     this.maxHull = this.assisted ? 6 : 4;
     this.hull = this.maxHull;
     this.required = this.assisted ? 2 : 3;
-    this.taken = 0;
     this.hitCooldown = this.padNag = 0;
     this.started = this.ended = false;
     this.timeScale = 1;
@@ -157,7 +159,7 @@ export class RoverScene extends Phaser.Scene {
 
     showBriefing(this, {
       title: `SURFACE TRAVERSE // ${missionName(this.siteId).toUpperCase()}`,
-      subtitle: `GRAVITY ${this.world === 'mars' ? '3.71' : '1.62'} M/S² · ${this.required} CORES · ${this.maxHull} HULL`,
+      subtitle: `GRAVITY ${this.world === 'mars' ? '3.71' : '1.62'} M/S² · ${this.required} CORES REQUIRED · ${this.maxHull} HULL`,
       lines: [
         '• [D / →] DRIVE   [A / ←] BRAKE & REVERSE',
         '• IN THE AIR: [A] TILT BACK  [D] TILT FORWARD. LET GO AND IT LEVELS ITSELF',
@@ -323,8 +325,14 @@ export class RoverScene extends Phaser.Scene {
     NineSliceHUD.drawStatusDot(frame, 20, 15);
     fitText(hudText(this, 28, 12, `SURFACE TRAVERSE // ${name.toUpperCase()}`, PALETTE.cyanLaser), 278);
     hudText(this, 20, 26, 'BAT', PALETTE.lunarDustLight);
-    hudText(this, 20, 40, 'HULL', PALETTE.lunarDustLight);
-    hudText(this, 160, 40, 'CORES', PALETTE.lunarDustLight);
+    const hullLabel = hudText(this, 20, 40, 'HULL', PALETTE.lunarDustLight);
+    const coresLabel = hudText(this, 160, 40, 'CORES', PALETTE.lunarDustLight);
+    // Touch labels are bigger, so the pips start right after each label
+    const after = (t: Phaser.GameObjects.Text, x: number) => (TOUCH_UI ? Math.ceil(t.x + t.width + 5) : x);
+    this.hullPipsX = after(hullLabel, 46);
+    this.corePipsX = after(coresLabel, 196);
+    const countX = TOUCH_UI ? this.corePipsX + this.cores.length * 9 + 4 : 240;
+    this.coreCount = hudText(this, countX, 40, `0/${this.cores.length}`, PALETTE.cyanLaser);
     this.hud = this.add.graphics().setDepth(101).setScrollFactor(0);
     this.incl = this.add.graphics().setDepth(101).setScrollFactor(0);
     this.readout = hudText(this, W - 108, 44, '', PALETTE.lunarHighlight);
@@ -342,8 +350,9 @@ export class RoverScene extends Phaser.Scene {
     const g = this.hud;
     g.clear();
     drawSegBar(g, 46, 25, 250, 9, this.battery / 100, PALETTE.cyanGlowHex, { segments: 20, warnBelow: 0.25 });
-    drawPips(g, 46, 40, this.maxHull, this.hull, this.hull <= 1 ? PALETTE.thrusterOrangeHex : PALETTE.lunarCrustCreamHex);
-    drawPips(g, 196, 40, this.required, this.taken, PALETTE.cyanLaserHex);
+    drawPips(g, this.hullPipsX, 40, this.maxHull, this.hull, this.hull <= 1 ? PALETTE.thrusterOrangeHex : PALETTE.lunarCrustCreamHex);
+    drawPips(g, this.corePipsX, 40, this.cores.length, this.taken, PALETTE.cyanLaserHex);
+    this.coreCount.setText(`${this.taken}/${this.cores.length}`);
     // Course strip: rover, cores, pad
     const sx = 100, sw = W - 200, sy = H - 14;
     g.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(sx, sy, sw, 1);
@@ -454,12 +463,11 @@ export class RoverScene extends Phaser.Scene {
       if (c.taken || this.taken >= this.cores.length) continue;
       if (Math.hypot(c.x - this.x, c.y - (this.y - 8)) < 32) {
         c.taken = true;
-        this.taken = Math.min(this.cores.length, this.taken + 1);
         this.tweens.add({ targets: [c.glow, c.gfx], alpha: 0, scale: 2, duration: this.reduced ? 0 : 300, onComplete: () => { c.gfx.setVisible(false); c.glow.setVisible(false); } });
         this.sparks.burst(16, { x: c.x, y: c.y, color: PALETTE.cyanLaserHex, life: 0.5, drag: 3, glow: true }, 90);
         SoundFX.playPickup();
         this.battery = Math.min(100, this.battery + 12);
-        this.banner.show(`CORE SAMPLE ${Math.min(this.taken, this.required)}/${this.required} SECURED`);
+        this.banner.show(`CORE SAMPLE ${this.taken}/${this.cores.length} SECURED`);
       }
     }
 

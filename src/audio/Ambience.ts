@@ -27,23 +27,14 @@ class Bed {
     this.fader = ctx.createGain();
     this.fader.gain.value = 0;
     this.fader.connect(bus.dry);
-    // Sends ride on the same fader through a small splitter
     const rev = ctx.createGain();
-    rev.gain.value = 1;
+    rev.gain.value = 0;
     rev.connect(bus.rev);
     const del = ctx.createGain();
-    del.gain.value = 1;
+    del.gain.value = 0;
     del.connect(bus.del);
-    const revIn = ctx.createGain();
-    const delIn = ctx.createGain();
-    const revF = ctx.createGain();
-    const delF = ctx.createGain();
-    revF.gain.value = 0;
-    delF.gain.value = 0;
-    revIn.connect(revF); revF.connect(rev);
-    delIn.connect(delF); delF.connect(del);
-    this.sendFaders = [revF, delF];
-    this.out = { dry: this.fader, rev: revIn, del: delIn };
+    this.sendFaders = [rev, del];
+    this.out = { dry: this.fader, rev, del };
     if (id === 'moon') this.buildMoon();
     else if (id === 'mars') this.buildMars();
     else this.buildSpace();

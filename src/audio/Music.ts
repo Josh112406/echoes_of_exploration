@@ -3,7 +3,7 @@ import { TRACKS, TrackDef, TrackId, MelodyVoice, chordAtBar, degreeToSemis, loop
 import * as S from './Synth.ts';
 
 /** Seconds of audio scheduled ahead of the clock (smooth even if the main thread stutters). */
-const LOOKAHEAD = 0.3;
+const LOOKAHEAD = 0.8;
 
 /**
  * Register floors that keep the mix light: bass lines never drop below E2
@@ -102,8 +102,8 @@ class TrackPlayer {
 
   private schedule(): void {
     const ctx = this.ctx;
-    // After a long pause (hidden tab), jump forward instead of bursting notes
-    if (this.nextTime < ctx.currentTime - 0.5) this.nextTime = ctx.currentTime + 0.05;
+    // A delayed timer must never schedule missed notes together in the past.
+    if (this.nextTime < ctx.currentTime) this.nextTime = ctx.currentTime + 0.05;
     while (this.nextTime < ctx.currentTime + LOOKAHEAD) {
       const swing = this.step % 2 === 1 ? this.def.swing * this.stepDur : 0;
       this.playStep(this.step, this.nextTime + swing);

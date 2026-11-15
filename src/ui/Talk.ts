@@ -11,12 +11,12 @@ import { SoundFX } from '../audio/SoundEffects.ts';
  */
 
 /** Base reveal rate, in characters per second (medium: easy to read along). */
-export const TALK_CPS = 26;
+const TALK_CPS = 26;
 
 const BLIP_EVERY = 2;
 
 /** Seconds spent on one character before the next one appears. */
-export function charDelay(ch: string, next: string | undefined): number {
+function charDelay(ch: string, next: string | undefined): number {
   const base = 1 / TALK_CPS;
   // Only pause when the punctuation ends a phrase (followed by space or end),
   // so "4.5" or "U.S." do not stutter.
@@ -26,13 +26,6 @@ export function charDelay(ch: string, next: string | undefined): number {
   if (ch === ',' || ch === ';' || ch === ':') return base + 0.15;
   if (ch === '—' || ch === '…') return base + 0.2;
   return base;
-}
-
-/** Total time a line takes to talk out, in seconds. */
-export function talkDuration(text: string): number {
-  let t = 0;
-  for (let i = 0; i < text.length; i++) t += charDelay(text[i], text[i + 1]);
-  return t;
 }
 
 /**

@@ -1,6 +1,60 @@
 import Phaser from 'phaser';
 import { PALETTE } from '../ui/theme.ts';
-import { buildRobotCanvas, buildMachineCanvas } from './SpriteArt.ts';
+import { bayer, buildRobotCanvas, buildMachineCanvas, hash } from './SpriteArt.ts';
+
+const TILE_SIZE = 256;
+
+function hexToRgb(hex: string): [number, number, number] {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+}
+
+/** Tileable value noise: lattice wraps at `cells` so the tile repeats seamlessly. */
+function valueNoise(px: number, py: number, cells: number, seed: number): number {
+  const fx = (px / TILE_SIZE) * cells;
+  const fy = (py / TILE_SIZE) * cells;
+  const x0 = Math.floor(fx);
+  const y0 = Math.floor(fy);
+  const tx = fx - x0;
+  const ty = fy - y0;
+  const sx = tx * tx * (3 - 2 * tx);
+  const sy = ty * ty * (3 - 2 * ty);
+  const wrap = (v: number) => ((v % cells) + cells) % cells;
+  const a = hash(wrap(x0), wrap(y0), seed);
+  const b = hash(wrap(x0 + 1), wrap(y0), seed);
+  const c = hash(wrap(x0), wrap(y0 + 1), seed);
+  const d = hash(wrap(x0 + 1), wrap(y0 + 1), seed);
+  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+}
+
+function fillDitheredTile(
+  ctx: CanvasRenderingContext2D,
+  shades: readonly string[],
+  sample: (x: number, y: number) => number,
+  softBand: boolean,
+): void {
+  const shadeRgb = shades.map(hexToRgb);
+  const img = ctx.createImageData(TILE_SIZE, TILE_SIZE);
+  for (let y = 0; y < TILE_SIZE; y++) {
+    for (let x = 0; x < TILE_SIZE; x++) {
+      const f = sample(x, y) * (shadeRgb.length - 1);
+      const i0 = Math.floor(f);
+      const fr = f - i0;
+      const mix = softBand ? (fr < 0.32 ? 0 : fr > 0.68 ? 1 : (fr - 0.32) / 0.36) : fr;
+      const idx = Math.min(shadeRgb.length - 1, mix > bayer(x, y) ? i0 + 1 : i0);
+      const [r, g, b] = shadeRgb[idx];
+      const o = (y * TILE_SIZE + x) * 4;
+      img.data[o] = r;
+      img.data[o + 1] = g;
+      img.data[o + 2] = b;
+      img.data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
 
 export class PixelArtGenerator {
   /**
@@ -14,7 +68,7 @@ export class PixelArtGenerator {
    * 32x32 Textured Planetary Ground / Deep Space Tile
    */
   static createTerrainTile(world: 'moon' | 'mars' | 'elsewhere'): HTMLCanvasElement {
-    const SIZE = 256;
+    const SIZE = TILE_SIZE;
     const canvas = document.createElement('canvas');
     canvas.width = SIZE;
     canvas.height = SIZE;
@@ -23,53 +77,15 @@ export class PixelArtGenerator {
     if (world === 'elsewhere') {
       const shades = [PALETTE.spaceBlack, PALETTE.deepIndigo, PALETTE.shadowNavy];
       const seed = 7919;
-      const hash = (x: number, y: number, s: number): number => {
-        let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
-        h = Math.imul(h ^ (h >>> 13), 1274126177);
-        h ^= h >>> 16;
-        return (h >>> 0) / 4294967296;
-      };
-      const hexToRgb = (hex: string): [number, number, number] => [
-        parseInt(hex.slice(1, 3), 16),
-        parseInt(hex.slice(3, 5), 16),
-        parseInt(hex.slice(5, 7), 16),
-      ];
-      const shadeRgb = shades.map(hexToRgb);
-      const bayer4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-      const valueNoise = (px: number, py: number, cells: number, s: number): number => {
-        const fx = (px / SIZE) * cells;
-        const fy = (py / SIZE) * cells;
-        const x0 = Math.floor(fx);
-        const y0 = Math.floor(fy);
-        const tx = fx - x0;
-        const ty = fy - y0;
-        const sx = tx * tx * (3 - 2 * tx);
-        const sy = ty * ty * (3 - 2 * ty);
-        const wrap = (v: number) => ((v % cells) + cells) % cells;
-        const a = hash(wrap(x0), wrap(y0), s);
-        const b = hash(wrap(x0 + 1), wrap(y0), s);
-        const c = hash(wrap(x0), wrap(y0 + 1), s);
-        const d = hash(wrap(x0 + 1), wrap(y0 + 1), s);
-        return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-      };
-      const img = ctx.createImageData(SIZE, SIZE);
-      for (let y = 0; y < SIZE; y++) {
-        for (let x = 0; x < SIZE; x++) {
+      fillDitheredTile(
+        ctx,
+        shades,
+        (x, y) => {
           const n = valueNoise(x, y, 2, seed) * 0.65 + valueNoise(x, y, 6, seed + 1) * 0.35;
-          const v = Math.max(0, Math.min(1, (n - 0.38) * 1.4));
-          const f = v * (shadeRgb.length - 1);
-          const i0 = Math.floor(f);
-          const t = (bayer4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
-          const idx = Math.min(shadeRgb.length - 1, f - i0 > t ? i0 + 1 : i0);
-          const [r, g, b] = shadeRgb[idx];
-          const o = (y * SIZE + x) * 4;
-          img.data[o] = r;
-          img.data[o + 1] = g;
-          img.data[o + 2] = b;
-          img.data[o + 3] = 255;
-        }
-      }
-      ctx.putImageData(img, 0, 0);
+          return Math.max(0, Math.min(1, (n - 0.38) * 1.4));
+        },
+        false,
+      );
 
       for (let i = 0; i < 240; i++) {
         const sx = Math.floor(hash(i, 1, seed) * SIZE);
@@ -97,68 +113,20 @@ export class PixelArtGenerator {
     const grainDark = isMoon ? PALETTE.deepIndigo : PALETTE.marsShadowUmber;
     const pebbleBody = isMoon ? PALETTE.lunarRegolithMid : PALETTE.marsTerracotta;
     const pebbleLit = isMoon ? PALETTE.lunarCrustCream : PALETTE.marsHazePeach;
-
     const seed = isMoon ? 1337 : 4242;
-    const hash = (x: number, y: number, s: number): number => {
-      let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
-      h = Math.imul(h ^ (h >>> 13), 1274126177);
-      h ^= h >>> 16;
-      return (h >>> 0) / 4294967296;
-    };
 
-    // Tileable value noise: lattice wraps at `cells` so the tile repeats seamlessly
-    const valueNoise = (px: number, py: number, cells: number, s: number): number => {
-      const fx = (px / SIZE) * cells;
-      const fy = (py / SIZE) * cells;
-      const x0 = Math.floor(fx);
-      const y0 = Math.floor(fy);
-      const tx = fx - x0;
-      const ty = fy - y0;
-      const sx = tx * tx * (3 - 2 * tx);
-      const sy = ty * ty * (3 - 2 * ty);
-      const wrap = (v: number) => ((v % cells) + cells) % cells;
-      const a = hash(wrap(x0), wrap(y0), s);
-      const b = hash(wrap(x0 + 1), wrap(y0), s);
-      const c = hash(wrap(x0), wrap(y0 + 1), s);
-      const d = hash(wrap(x0 + 1), wrap(y0 + 1), s);
-      return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-    };
-
-    const bayer4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-
-    const hexToRgb = (hex: string): [number, number, number] => [
-      parseInt(hex.slice(1, 3), 16),
-      parseInt(hex.slice(3, 5), 16),
-      parseInt(hex.slice(5, 7), 16),
-    ];
-    const shadeRgb = shades.map(hexToRgb);
-
-    const img = ctx.createImageData(SIZE, SIZE);
-    for (let y = 0; y < SIZE; y++) {
-      for (let x = 0; x < SIZE; x++) {
+    fillDitheredTile(
+      ctx,
+      shades,
+      (x, y) => {
         const n =
           valueNoise(x, y, 3, seed) * 0.55 +
           valueNoise(x, y, 8, seed + 1) * 0.3 +
           valueNoise(x, y, 24, seed + 2) * 0.15;
-        // Contrast-shaped value mapped across the shade ramp, ordered-dithered
-        // between neighbouring shades for soft, title-style gradients
-        const v = Math.max(0, Math.min(1, (n - 0.5) * 1.7 + 0.45));
-        const f = v * (shadeRgb.length - 1);
-        const i0 = Math.floor(f);
-        const t = (bayer4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
-        // Flat shade areas with a narrow dithered band at each transition
-        const fr = f - i0;
-        const mix = fr < 0.32 ? 0 : fr > 0.68 ? 1 : (fr - 0.32) / 0.36;
-        const idx = Math.min(shadeRgb.length - 1, mix > t ? i0 + 1 : i0);
-        const [r, g, b] = shadeRgb[idx];
-        const o = (y * SIZE + x) * 4;
-        img.data[o] = r;
-        img.data[o + 1] = g;
-        img.data[o + 2] = b;
-        img.data[o + 3] = 255;
-      }
-    }
-    ctx.putImageData(img, 0, 0);
+        return Math.max(0, Math.min(1, (n - 0.5) * 1.7 + 0.45));
+      },
+      true,
+    );
 
     // Sparse single-pixel grains (light catches + tiny pits)
     for (let i = 0; i < 320; i++) {

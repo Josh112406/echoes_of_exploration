@@ -114,6 +114,7 @@ export class EntryReaderModal {
 
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (this.container.classList.contains('hidden') || this.isSinglePageView) return;
+      if (document.querySelector('#settings-overlay:not(.hidden), #about-overlay:not(.hidden), #fieldtask-overlay:not(.hidden), #failure-overlay:not(.hidden)')) return;
       const target = e.target as HTMLElement | null;
       if (target && target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return; // let buttons click
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
@@ -272,6 +273,7 @@ export class EntryReaderModal {
     const swap = () => {
       this.renderCard(dir);
       this.renderTop();
+      this.container.scrollTop = 0;
       this.lines = this.linesFor(page);
       // Every visit, UNIT-7 talks the page through again (as in the finale).
       this.startLine(0);
@@ -694,7 +696,7 @@ export class EntryReaderModal {
     this.container.innerHTML = `
       <div class="briefing-single">
         <div class="briefing__top">
-          <span class="briefing__verified" style="color:var(--verified);">${verifiedLabel}</span>
+          <span class="briefing__verified" style="color:${e.last_verified ? 'var(--verified)' : 'var(--muted)'};">${verifiedLabel}</span>
           <div class="briefing__actions">
             <button id="btn-toggle-reel" class="btn">BACK TO BRIEFING</button>
             <button id="btn-close-entry" class="btn">CLOSE [X]</button>

@@ -4,7 +4,7 @@ import { GameState } from '../core/GameState.ts';
 import { EventBus, EVENTS } from '../core/EventBus.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, fitText, hudPx, shrinkToFit } from '../ui/NineSliceHUD.ts';
 import { ALL_ENTRIES } from '../data/entries.ts';
 import { Practice } from './Practice.ts';
 import { fieldTaskForEntry } from '../data/fieldTasks.ts';
@@ -31,6 +31,11 @@ export function leaveMinigame(scene: Phaser.Scene, practiceResult?: 'complete' |
 
 export const MG_W = CONSTANTS.CANVAS.WIDTH;
 export const MG_H = CONSTANTS.CANVAS.HEIGHT;
+
+/** Canvas units needed for a 44px touch target at the current display scale. */
+export function minTouchTarget(scene: Phaser.Scene): number {
+  return Math.ceil(44 * MG_W / scene.scale.displaySize.width);
+}
 
 export interface Particle {
   x: number;
@@ -154,19 +159,24 @@ export function drawPips(g: Phaser.GameObjects.Graphics, x: number, y: number, n
   }
 }
 
+/** HUD label or readout; one step larger on touch screens (see hudPx). */
 export function hudText(scene: Phaser.Scene, x: number, y: number, text: string, color: string = PALETTE.lunarHighlight, size = 7): Phaser.GameObjects.Text {
-  return scene.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: `${size}px`, color, letterSpacing: 1 }).setDepth(101).setScrollFactor(0);
+  return scene.add.text(x, y, text, { fontFamily: HUD_FONT, fontSize: hudPx(size), color, letterSpacing: 1 }).setDepth(101).setScrollFactor(0);
 }
 
-/** Truncate a HUD text with an ellipsis until it fits within maxW pixels. */
-export function fitText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
-  const full = t.text;
-  let n = full.length;
-  while (t.width > maxW && n > 4) {
-    n--;
-    t.setText(full.slice(0, n).trimEnd() + '…');
+export { fitText };
+
+/**
+ * Fits a centered header or subtitle inside maxW: eases wide tracking first, then
+ * wraps across lines so long mission names stay readable inside fixed panels.
+ */
+export function fitHeaderText(t: Phaser.GameObjects.Text, maxW: number): Phaser.GameObjects.Text {
+  if (t.width > maxW) t.setLetterSpacing(1);
+  if (t.width > maxW) {
+    t.setLineSpacing(3);
+    t.setWordWrapWidth(maxW, true);
   }
-  return t;
+  return fitText(t, maxW);
 }
 
 export interface TouchButton {
@@ -181,14 +191,18 @@ export function touchButton(
 ): TouchButton {
   const bg = scene.add.graphics().setDepth(100).setScrollFactor(0);
   NineSliceHUD.drawFrame(bg, x, y, w, h, variant);
-  const zone = scene.add.zone(x + w / 2, y + h / 2, w, h).setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+  const hit = minTouchTarget(scene);
+  const hitH = Math.max(h, hit);
+  const zone = scene.add.zone(x + w / 2, Phaser.Math.Clamp(y + h / 2, hitH / 2, MG_H - hitH / 2), Math.max(w, hit), hitH)
+    .setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
   zone.on('pointerdown', onDown);
   zone.on('pointerup', onUp);
   zone.on('pointerout', onUp);
-  const text = scene.add.text(x + w / 2, y + h / 2, label, {
-    fontFamily: HUD_FONT, fontSize: '7px', letterSpacing: 1,
+  zone.on('pointercancel', onUp);
+  const text = shrinkToFit(scene.add.text(x + w / 2, y + h / 2, label, {
+    fontFamily: HUD_FONT, fontSize: hudPx(7), letterSpacing: 1,
     color: variant === 'primary' ? PALETTE.spaceBlack : PALETTE.lunarCrustCream,
-  }).setOrigin(0.5).setDepth(102).setScrollFactor(0);
+  }).setOrigin(0.5).setDepth(102).setScrollFactor(0), w - 6);
   return { zone, label: text };
 }
 
@@ -197,9 +211,11 @@ export function exitButton(scene: Phaser.Scene, label: string, onExit: () => voi
   const W = MG_W;
   const bg = scene.add.graphics().setDepth(100).setScrollFactor(0);
   NineSliceHUD.drawFrame(bg, W - 98, 8, 86, 22, 'secondary');
-  const zone = scene.add.zone(W - 55, 19, 86, 22).setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
-  const txt = scene.add.text(W - 55, 19, label, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.lunarHighlight, letterSpacing: 1 })
-    .setOrigin(0.5).setDepth(102).setScrollFactor(0);
+  const hit = minTouchTarget(scene);
+  const zone = scene.add.zone(W - 55, Math.max(19, hit / 2), Math.max(86, hit), Math.max(22, hit))
+    .setDepth(101).setScrollFactor(0).setInteractive({ cursor: 'pointer' });
+  const txt = shrinkToFit(scene.add.text(W - 55, 19, label, { fontFamily: HUD_FONT, fontSize: hudPx(7), color: PALETTE.lunarHighlight, letterSpacing: 1 })
+    .setOrigin(0.5).setDepth(102).setScrollFactor(0), 80);
   zone.on('pointerdown', () => {
     SoundFX.playClick();
     if (Practice.run) leaveMinigame(scene, 'exited');
@@ -218,7 +234,7 @@ export class Banner {
   constructor(scene: Phaser.Scene, y: number, reduced: boolean) {
     this.scene = scene;
     this.reduced = reduced;
-    this.text = scene.add.text(MG_W / 2, y, '', { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.cyanLaser, letterSpacing: 2 })
+    this.text = scene.add.text(MG_W / 2, y, '', { fontFamily: HUD_FONT, fontSize: hudPx(9), color: PALETTE.cyanLaser, letterSpacing: 2 })
       .setOrigin(0.5).setDepth(140).setScrollFactor(0).setAlpha(0)
       .setShadow(0, 1, PALETTE.spaceBlack, 0, false, true);
   }
@@ -250,23 +266,84 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
   const lines = run
     ? [...spec.lines, '• PRACTICE RUN: NO ECHO IS RECOVERED.', `• TRUE STORY: ${run.note.toUpperCase()}`]
     : spec.lines;
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    const overlay = document.createElement('div');
+    overlay.className = 'mobile-briefing';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', spec.title);
+    const card = document.createElement('div');
+    card.className = 'mobile-briefing__card';
+    const heading = document.createElement('h2');
+    heading.textContent = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
+    const subtitle = document.createElement('p');
+    subtitle.className = 'mobile-briefing__subtitle';
+    subtitle.textContent = spec.subtitle;
+    const body = document.createElement('div');
+    body.className = 'mobile-briefing__body';
+    for (const line of lines) {
+      const p = document.createElement('p');
+      p.textContent = line;
+      body.appendChild(p);
+    }
+    const button = document.createElement('button');
+    button.className = 'btn btn--primary';
+    button.textContent = spec.cta;
+    let done = false;
+    const start = () => {
+      if (done) return;
+      done = true;
+      overlay.remove();
+      scene.input.keyboard?.off('keydown-SPACE', start);
+      scene.input.keyboard?.off('keydown-ENTER', start);
+      SoundFX.playClick();
+      onStart();
+    };
+    button.addEventListener('click', start);
+    card.append(heading, subtitle, body, button);
+    overlay.appendChild(card);
+    document.getElementById('game-stage')?.appendChild(overlay);
+    scene.time.delayedCall(150, () => {
+      if (done) return;
+      scene.input.keyboard?.on('keydown-SPACE', start);
+      scene.input.keyboard?.on('keydown-ENTER', start);
+    });
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      done = true;
+      overlay.remove();
+      scene.input.keyboard?.off('keydown-SPACE', start);
+      scene.input.keyboard?.off('keydown-ENTER', start);
+    });
+    return;
+  }
   const c = scene.add.container(W / 2, H / 2).setDepth(150).setScrollFactor(0);
+  const title = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
+  const titleText = fitHeaderText(scene.add.text(0, 0, title, {
+    fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3, align: 'center',
+  }).setOrigin(0.5, 0), 328);
+  const subText = fitHeaderText(scene.add.text(0, 0, spec.subtitle, {
+    fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.beaconGold, letterSpacing: 2, align: 'center',
+  }).setOrigin(0.5, 0), 328);
   // Lines are laid out by their wrapped height, so long notes never overlap
   const texts = lines.map((line) => scene.add.text(-164, 0, line, {
     fontFamily: HUD_FONT, fontSize: '7px', color: line.startsWith('• TRUE STORY') ? PALETTE.cyanLaser : PALETTE.lunarCrustCream,
     wordWrap: { width: 328, useAdvancedWrap: true },
   }));
+  const yTitle = 10;
+  const ySub = yTitle + titleText.height + 5;
+  const yDiv = ySub + subText.height + 7;
+  const yBody = yDiv + 10;
   const body = texts.reduce((sum, t) => sum + Math.max(15, t.height + 5), 0);
-  const hgt = Math.min(H - 16, 105 + body);
-  const top = -hgt / 2;
+  const hgt = Math.min(H - 16, yBody + body + 51);
+  const top = Math.round(-hgt / 2);
   const bg = scene.add.graphics();
   NineSliceHUD.drawFrame(bg, -180, top, 360, hgt, 'panel');
-  bg.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(-168, top + 44, 336, 1);
+  bg.fillStyle(PALETTE.atmosphericDuskHex, 1).fillRect(-168, top + yDiv, 336, 1);
   c.add(bg);
-  const title = run ? `PRACTICE RUN // ${run.name.toUpperCase()}` : spec.title;
-  c.add(fitText(scene.add.text(0, top + 16, title, { fontFamily: HUD_FONT, fontSize: '9px', color: PALETTE.lunarHighlight, letterSpacing: 3 }).setOrigin(0.5), 340));
-  c.add(scene.add.text(0, top + 32, spec.subtitle, { fontFamily: HUD_FONT, fontSize: '7px', color: PALETTE.beaconGold, letterSpacing: 2 }).setOrigin(0.5));
-  let ly = top + 54;
+  titleText.setY(top + yTitle);
+  subText.setY(top + ySub);
+  c.add([titleText, subText]);
+  let ly = top + yBody;
   for (const t of texts) {
     t.setY(ly);
     c.add(t);
@@ -276,8 +353,8 @@ export function showBriefing(scene: Phaser.Scene, spec: BriefingSpec, onStart: (
   const btn = scene.add.graphics();
   NineSliceHUD.drawFrame(btn, -110, by, 220, 22, 'primary');
   c.add(btn);
-  c.add(scene.add.text(0, by + 11, spec.cta, { fontFamily: HUD_FONT, fontSize: '8px', color: PALETTE.spaceBlack, letterSpacing: 3 }).setOrigin(0.5));
-  const zone = scene.add.zone(0, by + 11, 220, 22).setInteractive({ cursor: 'pointer' });
+  c.add(fitText(scene.add.text(0, by + 11, spec.cta, { fontFamily: HUD_FONT, fontSize: '8px', color: PALETTE.spaceBlack, letterSpacing: 3 }).setOrigin(0.5), 204));
+  const zone = scene.add.zone(0, by + 11, 220, Math.max(22, minTouchTarget(scene))).setInteractive({ cursor: 'pointer' });
   c.add(zone);
 
   let done = false;

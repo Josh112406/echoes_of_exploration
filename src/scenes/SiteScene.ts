@@ -14,10 +14,12 @@ import { getMinigameMetaForSite } from '../data/minigames.ts';
 import { WorldId } from '../data/schema.ts';
 import { SoundFX } from '../audio/SoundEffects.ts';
 import { Soundscape } from '../audio/Soundscape.ts';
+import { minTouchTarget } from '../systems/MinigameKit.ts';
 import { PostProcessing } from '../systems/PostProcessing.ts';
 import { PALETTE } from '../ui/theme.ts';
-import { NineSliceHUD, HUD_FONT, FrameVariant } from '../ui/NineSliceHUD.ts';
+import { NineSliceHUD, HUD_FONT, FrameVariant, TOUCH_UI, hudPx } from '../ui/NineSliceHUD.ts';
 import { Unit7Voice } from '../ui/Unit7Voice.ts';
+import { MobileJoystick, bindPressAction } from '../ui/MobileJoystick.ts';
 import { StoryDirector } from '../systems/StoryDirector.ts';
 import { buildRingedPlanet } from '../systems/TitleArt.ts';
 import {
@@ -70,8 +72,8 @@ const HOVER_LIFT = 6;
 const NOZZLE_ROW = 20;
 
 export class SiteScene extends Phaser.Scene {
-  private readonly worldWidth: number = 2400;
-  private readonly worldHeight: number = 1600;
+  private readonly worldWidth: number = CONSTANTS.CANVAS.WORLD_WIDTH;
+  private readonly worldHeight: number = CONSTANTS.CANVAS.WORLD_HEIGHT;
 
   private robot!: Phaser.GameObjects.Sprite;
   private robotShadow!: Phaser.GameObjects.Ellipse;
@@ -114,6 +116,7 @@ export class SiteScene extends Phaser.Scene {
   private voice!: Unit7Voice;
   private story!: StoryDirector;
   private keyQ!: Phaser.Input.Keyboard.Key;
+  private mobileJoystick: MobileJoystick | null = null;
 
   // HUD
   private hudCompassArrow!: Phaser.GameObjects.Sprite;
@@ -138,6 +141,7 @@ export class SiteScene extends Phaser.Scene {
   private ringPhase: number = 0;
   private facing: 1 | -1 = 1;
   private hudProgressText!: Phaser.GameObjects.Text;
+  private hudProgressBox!: Phaser.GameObjects.Graphics;
 
   // Zero-g flight (Elsewhere): ion pack instead of treads
   private flying: boolean = false;
@@ -149,13 +153,37 @@ export class SiteScene extends Phaser.Scene {
     super('SiteScene');
   }
 
+  private shutdownCleanups: (() => void)[] = [];
+
   init(data?: { siteId?: string }): void {
     this.returnedFromSiteId = data?.siteId ?? null;
   }
 
   create(): void {
     document.body.classList.add('in-game');
+    document.body.classList.add('site-scene');
     const world = GameState.getWorld();
+    this.mobileJoystick = MobileJoystick.fromPage();
+    this.shutdownCleanups = [
+      () => {
+        document.body.classList.remove('site-scene');
+        this.mobileJoystick?.destroy();
+        this.mobileJoystick = null;
+        SoundFX.setRover(0);
+        if (this.robot) {
+          GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+        }
+      },
+    ];
+    let cleaned = false;
+    const runCleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      for (const fn of this.shutdownCleanups) fn();
+      this.shutdownCleanups = [];
+    };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, runCleanup);
+    this.events.once(Phaser.Scenes.Events.DESTROY, runCleanup);
     // Each world has its own exploration music and its own air (or lack of it)
     const music = world === 'moon' ? 'explore_moon' : world === 'mars' ? 'explore_mars' : 'transition';
     const ambience = world === 'elsewhere' ? 'space' : world;
@@ -273,7 +301,7 @@ export class SiteScene extends Phaser.Scene {
     // Proximity prompt graphics & text (world space)
     this.promptBg = this.add.graphics().setDepth(30).setVisible(false).setScale(WORLD_TEXT_SCALE);
     this.promptText = this.add.text(0, 0, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 1,
@@ -307,11 +335,15 @@ export class SiteScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-SPACE', () => {
       if (!this.isUiBlocked()) this.voice.advance();
     });
-    this.keyQ.on('down', () => {
+    const talk = () => {
       if (this.isUiBlocked()) return;
       this.tutorialContainer.setVisible(false);
       if (!this.voice.advance()) this.story.requestThought(world);
-    });
+    };
+    this.keyQ.on('down', talk);
+    const mobileTalk = document.getElementById('mobile-talk');
+    const unbindTalk = mobileTalk ? bindPressAction(mobileTalk, talk) : () => {};
+    this.shutdownCleanups.push(unbindTalk);
     this.input.keyboard?.on('keydown-M', () => {
       if (this.isUiBlocked()) return;
       if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
@@ -324,12 +356,12 @@ export class SiteScene extends Phaser.Scene {
       if (id && id === this.returnedFromSiteId) this.story.queueAfterthought(id);
     };
     EventBus.on(EVENTS.ENTRY_CLOSED, onEntryClosed);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => EventBus.off(EVENTS.ENTRY_CLOSED, onEntryClosed));
+    this.shutdownCleanups.push(() => EventBus.off(EVENTS.ENTRY_CLOSED, onEntryClosed));
 
     // Pointer steer & touch interact
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      // Ignore HUD touches
-      if (pointer.y <= 36) return;
+      // Ignore HUD touches and clicks while a DOM overlay is covering the stage
+      if (this.isUiBlocked() || pointer.y <= 36) return;
 
       if (this.nearestMarker && this.nearestDist <= 56) {
         this.interact(this.nearestMarker.id);
@@ -341,20 +373,7 @@ export class SiteScene extends Phaser.Scene {
       this.refreshMarkerStates();
     };
     EventBus.on(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      SoundFX.setRover(0);
-      EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-      if (this.robot) {
-        GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
-      }
-    });
-    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
-      EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked);
-      if (this.robot) {
-        GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
-      }
-    });
+    this.shutdownCleanups.push(() => EventBus.off(EVENTS.ENTRY_UNLOCKED, onEntryUnlocked));
   }
 
   private createGeologicFeatures(world: WorldId): void {
@@ -723,7 +742,7 @@ export class SiteScene extends Phaser.Scene {
     const label = this.add.container(coord.x, coord.y + 11).setDepth(3000).setAlpha(0).setVisible(false).setScale(WORLD_TEXT_SCALE);
     const labelPlate = this.add.graphics();
     const labelText = this.add.text(0, 0, coord.name.toUpperCase(), {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
       letterSpacing: 1,
@@ -751,7 +770,7 @@ export class SiteScene extends Phaser.Scene {
     const w = Math.ceil(m.labelText.width) + 20;
     m.labelText.setX(4);
     m.labelPlate.clear();
-    NineSliceHUD.drawFrame(m.labelPlate, -w / 2, -7, w, 14, variant);
+    NineSliceHUD.drawFrame(m.labelPlate, -w / 2, TOUCH_UI ? -9 : -7, w, TOUCH_UI ? 18 : 14, variant);
     NineSliceHUD.drawStatusDot(m.labelPlate, -w / 2 + 5, -1, dot);
 
     m.glowDisk.setVisible(isActiveTarget).setTint(PALETTE.cyanGlowHex).setAlpha(0.55);
@@ -795,38 +814,47 @@ export class SiteScene extends Phaser.Scene {
       .setScrollFactor(0).setDepth(101);
 
     this.hudTargetText = this.add.text(38, 22, 'RADAR: SEARCHING...', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.cyanLaser,
-      letterSpacing: 2,
+      letterSpacing: TOUCH_UI ? 1 : 2,
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
-    // 2. Top-Right Progress panel + MAP & MENU buttons
-    const rightBox = this.add.graphics().setScrollFactor(0).setDepth(100);
-    NineSliceHUD.drawFrame(rightBox, W - 298, 10, 182, 24, 'panel');
-    NineSliceHUD.drawStatusDot(rightBox, W - 289, 21);
-    NineSliceHUD.drawFrame(rightBox, W - 110, 10, 44, 24, 'secondary');
-    NineSliceHUD.drawFrame(rightBox, W - 62, 10, 50, 24, 'secondary');
-
+    // 2. Top-Right Progress panel + MAP & MENU buttons.
+    // Touch screens already have big MAP / MENU buttons beside the joystick, so the
+    // canvas copies are left out there and the progress panel takes the corner.
+    this.hudProgressBox = this.add.graphics().setScrollFactor(0).setDepth(100);
     this.hudProgressText = this.add.text(W - 282, 22, '', {
-      fontSize: '7px',
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarHighlight,
-      letterSpacing: 2,
+      letterSpacing: TOUCH_UI ? 1 : 2,
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101);
 
     this.updateHUDProgress(world);
+    if (TOUCH_UI) {
+      this.bindTouchMapMenu(world);
+      return;
+    }
+    const rightBox = this.add.graphics().setScrollFactor(0).setDepth(100);
+    NineSliceHUD.drawFrame(rightBox, W - 110, 10, 44, 24, 'secondary');
+    NineSliceHUD.drawFrame(rightBox, W - 62, 10, 50, 24, 'secondary');
 
     // Map button
-    const mapBtn = this.add.zone(W - 88, 22, 44, 24)
+    const hitH = Math.max(24, minTouchTarget(this));
+    const mapBtn = this.add.zone(W - 88, Math.max(22, hitH / 2), 44, hitH)
       .setScrollFactor(0).setDepth(102).setInteractive({ cursor: 'pointer' });
-    mapBtn.on('pointerdown', () => {
+    const openMap = () => {
       if (this.robot) {
         GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
       }
       SoundFX.playClick();
       EventBus.emit(EVENTS.NAVIGATE_TO_HUB);
-    });
+    };
+    mapBtn.on('pointerdown', openMap);
+    const mobileMap = document.getElementById('mobile-map');
+    const unbindMap = mobileMap ? bindPressAction(mobileMap, openMap) : () => {};
+    this.shutdownCleanups.push(unbindMap);
 
     const mapText = this.add.text(W - 88, 22, 'MAP', {
       fontSize: '7px',
@@ -838,15 +866,19 @@ export class SiteScene extends Phaser.Scene {
     mapBtn.on('pointerout', () => mapText.setColor(PALETTE.lunarHighlight));
 
     // Menu button
-    const menuBtn = this.add.zone(W - 37, 22, 50, 24)
+    const menuBtn = this.add.zone(W - 37, Math.max(22, hitH / 2), 50, hitH)
       .setScrollFactor(0).setDepth(102).setInteractive({ cursor: 'pointer' });
-    menuBtn.on('pointerdown', () => {
+    const openMenu = () => {
       if (this.robot) {
         GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
       }
       SoundFX.playClick();
       EventBus.emit(EVENTS.SHOW_TITLE);
-    });
+    };
+    menuBtn.on('pointerdown', openMenu);
+    const mobileMenu = document.getElementById('mobile-menu');
+    const unbindMenu = mobileMenu ? bindPressAction(mobileMenu, openMenu) : () => {};
+    this.shutdownCleanups.push(unbindMenu);
 
     const menuText = this.add.text(W - 37, 22, 'MENU', {
       fontSize: '7px',
@@ -856,6 +888,18 @@ export class SiteScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
     menuBtn.on('pointerover', () => menuText.setColor(PALETTE.cyanLaser));
     menuBtn.on('pointerout', () => menuText.setColor(PALETTE.lunarHighlight));
+  }
+
+  /** Touch: the on-screen MAP / MENU buttons (index.html) drive the same actions. */
+  private bindTouchMapMenu(world: WorldId): void {
+    const keep = () => {
+      if (this.robot) GameState.setRobotPosition(world, { x: this.robot.x, y: this.robot.y });
+      SoundFX.playClick();
+    };
+    const mobileMap = document.getElementById('mobile-map');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMap) this.shutdownCleanups.push(bindPressAction(mobileMap, () => { keep(); EventBus.emit(EVENTS.NAVIGATE_TO_HUB); }));
+    if (mobileMenu) this.shutdownCleanups.push(bindPressAction(mobileMenu, () => { keep(); EventBus.emit(EVENTS.SHOW_TITLE); }));
   }
 
   private setRadarText(text: string): void {
@@ -872,6 +916,14 @@ export class SiteScene extends Phaser.Scene {
     const total = GameState.getChronoList(world).length;
     const worldName = world === 'moon' ? 'MOON' : world === 'mars' ? 'MARS' : 'DEEP SPACE';
     this.hudProgressText.setText(`${worldName} // ${recovered}/${total} FOUND`);
+    // Desktop: fixed slot left of MAP / MENU. Touch: sized to the text, in the corner.
+    const W = CONSTANTS.CANVAS.WIDTH;
+    const boxW = TOUCH_UI ? Math.ceil(this.hudProgressText.width) + 28 : 182;
+    const boxX = TOUCH_UI ? W - 12 - boxW : W - 298;
+    this.hudProgressText.setX(boxX + 16);
+    this.hudProgressBox.clear();
+    NineSliceHUD.drawFrame(this.hudProgressBox, boxX, 10, boxW, 24, 'panel');
+    NineSliceHUD.drawStatusDot(this.hudProgressBox, boxX + 9, 21);
   }
 
   private createTutorialToast(): void {
@@ -879,15 +931,19 @@ export class SiteScene extends Phaser.Scene {
       .setScrollFactor(0).setDepth(110);
 
     const bg = this.add.graphics();
-    NineSliceHUD.drawFrame(bg, -160, -10, 320, 20, 'muted');
     this.tutorialContainer.add(bg);
 
     const verb = this.flying ? 'FLY' : 'DRIVE';
-    const t = this.add.text(0, 0, `WASD / DRAG TO ${verb} · [Q] TALK TO UNIT-7 · FOLLOW THE CYAN ARROW`, {
-      fontSize: '7px',
+    const tip = TOUCH_UI
+      ? `STICK TO ${verb} · FOLLOW THE CYAN ARROW`
+      : `WASD / DRAG TO ${verb} · [Q] TALK TO UNIT-7 · FOLLOW THE CYAN ARROW`;
+    const t = this.add.text(0, 0, tip, {
+      fontSize: hudPx(7),
       fontFamily: HUD_FONT,
       color: PALETTE.lunarCrustCream,
     }).setOrigin(0.5);
+    const tw = Math.max(320, Math.ceil(t.width) + 24);
+    NineSliceHUD.drawFrame(bg, -tw / 2, TOUCH_UI ? -12 : -10, tw, TOUCH_UI ? 24 : 20, 'muted');
     this.tutorialContainer.add(t);
   }
 
@@ -911,26 +967,32 @@ export class SiteScene extends Phaser.Scene {
       }
     }
 
+    const blocked = this.isUiBlocked();
     let ix = 0;
     let iy = 0;
 
-    // Keyboard controls: Arrow Keys + WASD
-    if (this.cursors.left.isDown || this.keysWASD?.A?.isDown) ix -= 1;
-    if (this.cursors.right.isDown || this.keysWASD?.D?.isDown) ix += 1;
-    if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
-    if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
+    if (!blocked) {
+      // Keyboard controls: Arrow Keys + WASD
+      if (this.cursors.left.isDown || this.keysWASD?.A?.isDown) ix -= 1;
+      if (this.cursors.right.isDown || this.keysWASD?.D?.isDown) ix += 1;
+      if (this.cursors.up.isDown || this.keysWASD?.W?.isDown) iy -= 1;
+      if (this.cursors.down.isDown || this.keysWASD?.S?.isDown) iy += 1;
 
-    // Pointer steering
-    if (this.input.activePointer.isDown && this.input.activePointer.y > 36) {
-      const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
-      const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
-      const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);
-      const distToPointer = Math.hypot(dx, dy);
+      // Touch uses the dedicated joystick; keep canvas drag steer for desktop pointer users.
+      if (this.mobileJoystick?.active) {
+        ix = this.mobileJoystick.x;
+        iy = this.mobileJoystick.y;
+      } else if (!window.matchMedia('(pointer: coarse)').matches && this.input.activePointer.isDown && this.input.activePointer.y > 36) {
+        const worldPoint = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y);
+        const dx = this.toroidalDelta(worldPoint.x, this.robot.x, this.worldWidth);
+        const dy = this.toroidalDelta(worldPoint.y, this.robot.y, this.worldHeight);
+        const distToPointer = Math.hypot(dx, dy);
 
-      if (distToPointer > 14) {
-        const angle = Math.atan2(dy, dx);
-        ix = Math.cos(angle);
-        iy = Math.sin(angle);
+        if (distToPointer > 14) {
+          const angle = Math.atan2(dy, dx);
+          ix = Math.cos(angle);
+          iy = Math.sin(angle);
+        }
       }
     }
 
@@ -1173,9 +1235,9 @@ export class SiteScene extends Phaser.Scene {
       const boxW = Math.max(120, Math.ceil(this.promptText.width) + 16);
       this.promptBg.setDepth(3100);
       this.promptBg.setPosition(px, py);
-      NineSliceHUD.drawFrame(this.promptBg, -boxW / 2, -7, boxW, 16, variant);
+      NineSliceHUD.drawFrame(this.promptBg, -boxW / 2, TOUCH_UI ? -9 : -7, boxW, TOUCH_UI ? 20 : 16, variant);
 
-      if (Phaser.Input.Keyboard.JustDown(this.keyE)) {
+      if (!blocked && Phaser.Input.Keyboard.JustDown(this.keyE)) {
         this.interact(this.nearestMarker.id);
       }
     } else {
@@ -1289,12 +1351,9 @@ export class SiteScene extends Phaser.Scene {
     }
   }
 
-  /** A DOM overlay (entry reader, archive, settings…) is covering the game. */
+  /** A DOM overlay (entry reader, archive, field task, settings…) is covering the game. */
   private isUiBlocked(): boolean {
-    return !!document.querySelector(
-      '#entry-overlay:not(.hidden), #archive-overlay:not(.hidden), #failure-overlay:not(.hidden), ' +
-      '#settings-overlay:not(.hidden), #about-overlay:not(.hidden), #title-overlay:not(.hidden), #hub-overlay:not(.hidden)'
-    );
+    return !!document.querySelector('.overlay-pane:not(.hidden)');
   }
 
   /** Name of the next echo in launch order in this sector. */

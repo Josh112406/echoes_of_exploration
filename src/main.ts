@@ -7,14 +7,71 @@ import { SoundFX } from './audio/SoundEffects.ts';
 import { Soundscape } from './audio/Soundscape.ts';
 import { getMinigameKeyForSite } from './data/minigames.ts';
 import { Practice } from './systems/Practice.ts';
+import { installRotatePrompt, installSoundPrompt } from './ui/DeviceFit.ts';
+
+// Prefer Canvas when an older driver cannot compile the fragment precision Phaser needs.
+function supportsWebGLShaders(): boolean {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    if (!gl || !gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)?.precision) return false;
+    const shader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!shader) return false;
+    gl.shaderSource(shader, 'precision highp float; void main() { gl_FragColor = vec4(1.0); }');
+    gl.compileShader(shader);
+    const compiled = Boolean(gl.getShaderParameter(shader, gl.COMPILE_STATUS));
+    gl.deleteShader(shader);
+    return compiled;
+  } catch {
+    return false;
+  }
+}
 
 // Music, ambience and effects: unlocks on the first click or key press
 Soundscape.install();
 
 window.addEventListener('DOMContentLoaded', () => {
   // Mount Phaser Game
-  const game = new Phaser.Game(gameConfig);
+  const fallback = document.getElementById('graphics-fallback');
+  const showFallback = () => { if (fallback) fallback.hidden = false; };
+  const hideFallback = () => { if (fallback) fallback.hidden = true; };
+  document.getElementById('retry-graphics')?.addEventListener('click', () => window.location.reload());
+
+  let game: Phaser.Game;
+  try {
+    game = new Phaser.Game({ ...gameConfig, type: supportsWebGLShaders() ? Phaser.AUTO : Phaser.CANVAS });
+  } catch {
+    showFallback();
+    return;
+  }
+  const watchRenderer = () => {
+    if (game.renderer.type !== Phaser.WEBGL) return;
+    const renderer = game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+    renderer.on(Phaser.Renderer.Events.LOSE_WEBGL, showFallback);
+    renderer.on(Phaser.Renderer.Events.RESTORE_WEBGL, hideFallback);
+  };
+  if (game.isBooted) watchRenderer();
+  else game.events.once(Phaser.Core.Events.BOOT, watchRenderer);
   (window as any).__PHASER_GAME__ = game;
+
+  // Phones held upright: ask to rotate (the game pauses behind the prompt)
+  installRotatePrompt(game);
+  // If the browser ever holds the sound back, offer a one-tap way to bring it back
+  installSoundPrompt();
+
+  // Android browser bars can change the visible height without updating CSS viewport units.
+  const fitVisibleViewport = () => {
+    document.documentElement.style.setProperty(
+      '--visible-viewport-height',
+      `${window.visualViewport?.height ?? window.innerHeight}px`,
+    );
+    requestAnimationFrame(() => {
+      game.scale.getParentBounds();
+      game.scale.refresh();
+    });
+  };
+  window.visualViewport?.addEventListener('resize', fitVisibleViewport);
+  window.addEventListener('resize', fitVisibleViewport);
+  fitVisibleViewport();
 
   // Mount UI Overlays
   new UIManager();
@@ -29,6 +86,17 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('about-overlay')?.classList.add('hidden');
     document.getElementById('fieldtask-overlay')?.classList.add('hidden');
   };
+
+  const applyDisplaySettings = () => {
+    const { highContrast, textSize } = GameState.getState().settings;
+    const root = document.documentElement.classList;
+    root.toggle('high-contrast', highContrast);
+    root.toggle('text-large', textSize === 'large');
+    root.toggle('text-xlarge', textSize === 'xlarge');
+  };
+  applyDisplaySettings();
+  EventBus.on(EVENTS.SETTINGS_CHANGED, applyDisplaySettings);
+  EventBus.on(EVENTS.PROGRESS_RESET, applyDisplaySettings);
 
   const stopActivePlayScenes = () => {
     SoundFX.setThruster(false);
