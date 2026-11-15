@@ -67,7 +67,7 @@ export class AboutModal {
 
           <section>
             ${h('PRIVACY')}
-            <p>No accounts, no cookies, no tracking. Progress is saved only in this browser (localStorage). The game makes no network calls to outside services while you play; links open official pages in a new tab.</p>
+            <p>No accounts, no cookies, no tracking. Progress is saved only in this browser (localStorage). The game makes no network calls to outside services while you play; links open official pages in a new tab. The static hosting provider (Vercel) may keep standard operational request logs outside the team's control under the ${link('https://vercel.com/legal/privacy-policy', 'Vercel Privacy Policy')}.</p>
           </section>
 
           <section>
@@ -81,7 +81,7 @@ export class AboutModal {
               ${list(citations.map((u) => link(u, `${sourceHost(u)}${new URL(u).pathname}`)))}
             </details>
             <details>
-              <summary>Photographs (${entries.length}), all NASA public-domain imagery</summary>
+              <summary>Photographs (${entries.length}), NASA, JPL, and partner mission imagery</summary>
               ${list(entries.map((e) => `${esc(e.name)}: ${esc(e.image.nasa_id)} · ${esc(e.image.credit)} · ${link(e.image.source_url, 'NASA Image Library')}`))}
             </details>
             <details>

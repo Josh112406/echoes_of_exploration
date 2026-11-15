@@ -76,7 +76,7 @@ Coverage: 23 playable echoes, a 31-mission catalog, 9 designed encounters (2 wit
 - nasa.gov: https://www.nasa.gov/missions/artemis/clps/nasa-anticipates-lunar-findings-from-next-generation-retroreflector
 - nasa.gov: https://www.nasa.gov/specials/apollo50th/missions.html
 
-## Photographs (NASA public-domain imagery)
+## Photographs (NASA, JPL, and partner mission imagery)
 
 - Apollo 11 Landing Site: as11-40-5927, NASA. https://images.nasa.gov/details/as11-40-5927
 - Apollo 12 Landing Site: as12-46-6749, NASA. https://images.nasa.gov/details/as12-46-6749
@@ -119,7 +119,7 @@ Coverage: 23 playable echoes, a 31-mission catalog, 9 designed encounters (2 wit
 
 ## Use of artificial intelligence
 
-Parts of the code, the procedural pixel art and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The team confirms that the facts and code are human-verified. Illustrations made this way are labelled as illustrations, never presented as NASA photographs.
+Parts of the code, procedural pixel art, Web Audio synthesizer routines, and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The team confirms that the facts and code are human-verified. Generated scene illustrations are watermarked and AI-assisted procedural artwork is disclosed as illustration, never presented as NASA mission photography.
 
 ## Human verification
 

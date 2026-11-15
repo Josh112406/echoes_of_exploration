@@ -35,7 +35,7 @@ const out: string[] = [
   '',
   ...citations.filter((u) => !catalogUrls.has(u)).map((u) => `- ${host(u)}: ${u}`),
   '',
-  '## Photographs (NASA public-domain imagery)',
+  '## Photographs (NASA, JPL, and partner mission imagery)',
   '',
   ...entries.map((e) => `- ${e.name}: ${e.image.nasa_id}, ${e.image.credit}. ${e.image.source_url}`),
   '',

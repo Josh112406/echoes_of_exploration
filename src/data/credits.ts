@@ -31,7 +31,7 @@ export const HUMAN_REVIEW_STATEMENT = 'The team confirms that all facts and code
 
 export const REVIEW_STATUS_LABEL = 'HUMAN VERIFIED';
 
-export const AI_DISCLOSURE = 'Parts of the code, the procedural pixel art and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The team confirms that the facts and code are human-verified. Illustrations made this way are labelled as illustrations, never presented as NASA photographs.';
+export const AI_DISCLOSURE = 'Parts of the code, procedural pixel art, Web Audio synthesizer routines, and early drafts of some text were produced with AI coding assistants (including Claude by Anthropic and Gemini / Antigravity by Google DeepMind). The team confirms that the facts and code are human-verified. Generated scene illustrations are watermarked and AI-assisted procedural artwork is disclosed as illustration, never presented as NASA mission photography.';
 
 export const MEDIA_GUIDELINES_URL = 'https://www.nasa.gov/nasa-brand-center/images-and-media/';
 
