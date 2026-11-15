@@ -237,6 +237,7 @@ export class TitleScreen {
     st.setProperty('--cv-y', `${r.top - box.top}px`);
     st.setProperty('--cv-w', `${r.width}px`);
     st.setProperty('--cv-h', `${r.height}px`);
+    st.setProperty('--mobile-menu-h', `${this.container.querySelector<HTMLElement>('.tmenu')?.offsetHeight ?? 180}px`);
     const wasCompact = this.compact;
     this.compact = r.height < 330 && box.height > box.width;
     this.container.classList.toggle('is-compact', this.compact);

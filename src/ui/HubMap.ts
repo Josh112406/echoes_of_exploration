@@ -44,6 +44,7 @@ export class HubMap {
     }
 
     this.container.innerHTML = `
+      <div class="hub-mobile-toolbar"><button id="btn-close-hub-mobile" class="btn">CLOSE MAP</button></div>
       <!-- Editorial Hero Header Entrance -->
       <div class="hero-intro">
         <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:4px; flex-wrap:wrap;">
@@ -106,6 +107,11 @@ export class HubMap {
       ${this.isListView ? this.renderListView(entries) : this.renderMapView(entries, currentWorld)}
     `;
 
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      const surface = this.container.querySelector('.hub-surface');
+      const details = this.container.querySelector('#marker-card-popover');
+      if (surface && details) surface.after(details);
+    }
     this.bindEvents();
 
     if (!this.isListView) {
@@ -143,7 +149,7 @@ export class HubMap {
     }).join('');
 
     return `
-      <div style="position:relative; width:100%; aspect-ratio:2/1; max-height:calc(100vh - 210px); background:#0e121a; border:1px solid rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+      <div class="hub-surface" style="position:relative; width:100%; aspect-ratio:2/1; max-height:calc(100vh - 210px); background:#0e121a; border:1px solid rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
         <img src="${mapSrc}" alt="${currentWorld} Surface Map" style="width:100%; height:100%; object-fit:cover; opacity:0.85;" />
         
         <!-- Celestial Graticule Coordinate Grid -->
@@ -282,10 +288,10 @@ export class HubMap {
       if (quickMenu) quickMenu.style.display = 'none';
     });
 
-    this.container.querySelector('#btn-close-hub')?.addEventListener('click', () => {
+    this.container.querySelectorAll('#btn-close-hub, #btn-close-hub-mobile').forEach((button) => button.addEventListener('click', () => {
       SoundFX.playClick();
       this.container.classList.add('hidden');
-    });
+    }));
 
     this.container.querySelectorAll('.btn-direct-pick').forEach(btn => {
       btn.addEventListener('click', (e) => {

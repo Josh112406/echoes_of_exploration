@@ -193,6 +193,17 @@ header.nav {
 #mobile-game-controls, .mobile-action-buttons { display: none; }
 
 .unit7-mobile { display: none; }
+.hub-mobile-toolbar { display: none; }
+
+@media (pointer: coarse) {
+  #hub-overlay { display: block; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding-top: 12px; }
+  .hub-mobile-toolbar { display: flex; justify-content: flex-end; position: sticky; top: -12px; z-index: 30; background: var(--g-alt); padding: 8px 0; margin-bottom: 12px; }
+  #btn-close-hub-mobile { min-height: 44px; }
+  #hub-overlay #btn-close-hub { display: none; }
+  #hub-overlay .hub-surface { max-height: none !important; min-height: 280px; }
+  #hub-overlay .telemetry-deck { padding: 16px; border: 1px solid var(--accent); font-size: 12px; line-height: 1.6; }
+  #hub-overlay .telemetry-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+}
 
 @media (pointer: coarse) {
   .unit7-mobile {
@@ -859,7 +870,7 @@ header.nav {
 @media (pointer: coarse) {
   #title-overlay.is-compact .tmenu-title {
     position: absolute;
-    top: 62px;
+    top: var(--mobile-title-top);
     left: 16px;
     right: 16px;
     width: auto;
@@ -873,7 +884,10 @@ header.nav {
     letter-spacing: 0.08em;
   }
   .tmenu-title span { display: block; font-size: 10px; color: var(--verified); }
-  #title-overlay.is-compact .tmenu { top: 122px; bottom: auto; }
+  #title-overlay.is-compact { --mobile-title-top: max(60px, calc(var(--cv-y, 0px) + var(--cv-h, 0px) / 2 - (60px + var(--mobile-menu-h, 180px)) / 2)); }
+  #title-overlay.is-compact .tmenu { top: calc(var(--mobile-title-top) + 60px); bottom: auto; }
+  #title-overlay.is-compact .tmenu__row { background: rgba(5, 7, 15, 0.8); }
+  #title-overlay.is-compact .tmenu-say { top: max(calc(var(--cv-y, 0px) + var(--cv-h, 0px) + 14px), calc(var(--mobile-title-top) + 60px + var(--mobile-menu-h, 180px) + 16px)); }
 
   .mobile-briefing {
     position: absolute;
